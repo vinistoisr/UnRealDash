@@ -1,0 +1,23 @@
+# Repository scripts
+
+Toolchain checks, local build and packaging entry points, shared script logic and
+Pester tests belong here (PLAN.md 0.7 and 1.6). Runtime code and compiled outputs do not.
+
+Run doctor.ps1 with workstation, android, linux or device as -Profile. Use
+-PreInstall for capacity and installer prerequisites only. pins.json owns versions,
+detection metadata and profile membership. Its engine.root is a provisional install
+location; the owner must record the actual location after installation. The device
+address remains a placeholder until task 0.8.
+
+Doctor -SearchPath replaces command discovery PATH; -PinsFile substitutes the data
+file. Missing or inaccessible tools fail with an explanation. Symbolic links found
+on that PATH are resolved to their existing target before execution.
+
+Build and packaging scripts call doctor before -WhatIf prints a RunUAT command.
+-DoctorScript substitutes the doctor for tests. Without -WhatIf, the skeletons
+stop without building, deploying or capturing. Later tasks implement those actions.
+Configuration is Development. Deployment and capture currently preview the package
+command for their target; they do not yet contain device or metrics operations.
+
+Run `pwsh -NoProfile -Command "Invoke-Pester -Path scripts/tests -CI"`.
+The installed Pester 6.2 module supports the Pester 5 APIs used by these tests.
