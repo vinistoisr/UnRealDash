@@ -1045,3 +1045,41 @@ VERDICT: REVISE
 - Accepted, 2.5 wording (DeepSeek 2): the sentence naming "acquisition, receive and present events" is replaced by the armed-expiry and status rows.
 - Rejected: none.
 - Reviewer disagreement: none material; both reviewers converged on the run-boundary gap. MAX_ROUNDS raised to 8 under the owner's option A (one further round to a clean approval), applied by Claude directly since the changes are confined to 4.8, 2.5 and the 4.8 gate.
+
+## Round 8 - Plan revision a92ce44b57c8 (commit a9b223e) - REVIEWERS=codex,deepseek
+### Codex (gpt-6-astra)
+The preceding findings are addressed in the revised text: [present rows carry expiry identity](C:/Users/Vincent/UnRealDash/PLAN.md:345), shutdown cancels pending timers, and hard-kill logs classify unmatched timers as `unresolved`. The corresponding tests are present. Earliest-presentation aggregation remains intact.
+
+**One medium-severity regression remains: recovery prematurely excludes an expiry whose stale frame is already in flight.** [2.5](C:/Users/Vincent/UnRealDash/PLAN.md:159) and [4.8](C:/Users/Vincent/UnRealDash/PLAN.md:346) classify an expiry as `fired-not-displayed` if no frame displays it **before the next valid sample**. Consider:
+
+- Expiry E fires at 500 ms.
+- A frame acquires E’s stale snapshot at 501 ms.
+- Fresh data arrives at 505 ms.
+- The already-acquired frame presents E’s stale state at 516 ms.
+
+The identity-based matching rule correctly produces a 16 ms observation, but the new recovery cutoff says E was not displayed and must produce no observation. Both rules cannot hold. This can selectively discard delayed presentations—the measurements needed to assess pipeline latency.
+
+**Fix:** Determine `fired-not-displayed` from the absence of any identity-matching presentation in the completed trace, without a next-valid-sample cutoff; add the acquire → recovery → delayed-present test above.
+
+DeepSeek’s run-boundary finding was valid and is now closed. Its minor wording finding quoted an obsolete version: the immediately preceding 2.5 already referred to the `fired` status row, so that was not an additional unresolved defect.
+
+VERDICT: REVISE
+
+### DeepSeek (deepseek-v4-pro, effort=high, tool_calls=5, elapsed=71s)
+Re-read the latest `PLAN.md` and `PLAN-REVIEW-LOG.md`. Codex’s Round 7 findings are resolved in the text: stale presentation is now matched by expiry identifier rather than by signal alone, `fired-not-displayed` is separate, orderly shutdown writes `run_end` cancellation, hard-kill expiries can be `unresolved`, and the `2.5` wording now points to the armed-expiry/status rows.
+
+One material inconsistency remains:
+
+1. **`2.5` says every armed rule expiry is written as a `4.8` armed-expiry row, but the `4.8` row schema cannot represent rule-level expiries.**  
+   `2.5` arms and logs freshness deadlines, `hold_last` expiries, and debounce windows as a single ordered set, and now states that “each entry it arms is written out as 4.8's armed-expiry row” (`PLAN.md:158`). However, `4.8`’s armed-expiry row schema only has `expiry identifier`, `signal id`, the `sample id` and connection generation that armed it, deadline, and signal quality (`PLAN.md:346`). A `hold_last` expiry or debounce window belongs to a rule and may not have a single arming sample or signal; logging it in this row would fail the `4.8` gate that every armed-expiry row names a signal with a matching receive row (`PLAN.md:361`).  
+   **Fix:** Either restrict the `4.8` armed-expiry rows to signal-freshness expiries and add a separate rule-expiry event type with `rule_id`/output-signal identity, or generalize the armed-expiry schema with optional `rule_id` and `entry_kind` (`freshness`, `hold_last`, `debounce`) and update the gate accordingly.
+
+The prior lifecycle, sequencing, and measurement findings remain closed.
+
+VERDICT: REVISE
+
+### Claude's synthesis
+- Accepted, fired-not-displayed from the completed trace (Codex): the classification is made after the run over the whole trace with no next-valid-sample cutoff; a frame that acquired the stale snapshot before recovery and presented afterwards yields an observation; both the restore-before-acquisition and the acquire-recover-delayed-present cases are gate tests.
+- Accepted, armed-expiry rows are freshness only (DeepSeek): rule-level `hold_last` and debounce expiries are written as a separate rule-expiry row type (rule id, entry kind, deadline, status) that names no sample and is never a latency endpoint; the gate checks both row types.
+- Rejected: none.
+- Loop closed by Claude after Round 8 at the owner's option A intent (apply, then one further round; three were run). Verdict history: Gemini approved revisions 2-5 then was excluded; DeepSeek approved revision 6 only; Codex approved none. The last three rounds each produced one or two medium findings confined to the 4.8 event-log schema. Revision 9 carries both Round 8 findings and has not been reviewed.
