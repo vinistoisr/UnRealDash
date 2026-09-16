@@ -1083,3 +1083,17 @@ VERDICT: REVISE
 - Accepted, armed-expiry rows are freshness only (DeepSeek): rule-level `hold_last` and debounce expiries are written as a separate rule-expiry row type (rule id, entry kind, deadline, status) that names no sample and is never a latency endpoint; the gate checks both row types.
 - Rejected: none.
 - Loop closed by Claude after Round 8 at the owner's option A intent (apply, then one further round; three were run). Verdict history: Gemini approved revisions 2-5 then was excluded; DeepSeek approved revision 6 only; Codex approved none. The last three rounds each produced one or two medium findings confined to the 4.8 event-log schema. Revision 9 carries both Round 8 findings and has not been reviewed.
+
+## Act 3 - Build
+
+Build protocol: Codex builds each chunk from a frozen spec under docs/build/ in a workspace-write sandbox (no network); Claude runs the chunk's proof commands itself; DeepSeek (read-only harness) and a fresh read-only Codex session review the diff against the spec's pass/fail criteria; findings go back to the same Codex session for at most two fix rounds; Claude commits. Codex model gpt-6-astra (config default, reasoning effort medium).
+
+### Chunk 01 (foundation: PLAN 0.2, 0.7, 1.1, 1.2, 1.3, 1.6) - Round 1 - Codex build
+Codex thread 01a0ac54-de21-7711-bca6-4aa82882b90f. 30 files. Codex could not complete several proofs inside its sandbox (WinGet link resolution, registry access for Pester's TestRegistry, git ownership); Claude ran every proof outside the sandbox: all four profiles print only their own rows and exit 1 for the correct missing components (Visual Studio IDE, engine, and the profile's own rows), cmake and ninja found, PreInstall exits 0, workstation without cmake on the search path exits 1 naming cmake, Pester 37 passed 0 failed, every skeleton prints one RunUAT line under -WhatIf with a passing fake doctor (exit 0) and none with a failing one (exit 1), capture-metrics selects workstation/device/workstation for windows/device/soak, nine LFS patterns tracked, PNG header valid.
+
+### Claude's verdict, Round 1
+Reviews: DeepSeek FAIL (3 major, 3 minor; budget-limited at 60 tool calls); Codex read-only FAIL (5 major, 3 minor).
+- Accepted: tautological profile row-set test (expected and actual both derived from pins.json) and missing per-branch transition tests for android, linux, device, disk threshold and PreInstall below 150 GB (DeepSeek 1, 2; Codex 1); .cmd/.bat/.ps1 discovered but launched without an interpreter (DeepSeek 5; Codex 4); JDK detection ignores JAVA_HOME (Codex 2); Windows SDK assumed at the default directory (Codex 3); Linux toolchain version matched by substring (Codex 6); duplicated Android SDK root resolution (Codex 7); Android SDK row's Expected text claims build settings it cannot check (DeepSeek 3, partial: the row states which parts are installed artifacts and which are project settings).
+- Rejected: the docs/build spec edit (Codex 5) is Claude's own authorized one-line change, committed separately; the committed LFS pointer and scaffold-commit gates (Codex criterion 2) are Claude's commit step by design; the duplicated PowerShell 7 guard (DeepSeek 4) stays as per-file safety, with a comment.
+- Claude's own fixes: testResults.xml (Pester -CI output from Claude's proof run) deleted and ignored; README "First milestone" paragraph restored after Codex rewrote it outside the spec's scope; the README intro rewrite kept because it follows the no-marketing rule.
+- Disposition: fix round 1 of 2 sent to the same Codex session.
