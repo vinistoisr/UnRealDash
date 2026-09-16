@@ -1,6 +1,6 @@
 # UnRealDash
 
-A next-generation automotive dashboard platform built around Unreal Engine: AI-authored instruments, expressive animation, reactive materials, and real-time 3D, with community ownership and portable designs as core goals.
+A vehicle dashboard project using Unreal Engine for rendering and engine-independent C++20 components for signal processing and document validation.
 
 ## Project status
 
@@ -39,4 +39,6 @@ Build a packaged Unreal feasibility demo with both a simple control dashboard an
 
 ## Licensing
 
-An open-source license for the project's original code has not yet been selected. Unreal Engine and third-party assets remain subject to their respective licenses; this repository does not include Unreal Engine source code.
+Original code uses the provisional [MIT license](LICENSE). Original example assets
+use provisional [CC-BY-4.0 terms](LICENSES-ASSETS.md). Engine and third-party assets
+remain under their own terms.
