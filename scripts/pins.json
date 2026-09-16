@@ -1,0 +1,311 @@
+{
+  "engine": {
+    "root": "C:/Program Files/Epic Games/UE_5.8"
+  },
+  "device": {
+    "adb_address": "192.168.0.0:5555"
+  },
+  "rows": [
+    {
+      "id": "disk",
+      "component": "C: free space",
+      "expected": ">= 30 GB",
+      "detect": "disk",
+      "profiles": [
+        "workstation",
+        "android",
+        "linux",
+        "device"
+      ],
+      "minimum": 30
+    },
+    {
+      "id": "lfs",
+      "component": "Git LFS",
+      "expected": "available",
+      "detect": "command",
+      "profiles": [
+        "workstation",
+        "android",
+        "linux",
+        "device"
+      ],
+      "command": "git",
+      "arguments": [
+        "lfs",
+        "version"
+      ],
+      "pattern": "git-lfs/\\d"
+    },
+    {
+      "id": "cmake",
+      "component": "cmake",
+      "expected": "available",
+      "detect": "command",
+      "profiles": [
+        "workstation",
+        "android",
+        "linux",
+        "device"
+      ],
+      "command": "cmake",
+      "arguments": [
+        "--version"
+      ],
+      "pattern": "\\d+\\.\\d+"
+    },
+    {
+      "id": "ninja",
+      "component": "ninja",
+      "expected": "available",
+      "detect": "command",
+      "profiles": [
+        "workstation",
+        "android",
+        "linux",
+        "device"
+      ],
+      "command": "ninja",
+      "arguments": [
+        "--version"
+      ],
+      "pattern": "\\d+\\.\\d+"
+    },
+    {
+      "id": "vs",
+      "component": "Visual Studio",
+      "expected": "2022 Community 17.14+; both C++ workloads",
+      "detect": "vs",
+      "profiles": [
+        "workstation",
+        "android",
+        "linux",
+        "device"
+      ],
+      "minimum": "17.14",
+      "product": "Microsoft.VisualStudio.Product.Community",
+      "workloads": [
+        "Microsoft.VisualStudio.Workload.NativeDesktop",
+        "Microsoft.VisualStudio.Workload.NativeGame"
+      ],
+      "major": 17
+    },
+    {
+      "id": "msvc",
+      "component": "MSVC toolset",
+      "expected": "14.44 (UE minimum 14.38; recommendation 14.50)",
+      "detect": "msvc",
+      "profiles": [
+        "workstation",
+        "android",
+        "linux",
+        "device"
+      ],
+      "version": "14.44"
+    },
+    {
+      "id": "windows-sdk",
+      "kits_root": null,
+      "component": "Windows SDK",
+      "expected": "10.0.26100",
+      "detect": "windows-sdk",
+      "profiles": [
+        "workstation",
+        "android",
+        "linux",
+        "device"
+      ],
+      "version": "10.0.26100"
+    },
+    {
+      "id": "engine",
+      "component": "Unreal Engine",
+      "expected": "5.8.2; Launcher binary; Android and Linux platforms",
+      "detect": "engine",
+      "profiles": [
+        "workstation",
+        "android",
+        "linux",
+        "device"
+      ],
+      "version": "5.8.2",
+      "platforms": [
+        "Android",
+        "Linux"
+      ]
+    },
+    {
+      "id": "studio",
+      "component": "Android Studio",
+      "expected": "Koala 2024.1.2 Patch 1; via Turnkey",
+      "detect": "studio",
+      "profiles": [
+        "android"
+      ],
+      "version": "2024.1.2",
+      "patch": "1"
+    },
+    {
+      "id": "ndk",
+      "component": "Android NDK",
+      "expected": "r27c",
+      "detect": "ndk",
+      "profiles": [
+        "android"
+      ],
+      "version": "27.2.12479018"
+    },
+    {
+      "id": "jdk",
+      "component": "JDK",
+      "expected": "OpenJDK 21.0.3",
+      "detect": "jdk",
+      "profiles": [
+        "android"
+      ],
+      "command": "java",
+      "arguments": [
+        "-version"
+      ],
+      "pattern": "openjdk version \"21\\.0\\.3(?:[+\"-])"
+    },
+    {
+      "id": "android-sdk",
+      "component": "Android SDK",
+      "expected": "platform android-35 and build-tools present",
+      "detect": "android-sdk",
+      "profiles": [
+        "android"
+      ],
+      "target": 35,
+      "compile_minimum": 34,
+      "installable_minimum": 26,
+      "project_settings": "Installable minimum API 26 and compile minimum 34 are project build settings verified at task 4.1, not SDK artifacts."
+    },
+    {
+      "id": "linux-toolchain",
+      "component": "Linux cross toolchain",
+      "expected": "v26; clang 20.1.8; Rocky Linux 8; UBT only",
+      "detect": "linux-toolchain",
+      "profiles": [
+        "linux"
+      ],
+      "version": "20.1.8",
+      "directory": "v26_clang-20.1.8-rockylinux8"
+    },
+    {
+      "id": "linux-root",
+      "component": "LINUX_MULTIARCH_ROOT",
+      "expected": "existing directory",
+      "detect": "environment",
+      "profiles": [
+        "linux"
+      ],
+      "variable": "LINUX_MULTIARCH_ROOT"
+    },
+    {
+      "id": "adb",
+      "component": "ADB reachability",
+      "expected": "configured device online",
+      "detect": "adb",
+      "profiles": [
+        "device"
+      ]
+    },
+    {
+      "id": "device-storage",
+      "component": "Device free storage",
+      "expected": "> 0 available blocks on /data",
+      "detect": "device-storage",
+      "profiles": [
+        "device"
+      ],
+      "minimum": 0
+    },
+    {
+      "id": "cpp",
+      "component": "C++ standard",
+      "expected": "C++20 for engine-independent sources; engine standard elsewhere",
+      "detect": "configuration",
+      "profiles": [],
+      "version": "c++20",
+      "note": "Enforced by future CMake and Unreal builds, not a workstation prerequisite."
+    },
+    {
+      "id": "python",
+      "component": "Python",
+      "expected": "3.12 in CI; 3.14 locally; tools support both",
+      "detect": "command",
+      "profiles": [],
+      "command": "python",
+      "arguments": [
+        "--version"
+      ],
+      "pattern": "Python 3\\.(12|14)\\.",
+      "ci": "3.12",
+      "local": "3.14"
+    },
+    {
+      "id": "pre-disk",
+      "component": "C: free space",
+      "expected": ">= 150 GB",
+      "detect": "disk",
+      "profiles": [
+        "preinstall"
+      ],
+      "minimum": 150
+    },
+    {
+      "id": "pre-git",
+      "component": "git",
+      "expected": "available",
+      "detect": "command",
+      "profiles": [
+        "preinstall"
+      ],
+      "command": "git",
+      "arguments": [
+        "--version"
+      ],
+      "pattern": "git version"
+    },
+    {
+      "id": "pre-winget",
+      "component": "winget",
+      "expected": "present on PATH",
+      "detect": "presence",
+      "profiles": [
+        "preinstall"
+      ],
+      "command": "winget"
+    },
+    {
+      "id": "pre-pwsh",
+      "component": "PowerShell",
+      "expected": ">= 7",
+      "detect": "powershell",
+      "profiles": [
+        "preinstall"
+      ],
+      "minimum": 7
+    },
+    {
+      "id": "pre-shell",
+      "component": "Signed-in shell",
+      "expected": "Windows user identity",
+      "detect": "identity",
+      "profiles": [
+        "preinstall"
+      ]
+    },
+    {
+      "id": "pre-path",
+      "component": "User PATH writable",
+      "expected": "user Environment registry key writable",
+      "detect": "path-writable",
+      "profiles": [
+        "preinstall"
+      ]
+    }
+  ]
+}
