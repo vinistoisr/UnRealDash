@@ -971,3 +971,40 @@ MAX_ROUNDS=5 reached without unanimous approval on one revision. Gemini approved
 
 ## Panel change before Round 6
 At Resolution on 2026-09-16 the owner chose option A: apply the six Round 5 findings as a revision, then run one further round. REVIEWERS=codex,deepseek for Round 6 by the owner's explicit decision (Gemini excluded: its four approvals cited details not present in the plan, and its turns took 34 to 91 minutes each). MAX_ROUNDS raised from 5 to 6. Both remaining reviewers resume their existing sessions.
+
+## Round 6 - Plan revision 8a8fe1e619f4 (commit ce75500) - REVIEWERS=codex,deepseek
+### Codex (gpt-6-astra)
+The lifecycle partition, target-specific compile gates, `1.6 → 4.1` sequencing, and `4.3 → 4.8` dependency are now fixed in the actual text. Hidden signals and acquisition without submission have explicit coverage. The expiry-observation fix is present, but introduces two remaining measurement problems.
+
+1. **Medium — Armed deadlines are treated as expirations even when superseded.** [PLAN.md:346](C:/Users/Vincent/UnRealDash/PLAN.md:346) records every armed deadline, while [2.5](C:/Users/Vincent/UnRealDash/PLAN.md:159) pairs it with the first stale presentation using those two records alone. Example: a sample arms expiry at 500 ms; another arrival moves expiry to 900 ms; stale first presents at 916 ms. Both armed rows remain, allowing a fictitious 416 ms latency alongside the correct 16 ms. No cancellation, firing status, or expiry identity distinguishes them. Reconnects and repeated stale episodes compound the ambiguity.
+   
+   **Fix:** Record actual freshness-expiry events with deadline, sample ID and generation, correlate presentation to that expiry, and test rearming, cancellation and repeated disconnects.
+
+2. **Medium — Recording every presented frame removes the unique receive-to-present endpoint.** [PLAN.md:345](C:/Users/Vincent/UnRealDash/PLAN.md:345) now repeats a sample in every frame displaying it, but [the latency definition](C:/Users/Vincent/UnRealDash/PLAN.md:357) and 6.5 never specify which presentation counts. A sample received at 0 ms and displayed at 16, 32 and 48 ms now has three candidate latencies. Aggregating those rows measures displayed sample age and weights samples by their screen duration; choosing the last row also corrupts arrival latency. Two scripts can agree while making the same mistake.
+   
+   **Fix:** Define one latency observation per distinct presented sample using its earliest qualifying presentation, and test that additional frames displaying that sample leave its latency unchanged.
+
+DeepSeek’s preceding sequencing findings are addressed. Gemini’s blanket approval was premature; however, the previous lifecycle counterexamples are now closed and should not be carried forward as unresolved.
+
+VERDICT: REVISE
+
+### DeepSeek (deepseek-v4-pro, effort=high, tool_calls=14, elapsed=236s)
+Re-read the current `PLAN.md` and `PLAN-REVIEW-LOG.md`. The prior DeepSeek findings are resolved in the revised text: `1.6` is skeleton-only with `4.1` owning the real Win64 build, `4.8 <- 4.7, 4.3`, the lifecycle is now an exhaustive four-state partition with submit rows and `acquired-not-displayed`, expiry-to-present has armed-expiry and per-frame rendered-quality observations, and the compile gate is split into `4.2 Android half`/`4.2 Linux half` with packaging depending on the correct half.
+
+I checked the new dependencies and event schemas for cycles, omitted edges, and unclassifiable states. I find no material unresolved defects:
+
+- The `1.6`/`4.1` cycle is genuinely broken (`1.6 -> 4.1`, with the real build in `4.1`).
+- `4.8`’s record types now cover acquisition, submission, presentation, armed expiry, sampled telemetry, and asset import.
+- The lifecycle partition covers presented, acquired-not-displayed, superseded-unacquired, and latest-unacquired, including hidden signals and termination before submission.
+- Android and Linux packaging depend only on their respective compile halves.
+- The terminal-blocker path into `7.1` is generalized and does not depend on the failed tasks themselves.
+
+The remaining small risks I see are implementation-detail concerns, not plan-level blockers: armed-expiry rows would benefit from explicit cancellation/re-arm correlation, and `4.4`’s desk-device half should in practice use an Android development build whose creation is not separately task-gated. Neither invalidates the plan as written.
+
+VERDICT: APPROVED
+
+### Claude's synthesis
+- Accepted, expiry identity (Codex 1): armed-expiry rows carry an expiry identifier, the sample identifier and connection generation that armed them, and a terminal status row (`fired` at the deadline, or `cancelled` with the re-arming sample identifier); expiry-to-present pairs a `fired` expiry with the first present row after it whose rendered quality for that signal is `stale`; tests cover re-arming, cancellation, and repeated disconnects.
+- Accepted, one latency observation per sample (Codex 2): receive-to-present is one observation per distinct presented sample, from its receive row to its earliest present row; later frames that keep displaying the sample do not create observations; a test asserts that additional frames leave the sample's latency unchanged; 6.5 reports the count of observations alongside the percentiles.
+- Rejected: none.
+- Reviewer disagreement: DeepSeek approved and called the expiry correlation an implementation detail; Codex called it a plan-level measurement defect. Disposition: Codex is right that a fictitious 416 ms latency would pass both scripts, so the contract belongs in the plan. Both changes are applied for Round 7.
