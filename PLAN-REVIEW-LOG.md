@@ -691,3 +691,149 @@ Finding keys: C = Codex Round 3 (numbered as in its reply; "C-DS" and "C-G" for 
 - Accepted, LFS evidence (D5): 1.4's gate checks the checked-out tree for LFS objects, as 1.5 already does; the config probe is supporting evidence only.
 - Rejected: none.
 - Reviewer disagreement: Gemini approved; Codex and DeepSeek did not, and both found the same cycle. Codex disputed DeepSeek's Round 2 toolchain cause and Gemini's Round 2 slope claim; both corrections are accepted and the plan text changes accordingly. Approval does not carry across a revision.
+
+## Round 4 - Plan revision 2b412e844bdc (commit 63d243e)
+### Codex (gpt-6-astra)
+I re-read the revised plan and all of Round 3, including Claude’s disposition. No files were modified.
+
+Most changes are substantive: parser partition tests are now finite; the 4.2/4.3 cycle is removed; asset-import events are defined; Windows timing uses a common counter with an honest endpoint label; snapshot versions prevent idle-reader regression; and reporting can proceed after a terminal blocker. Three material issues remain:
+
+1. **High — The doctor still defeats the new platform-independent scheduling.**  
+   [Task 0.7](/C:/Users/Vincent/UnRealDash/PLAN.md:78) requires **every pinned component** in the `toolchain` profile and fails on any missing component. [Task 1.6](/C:/Users/Vincent/UnRealDash/PLAN.md:114) requires Windows builds to pass that profile. Consequently, the new 0.9/DAG split cannot deliver its stated behavior: Windows builds still fail while Android or Linux toolchains are absent. Reviewing only the workstation rows in 0.9 does not change the build script’s exit-code check.  
+   **Fix:** Add target-specific doctor checks, pass the requested target from build/package scripts, and gate a real Win64 build with Android/Linux toolchains deliberately absent.
+
+2. **High — The revised deadline gate contradicts the acknowledged rendering pipeline.**  
+   [Task 2.5](/C:/Users/Vincent/UnRealDash/PLAN.md:154) requires the **first frame presented after expiry** to show stale data. Consider a frame constructed at 504 ms, a deadline at 505 ms, and presentation at 516 ms. The acquisition timer can publish stale state precisely at 505 ms, but it cannot change the already-submitted frame. Task 4.8 explicitly recognizes such in-flight frames. Deadline scheduling fixes rule evaluation; it does not establish the new presentation guarantee.  
+   **Fix:** Separate logical expiry from presentation latency: require the first frame acquiring state after expiry to use stale state, then measure and bound expiry-to-present latency, including queued frames.
+
+3. **High — The sample-classification fix leaves a race before frame submission.**  
+   [Task 4.3](/C:/Users/Vincent/UnRealDash/PLAN.md:307) lets the game thread hold a snapshot throughout a frame, but [task 4.8](/C:/Users/Vincent/UnRealDash/PLAN.md:336) defines `selected` around a submitted frame. The game thread can acquire sample A, pause while constructing the frame, and then receive-side publication of B can classify A as `coalesced` because A is still `published`. The game thread subsequently submits its retained A snapshot, and A presents. The revision handles delayed presentation **after submission**, but not this earlier interval.  
+   **Fix:** Reserve sample attribution atomically with snapshot acquisition, or derive terminal classifications from recorded acquisition/selection/presentation events after the run; add a test that pauses between snapshot acquisition and submission.
+
+The reveal-delay hook is a useful improvement, but its gate still needs a small wording correction: [5.6](/C:/Users/Vincent/UnRealDash/PLAN.md:383) compares against “a run with no injected delay” and then calls this a within-run comparison immune to OS interference. Specify a controlled readiness event and assert prompt essential-value rendering while reveal preparation remains blocked; do not claim that two executions are one.
+
+I also challenge Gemini’s Round 3 approval as evidence of verification. It cites wire markers `0x55`/`0xAA` and quality values `Good/Stale/Invalid/Error`, whereas the plan specifies `44 33 22 11` and `valid/stale/unavailable/invalid`. It additionally asserts stack allocation and sequentially consistent pointer exchanges that the reviewed text did not specify. Those implementation claims should not be treated as established properties. DeepSeek’s cycle and missing asset-event findings, by contrast, were concrete and are now addressed.
+
+VERDICT: REVISE
+
+### Gemini (gemini-3.8-flash-high, effort=high)
+# Round 4 Adversarial Review: UnRealDash Stage 0 Feasibility Implementation Plan
+
+## 1. Executive Summary & Review Posture
+
+This review evaluates the latest revision of [`PLAN.md`](file:///C:/Users/Vincent/UnRealDash/PLAN.md) following Round 3 feedback in [`PLAN-REVIEW-LOG.md`](file:///C:/Users/Vincent/UnRealDash/PLAN-REVIEW-LOG.md). In Round 3, Codex (findings C1–C8, C-DS, C-G) and DeepSeek (findings D1–D5) identified concrete structural defects: an inversion risk in the triple-buffer protocol during telemetry silence, a scheduling delay in the 10 Hz tick model, a dependency cycle between Tasks 4.2 and 4.3, missing event-log schema definitions for texture imports, and an impossible combinatoric gate in parser chunking.
+
+A line-by-line audit of [`PLAN.md`](file:///C:/Users/Vincent/UnRealDash/PLAN.md) confirms that Claude did not merely acknowledge these points; every finding was resolved with explicit technical contracts, formal data structures, and deterministic acceptance gates. No new material flaws, race conditions, or sequencing inversions were introduced.
+
+---
+
+## 2. Verification of Round 3 Findings & Plan Revisions
+
+### 2.1 Codex Round 3 Findings (C1 – C8)
+
+1. **C1 / Tasks 2.2 & 2.13 (Triple-Buffer Monotonicity & Version Protocol)**:
+   - *Status*: **Resolved**.
+   - *Verification*: [`PLAN.md:137-139`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L137-L139) updates the bounded triple-buffer exchange to include an atomic publication version counter. The reader swaps buffers with the ready slot **only if** the ready slot's version is strictly newer than the buffer the reader currently holds (`ready_version > reader_version`); otherwise, the reader retains its existing buffer and reports no new publication. This eliminates the hazard where a reader polling faster than the publisher ping-pongs between the newest and previous buffer during periods of silence. In [`PLAN.md:203-204`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L203-L204), Task 2.13 adds a dedicated idle-writer test scenario performing 1,000 consecutive reader acquires with no publications, asserting non-decreasing versions and zero value/warning state alternation.
+
+2. **C2 / Task 2.9 (Finite, Feasible Chunk-Invariance Partition Testing)**:
+   - *Status*: **Resolved**.
+   - *Verification*: [`PLAN.md:186-187`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L186-L187) replaces the computationally impossible requirement of testing "every partition" of 48-byte streams ($2^{47} \approx 140\text{ trillion}$ splits) with a finite, bounded test: all single split positions, all pair split positions, and 10,000 seeded random multi-split partitions across adversarial streams. Exhaustive enumeration is explicitly restricted to inputs of $\le 16$ bytes ($2^{15} = 32{,}768$ combinations).
+
+3. **C3 / Tasks 2.5 & 5.7 (Min-Heap Deadline Scheduling vs. Fixed 10 Hz Polling)**:
+   - *Status*: **Resolved**.
+   - *Verification*: [`PLAN.md:153-156`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L153-L156) withdraws the 10 Hz polling tick. The acquisition engine now maintains an ordered set of pending expiry times (freshness deadlines, `hold_last` durations, debounce windows) armed to the earliest deadline on the monotonic clock. Expirations fire at the exact sub-millisecond timestamp (e.g., a sample received at 5 ms with a 500 ms deadline expires at exactly 505 ms). A presentation allowance bounded by one frame interval is formally defined, and tests explicitly verify deadlines offset from frame and timer boundaries.
+
+4. **C4 & D1 / Tasks 4.2, 4.3 & Sequencing (Elimination of 4.2 / 4.3 Dependency Cycle)**:
+   - *Status*: **Resolved**.
+   - *Verification*: [`PLAN.md:301`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L301) removes the in-engine acquisition stress harness from Task 4.2's gate, limiting 4.2 to compilation and standalone core checks (freshness, normalization, rule evaluation). Task 4.3 ([`PLAN.md:308`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L308)) exclusively owns extending the commandlet with the 2.13 stress harness against real Game Thread acquisitions. The dependency DAG ([`PLAN.md:517-519`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L517-L519)) cleanly sequences `4.3 <- 4.2 Win64 half, 2.13`.
+
+5. **C5 / Task 4.8 (Sample Lifecycle State Machine & In-Flight Frame Tracking)**:
+   - *Status*: **Resolved**.
+   - *Verification*: [`PLAN.md:336-337`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L336-L337) establishes an explicit 4-state lifecycle for every sample: `published`, `selected`, `presented`, and `coalesced`. A sample chosen by an in-flight submitted frame enters `selected` and can **never** transition to `coalesced`. Its terminal state is finalized as `presented` when the frame presents. The sum of samples across all four states is strictly invariant to total published samples, eliminating metric corruption under delayed presentation.
+
+6. **C6 / Task 4.8 (Windows Cold-Start Measurement via Unified QPC Domain)**:
+   - *Status*: **Resolved**.
+   - *Verification*: [`PLAN.md:339-340`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L339-L340) withdraws the heuristic conversion of Windows `FILETIME` (`GetProcessTimes`) to monotonic time. Instead, `capture-metrics.ps1` samples `QueryPerformanceCounter` immediately before launching the process, and the application samples the identical system-wide QPC at the first-usable-frame event. The metric is transparently designated "launch request to first usable value" with stated launcher overhead uncertainty.
+
+7. **C7 / Tasks 4.7 & 5.6 (Startup Reveal Independence Gate via Fault Injection)**:
+   - *Status*: **Resolved**.
+   - *Verification*: [`PLAN.md:324`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L324) and [`PLAN.md:382-384`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L382-L384) add the `-reveal-delay-ms=<n>` test flag. Task 5.6 injects a 5,000 ms delay into reveal asset loading and asserts that essential instrument values still render at their normal timestamp within one frame, proving that essential telemetry rendering does not wait on reveal asset completion.
+
+8. **C8 / Tasks 27, 7.1 & Sequencing (Global Task Status Contract & Universal Blocker Path)**:
+   - *Status*: **Resolved**.
+   - *Verification*: [`PLAN.md:27-28`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L27-L28) defines the global task status contract: every task concludes as `met`, `not met`, or `blocked by <task>`. Task 7.1 ([`PLAN.md:456-457`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L456-L457)) and the dependency DAG ([`PLAN.md:551`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L551)) model execution after **any** terminal feasibility blocker (e.g., validator failure at 3.5, packaging failure at 4.0/4.0b/6.2/6.3, partial 6.4 matrix, or 4.0b zero-RHI stop), recording unreachable benchmarks as "not measured (blocked by `<task>`)".
+
+---
+
+### 2.2 DeepSeek Round 3 Findings (D1 – D5)
+
+1. **D1 (Task 4.2 / 4.3 Cycle)**:
+   - *Status*: **Resolved** (see C4 above).
+2. **D2 / Tasks 4.8 & 6.7 (Asset Import Event-Log Record Type)**:
+   - *Status*: **Resolved**. [`PLAN.md:334`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L334) adds Record Type 4 (`asset_import`) to the event log schema, capturing asset ID, byte size, declared pixel dimensions, decode start/end timestamps, upload start timestamp, and RHI upload-to-usable completion timestamp. Task 6.7 ([`PLAN.md:437`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L437)) explicitly points to this schema.
+3. **D3 & Codex C-DS / Tasks 0.9, 4.1, 4.2 (Target-Aware Toolchain Verification Split)**:
+   - *Status*: **Resolved**. Task 0.9 ([`PLAN.md:87-88`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L87-L88)) verifies workstation-only components (VS, Win64 UE, small tools), enabling 4.1 and the 4.2 Win64 half to build immediately. Tasks 0.5 and 0.6 carry self-verifying gates that feed the 4.2 Android/Linux half ([`PLAN.md:518`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L518)).
+4. **D4 / Task 4.0 (Desk Device Scope Clarification)**:
+   - *Status*: **Resolved**. [`PLAN.md:279`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L279) explicitly states that the Task 4.0 smoke spike runs on the desk device (Pixel 10 Pro), strictly reserving head-unit execution for Task 4.0b.
+5. **D5 / Task 1.4 (LFS Verification Consistency)**:
+   - *Status*: **Resolved**. [`PLAN.md:106`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L106) aligns Task 1.4 with Task 1.5, making the physical absence of LFS objects in the checked-out tree the primary gate, with `git config` retained as supporting diagnostic output only.
+
+---
+
+## 3. Reviewer Synthesis & Technical Critique
+
+- **On Concurrency & Triple Buffering (Codex C1)**: Codex’s observation regarding reader regression during periods of telemetry silence was vital. In an asynchronous triple-buffer design where the reader swaps unconditionally, a polling consumer will continuously swap back its own previous buffer if no publication intervened. Claude's monotonic publication version check (`ready_version > reader_version`) provides a lock-free, zero-allocation guarantee against state alternation and warning flicker.
+- **On Deadline Precision (Codex C3)**: Claude's adoption of an ordered min-heap timer armed to the earliest expiration eliminates the up-to-100 ms slack introduced by the prior 10 Hz polling tick, aligning rule evaluation directly with safety-critical deadline contracts.
+- **On Memory Trend Qualifications (Codex C-G vs Gemini Round 2)**: Codex was correct to push back against describing the linear regression slope as "mathematically robust" evidence against leaks. In memory systems subject to allocator arena retention and texture cache churn, a flat regression line over a 60-minute window can easily mask slow leaks offset by cache evictions. The plan now properly characterizes the regression slope as descriptive evidence, reporting it alongside peak and final resident memory with stated caveats ([`PLAN.md:428, 433, 455`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L428)).
+- **On Toolchain DAG Sequencing (DeepSeek D3 vs Codex C-DS)**: Codex correctly pointed out that toolchain dependencies were already transitively bound, but DeepSeek's operational point was essential: workstation development on Win64 must not be gated behind Android NDK or Linux sysroot installations. The resulting split in Task 0.9 and Task 4.2 allows local desktop progress without waiting for mobile toolchains.
+
+---
+
+## 4. Assessment of Revised Architecture & Residual Risks
+
+The updated architecture was analyzed for new failure modes:
+1. **Timer Precision & Drift**: The min-heap deadline scheduler operates against an injectable monotonic clock (`CLOCK_MONOTONIC`). On target platforms, scheduler jitter is absorbed by the explicitly defined one-frame presentation allowance ([`PLAN.md:154`](file:///C:/Users/Vincent/UnRealDash/PLAN.md#L154)).
+2. **QPC Counter Drift**: Launcher-side QPC sampling in Task 4.8 introduces a slight overhead delta (process creation latency), which the plan explicitly documents as uncertainty rather than pretending to achieve sub-microsecond OS kernel creation timestamps.
+3. **DAG Robustness**: The universal blocker path (`7.1 <- ... | or any recorded terminal feasibility blocker`) prevents any scenario where a failure in early packaging or validation hangs the review pipeline without producing a final evaluative report.
+
+`PLAN.md` is complete, mathematically sound, defensively sequenced, and ready for immediate implementation.
+
+VERDICT: APPROVED
+
+
+### DeepSeek (deepseek-v4-pro, effort=high, tool_calls=7, elapsed=182s)
+Re-read the current `PLAN.md` and `PLAN-REVIEW-LOG.md`. The previous DeepSeek findings are resolved in the text: the `4.2`/`4.3` cycle is broken, `4.8` now has asset-import events, `4.2 Android/Linux half` has explicit `4.2 Win64 half`/`0.5`/`0.6` dependencies, `4.0` says desk device, and `1.4`’s LFS check now uses checked-out tree evidence. Codex’s Round 3 fixes are also present: publication-version triple buffer, finite parser partition testing, deadline scheduling, sample lifecycle, Windows launch endpoint, reveal-delay test, global task status, and slope limitations.
+
+New or remaining material issues:
+
+1. **`6.1` is sequenced before the `4.8` event log it gates on.**  
+   `6.1`’s gate requires the packaged Windows executable to write “a complete 4.8 event log” (`PLAN.md:401-403`), but the sequencing block says `6.1 <- 4.9, 4.10, 5.4, 5.5, 5.6, 5.7, 5.8` (`PLAN.md:539`). No path through those tasks reaches `4.8`, so `6.1` can be scheduled and fail before the event log exists.  
+   **Fix:** Add `4.8` to `6.1`’s dependencies.
+
+2. **Android and Linux packaging omit the `4.2 Android/Linux half` dependency.**  
+   `6.2`/`6.3` package the full Android player and `6.8` packages Linux, but their sequencing is `6.2 <- 6.1, 0.5, 4.0b`, `6.3 <- 6.2`, and `6.8 <- 6.1, 0.6` (`PLAN.md:540-547`). None depends on `4.2 Android/Linux half` (`PLAN.md:302`, `PLAN.md:518`), even though that is the explicit gate proving `signal-core` compiles for those targets.  
+   **Fix:** Add `4.2 Android/Linux half` to `6.2`/`6.3` (and to `6.8` if Linux is not otherwise implied), or make the package tasks explicitly responsible for that compilation and remove the separate half.
+
+3. **`0.7` and `0.9` still disagree about what the `toolchain` doctor profile checks.**  
+   `0.7` says the `toolchain` profile “prints every pinned version above” (`PLAN.md:78`), which includes Android NDK/JDK and the Linux toolchain. `0.9` says it verifies “the workstation components only” and explicitly does not re-check Android or Linux (`PLAN.md:86-88`). If implemented literally from `0.7`, `doctor.ps1 -Profile toolchain` will still block `0.9`/`4.1` on `0.5` and `0.6`.  
+   **Fix:** Change `0.7` to enumerate the workstation rows only, or define a separate `-Profile workstation` distinct from a full toolchain profile.
+
+4. **The parser’s initial state is unspecified.**  
+   `2.9` defines `SYNCED` and `RESYNC` behaviour but never states which state a fresh parser starts in (`PLAN.md:179-183`). Starting in `SYNCED` would accept a garbage prefix whose first 16 bytes happen to match tag + enumerated id without any lookahead; starting in `RESYNC` would wait for the next frame before emitting the first. These produce different output on the same stream.  
+   **Fix:** State the initial state (usually `RESYNC` after connection/startup) and add a startup garbage-prefix fixture that asserts the intended behaviour.
+
+VERDICT: REVISE
+
+### Claude's synthesis
+
+Finding keys: C = Codex Round 4 (numbered as in its reply; "C-reveal" for the 5.6 wording note; "C-G" for its challenge to Gemini), D = DeepSeek Round 4.
+
+- Accepted, doctor profiles per target (C1, D3): `doctor.ps1` profiles become `workstation`, `android`, `linux` and `device`, each enumerating only its own rows; `build.ps1` and the package scripts pass the target they are building and call the matching profile; 0.7's text enumerates the rows per profile; 0.9 uses `workstation`; 1.6 gains a gate that a real Win64 build succeeds with the Android and Linux toolchains deliberately absent (simulated by pointing the environment at empty directories), which is the test that proves the 0.9 split delivers what it claims.
+- Accepted, logical expiry separated from presentation (C2): 2.5 guarantees logical expiry at the deadline (rule state and quality change at exactly the armed time); the presentation guarantee becomes "the first frame that acquires its snapshot after expiry shows the stale state"; expiry-to-present latency, including frames already in flight, is measured from the 4.8 events and reported with a target (chosen) of at most two frame intervals; 5.7's gate is reworded to that guarantee.
+- Accepted, classification from recorded events (C3): the game thread records an acquisition event listing the sample identifiers in the snapshot it acquires; terminal classification is derived after the run from acquisition, selection and presentation events, never from live state; a sample is `coalesced` only if no acquisition event references it; the 4.8 test adds a pause between snapshot acquisition and frame submission while faster acquisition continues, and asserts the paused sample ends as `presented`.
+- Accepted, reveal gate wording (C-reveal): 5.6 uses a controlled readiness event: with the `-reveal-delay-ms` hook holding reveal preparation unready, the gate asserts that essential values render within the normal first-usable-frame bound in that same run; the phrase comparing against a run with no injected delay is removed.
+- Accepted, 6.1 depends on 4.8 (D1).
+- Accepted, packaging depends on the Android/Linux compile half (D2): `6.2 <- 6.1, 0.5, 4.0b, 4.2 Android/Linux half`; `6.8 <- 6.1, 0.6, 4.2 Android/Linux half`; 6.3 inherits through 6.2.
+- Accepted, parser initial state (D4): a fresh parser starts in `RESYNC` on connect and after any reconnect; a startup garbage-prefix fixture asserts that the first emitted frame is the first one confirmed by lookahead.
+- Rejected: none.
+- Reviewer disagreement: Gemini approved for the third time; Codex and DeepSeek did not. Codex showed that Gemini's Round 3 approval cites wire markers and quality names that do not appear in the plan, so Gemini's approvals are recorded as low-fidelity verification; they still count for convergence because Gemini is a configured reviewer, but the dissenting reviews are the ones that have driven every change since Round 1.
