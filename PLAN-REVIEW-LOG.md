@@ -968,3 +968,6 @@ MAX_ROUNDS=5 reached without unanimous approval on one revision. Gemini approved
 - Accepted in principle, `4.8 <- 4.7, 4.3` (DeepSeek 2).
 - Rejected: none.
 - Reviewer disagreement: Gemini approved; Codex and DeepSeek did not. Both dissenters noted that Gemini's approvals overstate completeness; the loop's own record supports that, since every change since Round 1 came from the two dissenting reviews. Disposition: the six findings are correct and small; whether to apply them as an unreviewed final revision, run further rounds, or sign off as-is is the owner's call.
+
+## Panel change before Round 6
+At Resolution on 2026-09-16 the owner chose option A: apply the six Round 5 findings as a revision, then run one further round. REVIEWERS=codex,deepseek for Round 6 by the owner's explicit decision (Gemini excluded: its four approvals cited details not present in the plan, and its turns took 34 to 91 minutes each). MAX_ROUNDS raised from 5 to 6. Both remaining reviewers resume their existing sessions.
