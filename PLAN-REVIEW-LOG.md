@@ -1008,3 +1008,40 @@ VERDICT: APPROVED
 - Accepted, one latency observation per sample (Codex 2): receive-to-present is one observation per distinct presented sample, from its receive row to its earliest present row; later frames that keep displaying the sample do not create observations; a test asserts that additional frames leave the sample's latency unchanged; 6.5 reports the count of observations alongside the percentiles.
 - Rejected: none.
 - Reviewer disagreement: DeepSeek approved and called the expiry correlation an implementation detail; Codex called it a plan-level measurement defect. Disposition: Codex is right that a fictitious 416 ms latency would pass both scripts, so the contract belongs in the plan. Both changes are applied for Round 7.
+
+## Round 7 - Plan revision e119b5354c4c (commit cd267d0) - REVIEWERS=codex,deepseek
+### Codex (gpt-6-astra)
+The receive-to-present finding is fully addressed: [4.8](C:/Users/Vincent/UnRealDash/PLAN.md:357) selects the earliest presentation per distinct sample, tests repeated display, and [6.5](C:/Users/Vincent/UnRealDash/PLAN.md:441) reports the observation count. Expiry cancellation is also implemented in the text, but two gaps remain.
+
+1. **Medium — Expiry identity is recorded but not used to match presentation.** [PLAN.md:346](C:/Users/Vincent/UnRealDash/PLAN.md:346) still selects the first subsequent stale frame for the **signal**, regardless of sample or generation. Suppose expiry A fires at 500 ms, fresh data arrives at 505 ms before the next snapshot, and no frame displays A’s stale state. Expiry B later fires at 1005 ms and displays stale at 1016 ms. The stated algorithm assigns that frame to both expiries, fabricating a 516 ms observation for A. The requirement that every disconnect episode yield an observation compounds this: some stale episodes never reach a frame.
+
+   **Fix:** Match stale presentation to its expiry identity, directly or through sample/generation identity, and report fired-but-never-displayed expiries separately; test recovery between expiry and the next snapshot.
+
+2. **Medium — The new mandatory terminal-status rule cannot cover truncated runs.** [PLAN.md:346](C:/Users/Vincent/UnRealDash/PLAN.md:346) and [its gate](C:/Users/Vincent/UnRealDash/PLAN.md:361) require exactly one `fired` or `cancelled` row for every armed expiry. Kill the process after an armed row is flushed but before its deadline: neither terminal event exists. This is an expected outcome of the plan’s own kill tests, not malformed instrumentation. Even orderly termination can leave future deadlines unless shutdown cancellation is defined.
+
+   **Fix:** Allow unresolved expiries at the recorded run boundary, exclude them from latency observations, define orderly-shutdown cancellation, and test a kill with a flushed pending expiry.
+
+DeepSeek’s previous characterization of expiry correlation as an implementation detail remains too permissive: these rules determine which numerical observations the report accepts. The other previously resolved lifecycle and sequencing findings remain closed.
+
+VERDICT: REVISE
+
+### DeepSeek (deepseek-v4-pro, effort=high, tool_calls=6, elapsed=106s)
+Re-read the latest `PLAN.md` and `PLAN-REVIEW-LOG.md`. Codex’s Round 6 findings are now resolved in the text: armed-expiry rows carry an expiry identifier and terminal `fired`/`cancelled` status rows, and receive-to-present is one observation per distinct `presented` sample at its earliest presentation. The lifecycle and sequencing fixes from earlier rounds remain in place.
+
+One material issue remains:
+
+1. **Armed expiries that are still pending when the run ends have no terminal status, so the `4.8` gate is unsatisfiable.**  
+   `4.8` says every armed expiry later gets exactly one status row: `fired` or `cancelled` (`PLAN.md:346`), and the gate requires exactly one status row for every armed-expiry row (`PLAN.md:361`). `fired` occurs only at the deadline; `cancelled` is only specified for re-arming or generation end. A normal 60-second run that exits while a signal’s latest freshness deadline is still in the future will have an armed-expiry row with neither status. The kill test likewise does not say what happens to expiries pending at termination.  
+   **Fix:** Specify that process shutdown writes a `cancelled`/`run_end` status row for every still-armed expiry and flushes it before exit; add a gate case for a clean exit with a deadline still future. For hard kills where flushing may be impossible, either exclude those rows from the exactly-one-status invariant or define them as `unresolved` and report them separately.
+
+2. **Minor wording mismatch:** `2.5` still says expiry-to-present latency is computed from “acquisition, receive and present events” (`PLAN.md:159`), but the actual contract is now armed-expiry plus `fired` status rows (`PLAN.md:346`).  
+   **Fix:** Update the `2.5` sentence to reference the armed-expiry/status rows rather than the old event set.
+
+VERDICT: REVISE
+
+### Claude's synthesis
+- Accepted, expiry matched by identity (Codex 1): a stale present row is attributed to an expiry only if the rendered entry for that signal names the expiry's sample id and connection generation as the state it displays (the present row's per-signal entry gains the expiry identifier it is rendering, written by the renderer from the snapshot); a `fired` expiry with no such present row before the next valid sample is `fired-not-displayed` and is counted separately, never as an observation; a test recovers a signal between an expiry firing and the next snapshot and asserts no observation and one `fired-not-displayed` count.
+- Accepted, run-boundary expiries (Codex 2, DeepSeek 1): orderly shutdown writes a `cancelled` status row with reason `run_end` for every still-armed expiry and flushes before exit; after a hard kill, an armed expiry with no status row is `unresolved`, excluded from observations and reported as a count; the exactly-one-status invariant applies to orderly runs only; gate cases: a clean exit with a deadline still in the future, and a kill with a flushed pending expiry.
+- Accepted, 2.5 wording (DeepSeek 2): the sentence naming "acquisition, receive and present events" is replaced by the armed-expiry and status rows.
+- Rejected: none.
+- Reviewer disagreement: none material; both reviewers converged on the run-boundary gap. MAX_ROUNDS raised to 8 under the owner's option A (one further round to a clean approval), applied by Claude directly since the changes are confined to 4.8, 2.5 and the 4.8 gate.
