@@ -476,7 +476,7 @@ Decisions 2, 3, 5, 6, 7, 8, 9, 10, 11 and 12 below are **locked via escape hatch
 
 **14. MIT for code, CC-BY-4.0 for original example assets, both provisional.** Rejected: deferring the licence choice, as PROJECT-PLAN section 9 leaves it open. Reason: a public repository with no LICENSE file is not contributable. Provisional so the owner can change it before any external contribution arrives.
 
-**15. Device test cadence: the head unit qualifies; an old phone is the desk device.** Rejected: buying a desk Android device. Reason: the owner has a 2016 ZTE Axon 7 (Snapdragon 820, Adreno 530, 64-bit, Android 8.0 if it took the last official update). It clears UE 5.8's installable floor (API 26) on the OpenGL ES 3.2 path only; its Vulkan driver is 1.0-era and Adreno is a different driver family from the head unit's Mali-G57, so it exercises neither the Vulkan path nor the Mali bug class. It serves build-install-run iteration, app lifecycle, touch and layout checks, and catches obvious breakage before a driveway trip. A 2015 Huawei Y6 was also offered and rejected: 32-bit only, Android 5.1, 1 GB RAM, below the engine floor. Cost: no frame time measured on the phone is a result; the head unit remains the only source of qualification numbers. If the Axon 7 is on Android 7.x it cannot install a UE 5.8 package and the plan reverts to head-unit-only iteration. No gate in this plan assumes the phone.
+**15. Device test cadence: the head unit only, over network ADB from the driveway.** Rejected: an old phone as a desk device. The owner offered a 2016 ZTE Axon 7 (Snapdragon 820, Adreno 530, Android 8.0 at best) and a 2015 Huawei Y6 (32-bit, Android 5.1, 1 GB RAM). The Y6 is below UE 5.8's installable floor. The Axon 7 would run the OpenGL ES 3.2 path only, on a different GPU driver family from the head unit's Mali-G57, so it would exercise neither the Vulkan path nor the Mali bug class; the owner chose to keep one test device. Cost: every Android render iteration is a walk to the car; R-D covers the mitigation.
 
 **16. Stage 0 exit is the six conditions in Goal, taken from PROJECT-PLAN sections 8 and 10.** No alternative considered; these are the roadmap's own criteria.
 
@@ -502,7 +502,7 @@ Each is a belief this plan depends on, with its source and how it would be falsi
 
 **A7. Schema reuse is the owner's call.** The source-of-truth XML is the single `board/*.xml` schema file in the owner's separate `scirocco-dash` repository on the workstation. It is owner-authored, so reusing its content is his decision. This plan converts it offline in 3.7 and the player never reads it. If reuse is declined, the definition pack is re-derived from the documented frame format by hand and 3.7's gate changes to a hand-written pack.
 
-**A8. The head unit is the only qualifying Android device.** *Source: owner.* A ZTE Axon 7 is available as a GLES-only desk device (decision 15); its Android version is unverified and is checked in 0.8 alongside the head unit facts. No gate depends on it.
+**A8. The head unit is the only Android test device.** *Source: owner, 2026-09-15.* No desk device is assumed anywhere in this plan.
 
 **A9. No Linux machine exists.** *Source: environment scan 2026-09-15.* This is why 6.8's gate is "builds" and not "runs".
 
@@ -520,7 +520,7 @@ Each is a belief this plan depends on, with its source and how it would be falsi
 
 **R-C. Disk exhaustion during DDC and Intermediate growth.** The 150 GB precondition is based on unverified community footprint figures. A cook that fills C: can corrupt the DDC and cost a rebuild. *Test:* `doctor.ps1` prints free space and every packaging script calls it first. *Mitigation:* a documented DDC purge step in `scripts/`, and the owner clears space before 0.4 rather than during 6.2.
 
-**R-D. The device is in the car.** Every render check is a trip to the driveway, which makes the Android iteration loop expensive and biases the work toward batching changes, which in turn makes failures harder to attribute. *Mitigation:* network ADB so the trip is short; batch device runs behind a scripted checklist in 6.5; the Axon 7 desk device from decision 15 for GLES-path iteration and lifecycle checks, kept plugged in.
+**R-D. The device is in the car.** Every render check is a trip to the driveway, which makes the Android iteration loop expensive and biases the work toward batching changes, which in turn makes failures harder to attribute. *Mitigation:* network ADB so the trip is short; batch device runs behind a scripted checklist in 6.5; and the Windows package plus the Axon-free rule that no Android-specific change ships to the car without first passing the Windows screenshot checks in layer 3 of the test strategy.
 
 **R-E. GitHub LFS quota.** The free allowance is limited and has changed over time; the current storage and monthly bandwidth figures are read from the account's billing page in 1.2 and written into `packages/dashboard-spec/README.md`. Unreal content and packaged artifacts exceed any free tier quickly. *Test:* 5.2's gate caps added LFS bytes at 100 MB. *Mitigation:* packaged builds and captures are never committed; screenshots in the report are downscaled; if the quota is hit, the owner decides between paid data packs and moving content out of the repository.
 
@@ -545,9 +545,8 @@ Each is a belief this plan depends on, with its source and how it would be falsi
 **Open questions for the owner:**
 
 1. Does he approve reusing the content of his XML schema in this public repository (A7)?
-2. Is the Axon 7 on Android 8.0 (Settings > About phone)? On 7.x it cannot serve as the desk device (decision 15).
-3. Is the first real installation supplementary or eventually a cluster replacement? PROJECT-PLAN section 12 leaves this open; Stage 0 assumes supplementary and nothing in this plan depends on the answer.
-4. Are MIT and CC-BY-4.0 acceptable as more than provisional?
+2. Is the first real installation supplementary or eventually a cluster replacement? PROJECT-PLAN section 12 leaves this open; Stage 0 assumes supplementary and nothing in this plan depends on the answer.
+3. Are MIT and CC-BY-4.0 acceptable as more than provisional?
 
 ## Out of scope
 
