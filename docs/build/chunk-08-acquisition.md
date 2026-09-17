@@ -1,6 +1,6 @@
 # Build chunk 08: connector interface and acquisition threading
 
-Status: revision 2, after a DeepSeek spec review that returned VERDICT: REVISE with 22 findings. Frozen for a Codex build session. Covers PLAN.md task 4.3. Read PLAN.md (task 4.3, task 2.13, task 2.5, task 2.2, task 4.2's Win64 half, task 4.8's event-log section, the Sequencing block) and docs/ARCHITECTURE.md and docs/CONNECTORS.md before writing anything. PLAN.md is the authority on what; this file adds the exact mechanisms, proof commands and implementation constraints. If the two disagree, PLAN.md wins and the disagreement goes in the report.
+Status: revision 3. Revision 1 drew 22 review findings, revision 2 drew a further five including one blocker. Both rounds are resolved here. Frozen for a Codex build session. Covers PLAN.md task 4.3. Read PLAN.md (task 4.3, task 2.13, task 2.5, task 2.2, task 4.2's Win64 half, task 4.8's event-log section, the Sequencing block) and docs/ARCHITECTURE.md and docs/CONNECTORS.md before writing anything. PLAN.md is the authority on what; this file adds the exact mechanisms, proof commands and implementation constraints. If the two disagree, PLAN.md wins and the disagreement goes in the report.
 
 ## Goal
 
@@ -31,9 +31,10 @@ These are prerequisites the review found missing. Make them first; they are smal
 
 1. `RuleEngine::RuleId()` returning `definition_.rule_id`. `Reconnect` cannot clear latches without it, because `std::span<RuleEngine>` exposes no ids.
 2. `RuleEngine::ClearLatch()`, which does what `Acknowledge` does without needing the caller to know the id. `Acknowledge(rule_id)` keeps its current behaviour and is implemented in terms of it.
-3. `RuleEngine::EvaluationCount()`, a monotonically increasing count of `Evaluate` calls. Pass/fail criterion 3 needs it and there is no other way to observe it.
 
-Each gets a doctest case. None changes existing behaviour.
+Each gets a doctest case. Neither changes existing behaviour.
+
+Criterion 3's evaluation identity is served by `AcquisitionPipeline::RuleEvaluations()`, which counts passes. Do **not** add a counter to `RuleEngine` for it; a per-rule counter there would make the identity depend on the rule count, which is the ambiguity this revision removed.
 
 ## Deliverables
 
@@ -114,6 +115,7 @@ const ConnectionHealth& Health() const;
 Status Acknowledge(std::uint32_t rule_id);
 std::uint64_t PublishedCount() const;
 std::uint64_t DisplayDrops() const;
+std::uint64_t MappingDrops() const;
 std::uint64_t SamplesApplied() const;
 std::uint64_t RuleEvaluations() const;
 std::uint64_t RuleTransitions() const;
@@ -127,6 +129,7 @@ struct PumpResult {           // every field is a DELTA for this call, not a run
     std::uint32_t transitions;
     std::uint32_t display_pushed;
     std::uint32_t display_dropped;
+    std::uint32_t mapping_drops;
     std::uint32_t expiries_fired;
     Status status;
 };
@@ -134,16 +137,26 @@ struct PumpResult {           // every field is a DELTA for this call, not a run
 
 The accessors are cumulative totals. `PumpResult` is per call. Never conflate them.
 
-**`deadline` is an absolute instant** in the injected clock's domain, not a duration. `Pump` reads the clock **once**, at the top, and reuses that value for every step, so a single `Pump` is a single point in time. It loops over steps 1 to 3 until the transport reports `need_more_data` with zero bytes or `Clock::Now()` passes `deadline`, then runs steps 4 to 6 exactly once. Because `ITransport::Read` is non-blocking, `Pump` cannot exceed its deadline by more than one iteration.
+**`deadline` is an absolute instant** in the injected clock's domain, not a duration. Two distinct clock uses, and conflating them is a defect:
+
+- **Timestamping.** `Pump` reads the clock once at the top into `now` and uses that single value for every timestamp it records and for `PopDue`, so one `Pump` is one logical instant.
+- **The deadline test.** `Pump` calls `Clock::Now()` again at the top of each loop iteration purely to compare against `deadline`. This is the only place a second read is allowed, and it is why `Pump` cannot overrun by more than one iteration.
+
+`Pump` loops over steps 1 and 2 until the transport reports zero bytes or the live clock passes `deadline`, then runs steps 3 and 4 exactly once.
 
 **The ordering inside `Pump` is the contract and is not negotiable:**
 
-1. `ITransport::Read` into `read_buffer`. If `written > 0`, set `last_byte_at` to this `Pump`'s clock value. **On a zero-byte read `last_byte_at` is left unchanged**, because no byte arrived.
-2. `ISession::Offer` the bytes, then `ISession::Next` until `need_more_data`. For each message, `IDecoder::Offer` then `IDecoder::Next` until `need_more_data`. For each decoded field, `IMapping::Map`; a `done` from `Map` drops the field deliberately and is counted separately from a display drop. Every surviving field goes to `SignalRegistry::Apply`. **No dropping for display happens anywhere in this step.**
-3. After each `Apply`, call `SignalRegistry::Expire()`, then `RuleEngine::Evaluate` on **every** rule against `registry.Samples()`. Compare each result against `previous_results[i]`; if `current` or `latched` differs, that is a transition: count it, hand it to `IAcquisitionEventSink::OnRuleTransition`, and store the new result. **This happens once per applied sample, before step 5.**
-4. Drain `ExpirySchedule::PopDue(now)` using this `Pump`'s clock value; for each due expiry, `SignalRegistry::Expire()` and re-evaluate the rules exactly as in step 3. Step 4 runs even when step 1 read zero bytes. This is what lets a warning be raised during silence and a `hold_last` timer expire with no traffic at all. Drain the acknowledge slot at the top of this step.
-5. Only now, push into the display `SampleQueue` **exactly the samples applied during this `Pump`, in the order they were applied**. The drop-newest policy applies here and only here. Every drop increments `DisplayDrops()`.
-6. `SignalRegistry::Publish()`.
+1. `ITransport::Read` into `read_buffer`. If `written > 0`, set `last_byte_at` to `now`. **On a zero-byte read `last_byte_at` is left unchanged**, because no byte arrived.
+2. `ISession::Offer` the bytes, then `ISession::Next` until `need_more_data`. For each message, `IDecoder::Offer` then `IDecoder::Next` until `need_more_data`. For each decoded field, `IMapping::Map`; a `done` from `Map` drops the field deliberately, increments `MappingDrops()`, and is **not** a display drop. Then, for each surviving field, in this exact order and before the next field is touched:
+
+   a. `SignalRegistry::Apply`.
+   b. `SignalRegistry::Expire()`.
+   c. `RuleEngine::Evaluate` on **every** rule against `registry.Samples()`. Compare each against `previous_results[i]`; if `current` or `latched` differs, that is a transition: count it, hand it to `IAcquisitionEventSink::OnRuleTransition`, and store the new result. Increment `RuleEvaluations()` **once per pass, not once per rule**, so the identity in criterion 3 holds for any rule count.
+   d. Only now, push this sample into the display `SampleQueue`. The drop-newest policy applies **here and nowhere else**. Every drop increments `DisplayDrops()`.
+
+   Sub-steps c and d in this order, per sample, are the whole point of the task. Evaluating rules for a sample that is about to be dropped for display is what stops a 200 Hz warning from being lost by a 60 Hz renderer. Doing this per sample rather than in two separate passes is deliberate: a deferred push would need a staging buffer the pipeline is not allowed to allocate, and the per-sample form makes the guarantee local and auditable.
+3. Drain the acknowledge slot, then drain `ExpirySchedule::PopDue(now)`; for each due expiry, `SignalRegistry::Expire()` and re-evaluate the rules exactly as in 2c. This step runs even when step 1 read zero bytes, which is what lets a warning be raised during silence and a `hold_last` timer expire with no traffic at all. Expiry-driven evaluations increment `RuleEvaluations()` and so are excluded from criterion 3's identity; the test uses a scenario with no armed expiry firing, and says so.
+4. `SignalRegistry::Publish()`.
 
 **The pipeline never blocks on the reader.** No path from `Pump` waits on the game thread, no mutex is held across a transport read, and `Pump` allocates nothing.
 
@@ -181,7 +194,7 @@ struct IAcquisitionEventSink {
 };
 ```
 
-`OnRuleTransition` is called by the pipeline on the acquisition thread. **`OnAcquire` and `OnSubmit` are called by the game thread**, from `FDashAcquisition`. A sink implementation must therefore be safe for two threads; the ring sink below uses one SPSC ring per caller rather than a lock.
+`OnRuleTransition` is called by the pipeline on the acquisition thread, and its `at` is the `now` of the `Pump` that produced the transition. **`OnAcquire` and `OnSubmit` are called by the game thread**, from `FDashAcquisition`, and their `at` is the engine monotonic clock read at the moment of that call, not a value carried from the acquisition side. The two sides therefore share a clock domain but not a sample point, which is what lets 4.8 measure the interval between them. A sink implementation must therefore be safe for two threads; the ring sink below uses one SPSC ring per caller rather than a lock.
 
 Ship two implementations: a null sink, and a fixed-capacity in-memory ring sink used by the tests. Do not write a file in this chunk.
 
@@ -264,6 +277,8 @@ Each is a command that exits non-zero on failure.
    The defect this must catch is evaluating rules on **what survived the display queue** instead of on every applied sample. Construct it so: display queue capacity 1; within a single `Pump`, feed a sample that crosses a rule threshold followed immediately by one that crosses back, so the first is guaranteed to be dropped for display. Assert both:
    - the sink contains the transition for a sample that never entered the display queue, and
    - `RuleEvaluations()` equals `SamplesApplied()`, which is false for any implementation that evaluates per published frame or per surviving queue entry.
+
+   `RuleEvaluations()` counts evaluation **passes**, not per-rule calls, so this identity holds whatever the rule count. Load exactly one rule anyway, to keep the failure unambiguous, and arrange the scenario so no armed expiry fires during it, because an expiry-driven pass would also increment the counter.
 
    State in the report that you verified this test fails against an implementation that evaluates rules from the queue.
 4. ThreadSanitizer on the Linux runner reports zero data races over the whole suite, including the new cases.
