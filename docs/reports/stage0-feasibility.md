@@ -29,7 +29,11 @@ PLAN.md 6.5 supplies measurements and run context; PLAN.md 7.1 records them here
 
 ## CI from a clean clone (task 1.7)
 
-Not yet recorded. Claude fills this after the first green run of both workflows on a branch with no cached dependencies, naming the run ids of signal-core.yml and spec-tools.yml.
+Recorded 2026-09-16 (2026-09-17 02:07 UTC) on the first push of the workflows, commit 21e1e59, hosted runners with no cached dependencies and no local state.
+
+- signal-core.yml run 35173217954: build (ubuntu-latest) success, build (windows-latest) success, tsan success. Both build jobs printed doctest assertions 9,236 passed, 0 failed. The ThreadSanitizer job ran the 2.13 threading stress test with no ThreadSanitizer warning in its log.
+- spec-tools.yml run 35173217895: python-tools success, cpp-validator (windows-latest) success, cpp-validator (ubuntu-latest) success, parity success. The Python validator reported valid=27 invalid=65 mismatches=0 on Python 3.12; the parity job reported 0 differing lines.
+- Every checkout ran with lfs: false and the LFS-absence step passed on every job (the probe PNG is a pointer in the checkout, .git/lfs/objects empty).
 
 ## Findings
 
