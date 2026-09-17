@@ -33,3 +33,6 @@ runtime/UnRealDash/Config/Generated*.ini
 
 # Written by the cook and package steps, not source
 runtime/UnRealDash/Build/*/FileOpenOrder/
+
+# Git Bash on Windows turns a "2>/dev/null" redirect into a literal directory
+dev/
