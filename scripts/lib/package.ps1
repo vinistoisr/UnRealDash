@@ -1,18 +1,44 @@
+function Resolve-PwshPath {
+    if ($PSVersionTable.PSEdition -eq 'Core') {
+        $current = (Get-Process -Id $PID).Path
+        if ($current -and (Test-Path -LiteralPath $current)) { return $current }
+    }
+    $command = Get-Command pwsh -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($command -and (Test-Path -LiteralPath $command.Source)) { return $command.Source }
+    foreach ($base in @($env:ProgramFiles, $env:LOCALAPPDATA)) {
+        if (-not $base) { continue }
+        $relative = if ($base -eq $env:ProgramFiles) { 'PowerShell/7/pwsh.exe' } else { 'Microsoft/PowerShell/7/pwsh.exe' }
+        $candidate = Join-Path $base $relative
+        if (Test-Path -LiteralPath $candidate) { return $candidate }
+    }
+    Write-Host 'PowerShell 7 not found: checked the current Core host, pwsh on PATH, %ProgramFiles%/PowerShell/7/pwsh.exe, and %LOCALAPPDATA%/Microsoft/PowerShell/7/pwsh.exe.'
+    return $null
+}
+
 function Invoke-SmokePackage {
     param([string]$Platform, [string]$Configuration, [string]$Rhi,
-          [string]$DoctorScript, [bool]$Preview)
+          [string]$DoctorScript, [bool]$Preview, [string]$UatPath)
     $ErrorActionPreference = 'Stop'
     $profile = if ($Platform -eq 'Android') { 'android' } else { 'workstation' }
     Write-Host "Doctor profile: $profile"
-    & (Join-Path $PSHOME 'pwsh.exe') -NoProfile -File $DoctorScript -Profile $profile | Out-Host
+    $pwsh = Resolve-PwshPath
+    if (-not $pwsh) { return 1 }
+    & $pwsh -NoProfile -File $DoctorScript -Profile $profile | Out-Host
     if ($LASTEXITCODE -ne 0) { Write-Host 'Doctor failed; stopping.'; return 1 }
     $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
     $pins = Get-Content (Join-Path $root 'scripts/pins.json') -Raw | ConvertFrom-Json
-    $uat = Join-Path $pins.engine.root 'Engine/Build/BatchFiles/RunUAT.bat'
+    $uat = if ($UatPath) { [IO.Path]::GetFullPath($UatPath) } else { Join-Path $pins.engine.root 'Engine/Build/BatchFiles/RunUAT.bat' }
     $project = Join-Path $root 'runtime/UnRealDash/UnRealDash.uproject'
     $archive = Join-Path $root "runtime/UnRealDash/Saved/Packages/$Platform/$Configuration"
     if ($Rhi) { $archive = Join-Path $archive $Rhi }
     $generated = Join-Path $root 'runtime/UnRealDash/Config/GeneratedEngine.ini'
+    # Refuse unsafe paths: general escaping through batch argument parsing is unreliable.
+    foreach ($path in @($uat, $project, $archive)) {
+        if ($path -match '[&^|<>%]') {
+            Write-Host "Packaging refused: path '$path' contains cmd.exe metacharacter '$($Matches[0])'."
+            return 1
+        }
+    }
     $arguments = @('BuildCookRun', "-project=$project", '-noP4', "-platform=$Platform",
         "-clientconfig=$Configuration", '-build', '-cook', '-stage', '-pak', '-archive',
         '-package', "-archivedirectory=$archive", '-map=/Game/Smoke/L_Smoke', '-unattended')
@@ -26,6 +52,7 @@ function Invoke-SmokePackage {
         return 0
     }
     $ownsGenerated = $false
+    $result = 0
     try {
         if ($Platform -eq 'Android') {
             if (Test-Path -LiteralPath $generated) { throw "Remove existing override before packaging: $generated" }
@@ -39,12 +66,19 @@ function Invoke-SmokePackage {
         }
         Write-Host $command
         & $uat @arguments | Out-Host
-        return $LASTEXITCODE
+        $result = $LASTEXITCODE
     } catch {
         Write-Host "Packaging failed: $($_.Exception.Message)"
-        return 1
+        $result = 1
     } finally {
-        if ($ownsGenerated) { Remove-Item -LiteralPath $generated -Force }
+        if ($ownsGenerated) {
+            try { Remove-Item -LiteralPath $generated -Force } catch {
+                Write-Host "Cleanup failed for '$generated': $($_.Exception.Message)"
+                # Code 2 means packaging succeeded but override cleanup failed.
+                if ($result -eq 0) { $result = 2 }
+            }
+        }
     }
+    return $result
 }
 

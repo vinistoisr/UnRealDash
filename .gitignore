@@ -36,3 +36,6 @@ runtime/UnRealDash/Build/*/FileOpenOrder/
 
 # Git Bash on Windows turns a "2>/dev/null" redirect into a literal directory
 dev/
+
+# Session scratch for build prompts and reviewer reports
+scratchpad/
