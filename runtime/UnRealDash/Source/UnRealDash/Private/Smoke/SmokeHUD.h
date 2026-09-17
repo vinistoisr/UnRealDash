@@ -30,6 +30,15 @@ private:
     double StartedAt = 0;
     double PreviousTime = 0;
     uint64 Frame = 0;
+    // SMOKE SPIKE ONLY. A visual read on the device, not a rehearsal for the real primitives:
+    // PLAN 4.5 and 4.6 own the dial, the bar and the history graph, and none of this survives.
+    static constexpr int32 HistorySize = 240;
+    TArray<float> ValueHistory;
+    TArray<float> FrameMilliseconds;
+    double ObservedMinimum = 0;
+    double ObservedMaximum = 0;
+    double FullScale = 0;
+    bool bRangeSeen = false;
     bool bReady = false;
     bool bExportRequested = false;
     bool bScreenshotProcessed = false;

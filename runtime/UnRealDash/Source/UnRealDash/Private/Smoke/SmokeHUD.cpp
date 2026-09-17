@@ -13,6 +13,7 @@
 #include "Misc/CommandLine.h"
 #include "HAL/FileManager.h"
 #include "HAL/PlatformMisc.h"
+#include "HAL/PlatformApplicationMisc.h"
 #include "IImageWrapperModule.h"
 #include "Modules/ModuleManager.h"
 #include "UnrealClient.h"
@@ -24,6 +25,92 @@ ASmokeGameMode::ASmokeGameMode()
     HUDClass = ASmokeHUD::StaticClass();
     DefaultPawnClass = nullptr;
 }
+
+// SMOKE SPIKE ONLY. Everything between here and the next marker exists so a human can watch the
+// device and judge whether it feels smooth. PLAN 4.5 and 4.6 own the real dial, bar and graph,
+// built from the document through the component registry. None of this is their starting point.
+namespace
+{
+constexpr float kTau = 6.28318530718f;
+
+// A thick line is the most portable filled rectangle UCanvas offers. K2_DrawBox strokes an
+// outline, and DrawTile needs a texture this spike has no reason to carry.
+void FillBar(UCanvas* Canvas, const FVector2D& Origin, float Width, float Height, const FLinearColor& Colour)
+{
+    if (Width <= 0.f || Height <= 0.f) { return; }
+    const float Middle = Origin.Y + Height * 0.5f;
+    Canvas->K2_DrawLine(FVector2D(Origin.X, Middle), FVector2D(Origin.X + Width, Middle), Height, Colour);
+}
+
+void DrawArc(UCanvas* Canvas, const FVector2D& Centre, float Radius, float FromTurns, float ToTurns,
+             float Thickness, const FLinearColor& Colour, int32 Segments = 48)
+{
+    FVector2D Previous = FVector2D::ZeroVector;
+    for (int32 Index = 0; Index <= Segments; ++Index)
+    {
+        const float Turns = FMath::Lerp(FromTurns, ToTurns, static_cast<float>(Index) / Segments);
+        const FVector2D Point(Centre.X + Radius * FMath::Cos(Turns * kTau),
+                              Centre.Y + Radius * FMath::Sin(Turns * kTau));
+        if (Index > 0) { Canvas->K2_DrawLine(Previous, Point, Thickness, Colour); }
+        Previous = Point;
+    }
+}
+
+// The needle sweeps the same 240 degree span a physical gauge does, starting bottom-left.
+constexpr float kSweepStart = 0.375f;
+constexpr float kSweepEnd = 1.0f;
+
+void DrawDial(UCanvas* Canvas, UFont* Font, const FVector2D& Centre, float Radius, float Fraction,
+              const FLinearColor& Accent, const FString& Label)
+{
+    DrawArc(Canvas, Centre, Radius, kSweepStart, kSweepEnd, 3.f, FLinearColor(0.18f, 0.20f, 0.24f));
+    DrawArc(Canvas, Centre, Radius, kSweepStart, FMath::Lerp(kSweepStart, kSweepEnd, Fraction), 6.f, Accent);
+    for (int32 Tick = 0; Tick <= 8; ++Tick)
+    {
+        const float Turns = FMath::Lerp(kSweepStart, kSweepEnd, static_cast<float>(Tick) / 8.f);
+        const FVector2D Direction(FMath::Cos(Turns * kTau), FMath::Sin(Turns * kTau));
+        Canvas->K2_DrawLine(Centre + Direction * (Radius - 14.f), Centre + Direction * (Radius - 2.f),
+                            2.f, FLinearColor(0.45f, 0.48f, 0.55f));
+    }
+    const float NeedleTurns = FMath::Lerp(kSweepStart, kSweepEnd, Fraction);
+    const FVector2D Needle(FMath::Cos(NeedleTurns * kTau), FMath::Sin(NeedleTurns * kTau));
+    Canvas->K2_DrawLine(Centre - Needle * 12.f, Centre + Needle * (Radius - 18.f), 4.f, FLinearColor::White);
+    DrawArc(Canvas, Centre, 7.f, 0.f, 1.f, 5.f, FLinearColor::White, 20);
+    if (Font) { Canvas->K2_DrawText(Font, Label, Centre + FVector2D(-Radius * 0.35f, Radius * 0.45f)); }
+}
+
+// Takes raw values and scales them against the window's own range, so a climbing signal shows a
+// ramp rather than a flat line pinned to the top.
+void DrawHistory(UCanvas* Canvas, const FVector2D& Origin, float Width, float Height,
+                 const TArray<float>& Samples, const FLinearColor& Accent)
+{
+    Canvas->K2_DrawBox(Origin, FVector2D(Width, Height), 1.5f, FLinearColor(0.20f, 0.22f, 0.27f));
+    if (Samples.Num() < 2) { return; }
+    float Low = Samples[0], High = Samples[0];
+    for (float Value : Samples) { Low = FMath::Min(Low, Value); High = FMath::Max(High, Value); }
+    const float Span = High - Low;
+    const float Step = Width / static_cast<float>(Samples.Num() - 1);
+    auto Y = [&](float Value) {
+        const float Normalized = Span > 0.f ? (Value - Low) / Span : 0.5f;
+        // Inset so a flat trace at either extreme is still visibly inside the box.
+        return Origin.Y + Height - 4.f - Normalized * (Height - 8.f);
+    };
+    for (int32 Index = 1; Index < Samples.Num(); ++Index)
+    {
+        Canvas->K2_DrawLine(FVector2D(Origin.X + Step * (Index - 1), Y(Samples[Index - 1])),
+                            FVector2D(Origin.X + Step * Index, Y(Samples[Index])), 2.f, Accent);
+    }
+}
+
+float Percentile(TArray<float> Values, float Fraction)
+{
+    if (Values.Num() == 0) { return 0.f; }
+    Values.Sort();
+    const int32 Index = FMath::Clamp(static_cast<int32>(Fraction * (Values.Num() - 1)), 0, Values.Num() - 1);
+    return Values[Index];
+}
+} // namespace
+// End SMOKE SPIKE ONLY block.
 void ASmokeHUD::BeginPlay()
 {
     Super::BeginPlay();
@@ -68,6 +155,9 @@ void ASmokeHUD::BeginPlay()
     UE_LOG(LogUnRealDash, Display, TEXT("Smoke RHI=%s GPU=%s driver=%s internal_driver=%s"),
         GDynamicRHI ? GDynamicRHI->GetName() : TEXT("unavailable"), *GRHIAdapterName,
         *GRHIAdapterUserDriverVersion, *GRHIAdapterInternalDriverVersion);
+    // Games hold the screen awake while they are foreground. Without this the device locks
+    // mid-run, which on the first device pass turned a live capture into a lock screen photo.
+    FPlatformApplicationMisc::ControlScreensaver(FPlatformApplicationMisc::Disable);
     bReady = true;
 }
 void ASmokeHUD::DrawHUD()
@@ -79,11 +169,67 @@ void ASmokeHUD::DrawHUD()
     if (!Error.IsEmpty()) { UE_LOG(LogUnRealDash, Error, TEXT("%s"), *Error); bReady = false; FPlatformMisc::RequestExit(false); return; }
     const FString Quality = UnRealDashCore::ToString(Sample.Quality);
     const FString Age = UnRealDashCore::ToString(Sample.AgeEvidence);
-    Canvas->K2_DrawText(Font, FString::Printf(TEXT("%.6f quality=%s age_evidence=%s"), Sample.Value, *Quality, *Age), FVector2D(24, 24));
-    const float Size = FMath::Max(1.f, FMath::Min(Canvas->SizeX * 0.4f, Canvas->SizeY * 0.6f));
-    Canvas->K2_DrawTexture(Texture, FVector2D(24, 80), FVector2D(Size, Size), FVector2D::ZeroVector);
+    const float FrameMs = static_cast<float>((Now - PreviousTime) * 1000.0);
+
+    // SMOKE SPIKE ONLY: a visual read on the device. See the note above the helpers.
+    if (!bRangeSeen) { ObservedMinimum = ObservedMaximum = Sample.Value; bRangeSeen = true; }
+    ObservedMinimum = FMath::Min(ObservedMinimum, Sample.Value);
+    ObservedMaximum = FMath::Max(ObservedMaximum, Sample.Value);
+
+    // A real gauge has a fixed full scale, and the needle sits somewhere inside it. Normalizing
+    // against the running maximum instead pins a monotonically climbing signal at 1.0 forever,
+    // which is what the first device capture showed: a full bar and a flat history line. Full
+    // scale grows in steps and keeps headroom, so the needle moves and never leaves the dial.
+    FullScale = FMath::Max(FullScale, FMath::GridSnap(ObservedMaximum * 1.3, 5.0));
+    const float Fraction = FullScale > 0.0 ? static_cast<float>(Sample.Value / FullScale) : 0.f;
+
+    // Raw values, normalized at draw time, so the trace keeps its shape as the scale changes.
+    if (ValueHistory.Num() >= HistorySize) { ValueHistory.RemoveAt(0, 1, EAllowShrinking::No); }
+    ValueHistory.Add(static_cast<float>(Sample.Value));
+    if (Frame > 0)
+    {
+        if (FrameMilliseconds.Num() >= HistorySize) { FrameMilliseconds.RemoveAt(0, 1, EAllowShrinking::No); }
+        FrameMilliseconds.Add(FrameMs);
+    }
+
+    const float W = static_cast<float>(Canvas->SizeX);
+    const float H = static_cast<float>(Canvas->SizeY);
+    // Compared as the adapter's string rather than signal_core::Quality::valid on purpose: the
+    // game module is not allowed to name signal-core, and chunk 08 adds a check that enforces it.
+    const FLinearColor Accent = Quality == TEXT("valid")
+        ? FLinearColor(0.25f, 0.78f, 0.95f) : FLinearColor(0.95f, 0.62f, 0.20f);
+
+    Canvas->K2_DrawText(Font, FString::Printf(TEXT("%.4f  quality=%s  age_evidence=%s"), Sample.Value, *Quality, *Age), FVector2D(24, 24));
+
+    float Average = 0.f;
+    for (float Value : FrameMilliseconds) { Average += Value; }
+    Average = FrameMilliseconds.Num() ? Average / FrameMilliseconds.Num() : 0.f;
+    const float P95 = Percentile(FrameMilliseconds, 0.95f);
+    const float P99 = Percentile(FrameMilliseconds, 0.99f);
+    Canvas->K2_DrawText(Font, FString::Printf(
+        TEXT("%.1f fps   frame %.2f ms   avg %.2f   p95 %.2f   p99 %.2f   rhi=%s   %dx%d"),
+        Average > 0.f ? 1000.f / Average : 0.f, FrameMs, Average, P95, P99,
+        GDynamicRHI ? GDynamicRHI->GetName() : TEXT("?"), Canvas->SizeX, Canvas->SizeY), FVector2D(24, 52));
+
+    const float Radius = FMath::Clamp(FMath::Min(W * 0.16f, H * 0.30f), 40.f, 220.f);
+    DrawDial(Canvas, Font, FVector2D(W * 0.22f, H * 0.52f), Radius, FMath::Clamp(Fraction, 0.f, 1.f), Accent,
+             FString::Printf(TEXT("%.2f"), Sample.Value));
+
+    const float BarX = W * 0.42f, BarY = H * 0.40f, BarW = W * 0.50f, BarH = 34.f;
+    Canvas->K2_DrawBox(FVector2D(BarX, BarY), FVector2D(BarW, BarH), 1.5f, FLinearColor(0.20f, 0.22f, 0.27f));
+    FillBar(Canvas, FVector2D(BarX + 2.f, BarY + 2.f), (BarW - 4.f) * FMath::Clamp(Fraction, 0.f, 1.f), BarH - 4.f, Accent);
+
+    DrawHistory(Canvas, FVector2D(BarX, BarY + BarH + 24.f), BarW, H * 0.26f, ValueHistory, Accent);
+    Canvas->K2_DrawText(Font, FString::Printf(TEXT("last %d samples   seen %.2f to %.2f   full scale %.0f"),
+        ValueHistory.Num(), ObservedMinimum, ObservedMaximum, FullScale), FVector2D(BarX, BarY + BarH + 28.f + H * 0.26f));
+
+    // The imported PNG and the material quad stay: they are what 4.0 actually proved.
+    const float Size = FMath::Max(1.f, FMath::Min(W * 0.10f, H * 0.18f));
+    Canvas->K2_DrawTexture(Texture, FVector2D(W - Size - 24.f, 24.f), FVector2D(Size, Size), FVector2D::ZeroVector);
     Material->SetScalarParameterValue(TEXT("Value"), static_cast<float>(Sample.Value));
-    Canvas->K2_DrawMaterial(Material, FVector2D(48 + Size, 80), FVector2D(Size, Size), FVector2D::ZeroVector);
+    Canvas->K2_DrawMaterial(Material, FVector2D(W - Size - 24.f, 32.f + Size), FVector2D(Size, Size), FVector2D::ZeroVector);
+    // End SMOKE SPIKE ONLY.
+
     Csv += FString::Printf(TEXT("1,%llu,%.9f,%.6f,%.17g,%s,%s\n"), Frame++, Now, (Now - PreviousTime) * 1000, Sample.Value, *Quality, *Age);
     PreviousTime = Now;
     if (!bExportRequested && Now - StartedAt >= Config.RunSeconds)
@@ -108,7 +254,9 @@ void ASmokeHUD::DrawHUD()
         ScreenshotHandle = FScreenshotRequest::OnScreenshotRequestProcessed().AddLambda([WeakThis]() {
             if (ASmokeHUD* Hud = WeakThis.Get()) { Hud->bScreenshotProcessed = true; }
         });
-        FScreenshotRequest::RequestScreenshot(ScreenshotPath, false, false);
+        // bShowUI must be true. Everything this spike draws is HUD, so capturing without the UI
+        // writes a black PNG of an empty scene, which is what the first device run produced.
+        FScreenshotRequest::RequestScreenshot(ScreenshotPath, true, false);
         bExportRequested = true;
         UE_LOG(LogUnRealDash, Display, TEXT("Smoke screenshot requested path=%s"), *ScreenshotPath);
     }
