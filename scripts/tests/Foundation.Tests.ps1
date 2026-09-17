@@ -390,6 +390,7 @@ exit 9
 Describe 'Skeleton doctor gates' {
     It '<Script> <Target> previews <Platform> only after a passing <Profile> doctor' -ForEach $cases {
         $arguments = @('-WhatIf', '-DoctorScript', (Join-Path $PSScriptRoot 'fakes/doctor-pass.ps1'))
+        if ($Script -eq 'package-android') { $arguments += @('-Rhi', 'vulkan') }
         if ($Target) { $arguments += @('-Target', $Target) }
         $result = Invoke-Child "$Script.ps1" $arguments
         $result.Code | Should -Be 0
@@ -413,6 +414,7 @@ Describe 'Skeleton doctor gates' {
 
     It '<Script> <Target> stops without UAT when its doctor fails' -ForEach $cases {
         $arguments = @('-WhatIf', '-DoctorScript', (Join-Path $PSScriptRoot 'fakes/doctor-fail.ps1'))
+        if ($Script -eq 'package-android') { $arguments += @('-Rhi', 'vulkan') }
         if ($Target) { $arguments += @('-Target', $Target) }
         $result = Invoke-Child "$Script.ps1" $arguments
         $result.Code | Should -Be 1
@@ -511,3 +513,4 @@ Describe 'Repository foundation' {
         }
     }
 }
+

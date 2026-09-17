@@ -7,6 +7,7 @@ public class UnRealDashEditorTarget : TargetRules
         DefaultBuildSettings = BuildSettingsVersion.Latest;
         IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
         CppStandard = CppStandardVersion.Cpp20;
-        ExtraModuleNames.AddRange(new[] { "UnRealDash" });
+        ExtraModuleNames.AddRange(new[] { "UnRealDash", "UnRealDashSmokeEditor" });
     }
 }
+

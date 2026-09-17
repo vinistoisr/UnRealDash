@@ -5,6 +5,11 @@
     "Description": "UnRealDash signal player foundation.",
     "Modules": [
         {
+            "Name": "UnRealDashSmokeEditor",
+            "Type": "Editor",
+            "LoadingPhase": "Default"
+        },
+        {
             "Name": "UnRealDash",
             "Type": "Runtime",
             "LoadingPhase": "Default"
@@ -18,6 +23,12 @@
             "Name": "SignalCore",
             "Type": "Runtime",
             "LoadingPhase": "PreDefault"
+        }
+    ],
+    "Plugins": [
+        {
+            "Name": "AndroidFileServer",
+            "Enabled": false
         }
     ]
 }

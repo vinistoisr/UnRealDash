@@ -1,0 +1,782 @@
+--------- beginning of main
+09-17 11:46:27.546  4075 31023 I EuiccGoogle: [283] BlockingEuiccCardManager.requestAllProfiles: requestAllProfiles: cardId = [iZScYKy0PSD5u0h5sm8x5vJ5os0]
+09-17 11:46:27.578   983  1012 D CHRE    : @ 64103.654: [LONA:AM] Forwarding timer event to network scheduler and data manager
+09-17 11:46:27.578   983  1012 D CHRE    : @ 64103.654: [LONA:NS] Handling timer event. periodic=0 one_shot=0 wait_after_busy_errors=0
+09-17 11:46:27.578   983  1012 I CHRE    : @ 64103.654: [LONA:BS] Handling pressure results timeout. Requesting sensor flush.
+09-17 11:46:27.578   983  1012 D CHRE    : @ 64103.655: [LONA:BS] Pressure data received at 64101900385916 readingCount=23 total time delta=1745653778ns
+09-17 11:46:27.579  1293  1293 D AOC     : A3:MSG: usf_sensor.cc, 1935: USF: Received stop sampling request for SPL07003 Barometer (active:0).
+09-17 11:46:27.579  1293  1293 D AOC     : A3:MSG: spxyz00n_sensor.cc, 138: USF: Spxyz00nSensor: Stop 1 sensor.
+09-17 11:46:27.579  1293  1293 D AOC     : A3:MSG: spxyz00n_sensor.cc, 138: USF: Spxyz00nSensor: Stop 0 sensor.
+09-17 11:46:27.579   983  1012 I CHRE    : @ 64103.656: [LONA:BS] Pressure flush completed with errorCode=0
+09-17 11:46:27.580   983  1012 I CHRE    : @ 64103.656: [LONA:BS] Delivering barometer scan results
+09-17 11:46:27.704   983  1012 I CHRE    : @ 64103.780: CHPP WIFI: Scan request success=1 at service
+09-17 11:46:27.728   983  1012 D CHRE    : @ 64103.804: [LONA:WD] Progress: 20/21
+09-17 11:46:27.728   983  1012 D CHRE    : @ 64103.804: [LONA:AM] WiFi Data not available
+09-17 11:46:27.734   983  1012 D CHRE    : @ 64103.808: [LONA:WD] Progress: 21/21
+09-17 11:46:27.734   983  1012 D CHRE    : @ 64103.808: [LONA:AM] WiFi Scan received
+09-17 11:46:27.771  4075 31023 I EuiccGoogle: [283] EuiccServiceImpl.onGetEuiccProfileInfoList: onGetEuiccProfileInfoList: Profile nickname = Skylo.
+09-17 11:46:27.772  4075 31023 I EuiccGoogle: [283] EuiccServiceImpl.onGetEuiccProfileInfoList: onGetEuiccProfileInfoList: Profile info = EuiccProfileInfo (nickname=Skylo, serviceProviderName=Skylo, profileName=Skylo, profileClass=2, state=0, CarrierIdentifier=CarrierIdentifier{mcc=901,mnc=98,spn=null,imsi=null,gid1=null,gid2=null,carrierid=-1,specificCarrierId=-1}, policyRules=0, accessRules=null, iccid=899019803[****]).
+09-17 11:46:27.772  4075 31023 I EuiccGoogle: [283] EuiccServiceImpl.onGetEuiccProfileInfoList: onGetEuiccProfileInfoList: Profile nickname = ROGERS.
+09-17 11:46:27.773  4075 31023 I EuiccGoogle: [283] EuiccServiceImpl.onGetEuiccProfileInfoList: onGetEuiccProfileInfoList: Profile info = EuiccProfileInfo (nickname=ROGERS, serviceProviderName=ROGERS, profileName=ROGERS 5G eSIM, profileClass=2, state=1, CarrierIdentifier=CarrierIdentifier{mcc=302,mnc=720,spn=null,imsi=null,gid1=A1,gid2=FFFFFFFFFFFFFFFFFFFF,carrierid=-1,specificCarrierId=-1}, policyRules=0, accessRules=null, iccid=893027205[****]).
+09-17 11:46:27.774  4075 31023 I EuiccGoogle: [283] EuiccServiceImpl.onGetEuiccProfileInfoList: onGetEuiccProfileInfoList: Profile nickname = Airalo 2.
+09-17 11:46:27.775  4075 31023 I EuiccGoogle: [283] EuiccServiceImpl.onGetEuiccProfileInfoList: onGetEuiccProfileInfoList: Profile info = EuiccProfileInfo (nickname=Airalo 2, serviceProviderName=Airalo, profileName=WEBBING, profileClass=2, state=0, CarrierIdentifier=CarrierIdentifier{mcc=208,mnc=01,spn=null,imsi=null,gid1=536E617065,gid2=FFFFFFFFFFFFFFFF,carrierid=-1,specificCarrierId=-1}, policyRules=0, accessRules=[cert: 0361DD850DD3AB65D92DF4189A26413DA53AFFAA318F7DAD914794ADA2C9B409 pkg: null access: 1], iccid=898523507[****]).
+09-17 11:46:27.784  3179  3390 D EuiccConnector: handleMessage: E msg.what=6
+09-17 11:46:27.784  3179  3390 D EuiccConnector: processMsg: ConnectedState
+09-17 11:46:27.785  3179  3390 D EuiccConnector: handleMessage: X
+09-17 11:46:27.834 13383 13383 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:am start -n com.unrealdash.player/com.epicgames.unreal.SplashActivity'
+09-17 11:46:27.935  3431 30962 I NearbySharing: Got package event: PackageReplaced(packageName=com.unrealdash.player)
+--------- beginning of system
+09-17 11:46:28.050  1587  3097 W ActivityTaskManager: callingPackage for (uid=2000, pid=31031) has no WPC
+09-17 11:46:28.055  1587  3097 D CompatChangeReporter: Compat change id reported: 151861875; UID 10053; state: ENABLED
+09-17 11:46:28.057  1587  3097 V GrammaticalInflectionUtils: AttributionSource: android.content.AttributionSource@f5833ac6 does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+09-17 11:46:28.062  1587  3097 D CompatChangeReporter: Compat change id reported: 306666082; UID 10053; state: ENABLED
+09-17 11:46:28.067  1587  3097 D ActivityTaskManager: Temporarily retain top process state for launching app
+09-17 11:46:28.073  1629  1629 D RecentsView: onTaskDisplayChanged: 27176, new displayId = 0
+09-17 11:46:28.077  1587  3097 I AppsFilter: interaction: PackageSetting{6d29420 com.google.android.microdroid.empty_payload/10299} -> PackageSetting{878ed28 com.unrealdash.player/10053} BLOCKED
+09-17 11:46:28.078  1587  3097 D CorePackageUpdate: onRecentTaskRemoved Removing task: 27175
+09-17 11:46:28.078  1587  3097 D CorePackageUpdate: Couldn't find a persistent state for task= 27175
+09-17 11:46:28.079  1587  3097 V ActivityTaskManager: TaskLaunchParamsModifier: phase=3 task=Task{99ae81a #27176 type=standard A=10053:com.unrealdash.player nonResizable} activity=ActivityRecord{7280325 u0 com.unrealdash.player/com.epicgames.unreal.SplashActivity t-1} display-from-task=0 display-id=0 task-display-area-windowing-mode=1 suggested-display-area=DefaultTaskDisplayArea@141562218 inherit-from-task=fullscreen non-freeform-task-display-area display-area=DefaultTaskDisplayArea@141562218 skip-bounds-fullscreen
+09-17 11:46:28.079  1587  3097 I ActivityTaskManager: START u0 {flg=0x10000000 xflg=0x5 cmp=com.unrealdash.player/com.epicgames.unreal.SplashActivity} with LAUNCH_SINGLE_TASK from uid 2000 (com.android.shell) (BAL_ALLOW_PERMISSION) result code=0
+09-17 11:46:28.079  2830  2854 V WindowManagerShell: Transition requested (#1104): android.os.BinderProxy@657479a TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=27176 effectiveUid=10053 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=com.unrealdash.player/com.epicgames.unreal.SplashActivity } baseActivity=ComponentInfo{com.unrealdash.player/com.epicgames.unreal.SplashActivity} topActivity=ComponentInfo{com.unrealdash.player/com.epicgames.unreal.SplashActivity} origActivity=null realActivity=ComponentInfo{com.unrealdash.player/com.epicgames.unreal.SplashActivity} realActivityIsAppLockEnabled=false numActivities=1 lastActiveTime=64101720 supportsMultiWindow=false supportsMultiWindowWithoutConstraints=false resizeMode=0 isResizeable=false minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.os.BinderProxy@61698cb} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 204 - 0, 0) topActivityInfo=ActivityInfo{22f18a8 com.epicgames.unreal.SplashActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=false isInteractive=false isVisible=false isVisibleRequested=false isTopActivityNoDisplay=false isSleeping=true locusId=null displayAreaFeatureId=1 isTopActivityTransparent=false isActivityStackTransparent=false lastNonFullscreenBounds=null leafTaskBoundsFromOptions= false capturedLink=null capturedLinkTimestamp=0 requestedVisibleTypes=503 topActivityRequestOpenInBrowserEducationTimestamp=0 appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false isLeafTask= true eligibleForLetterboxEducation= false isLetterboxEducationEnabled= false isLetterboxDoubleTapEnabled= false eligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 topActivityAppBounds=Rect(0, 0 - 1280, 2856) isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false hasMinAspectRatioOverride=false topActivityLetterboxBounds=null topNonResizableActivityAspectRatio=-1.0} topActivityMainWindowFrame=null isAppBubble=false}, pipChange = null, remoteTransitionInfo = null, displayChanges = null, requestedLocation = null, userChange = null, windowingLayerChange = null, fullscreenRequestChange = null, flags = 0, debugId = 1104 }
+09-17 11:46:28.079  2830  2854 W DisconnectHandler: No disconnect change found in the transition, not handling request.
+09-17 11:46:28.079  1587  1822 V GrammaticalInflectionUtils: AttributionSource: android.content.AttributionSource@f5833ac6 does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+09-17 11:46:28.079  2830  2854 V ShellDesktopMode: DesktopTasksController: skipping handleRequest reason=triggerTask's display doesn't support desktop mode
+09-17 11:46:28.079  1587  2588 D CompatChangeReporter: Compat change id reported: 309578419; UID 10053; state: ENABLED
+09-17 11:46:28.079  2830  2854 D ShellSplitScreen: logExit: no-op, mLoggerSessionId is null
+09-17 11:46:28.082  1587  3097 W InputChannel-JNI: Channel already disposed.
+09-17 11:46:28.084  2830  2854 V RecentTasksController: Notify recent tasks changed
+09-17 11:46:28.084  2830  2854 D ShellDesktopMode: DesktopRepository(0): Removes freeform task: taskId=27175
+09-17 11:46:28.084  2830  2854 W ShellDesktopMode: DesktopRepository(0): No display id found for task: taskId=27175
+09-17 11:46:28.084  2830  2854 V RecentTasksController: Notify recent tasks changed
+09-17 11:46:28.084  1629  1629 D RecentTasksList: invalidateLoadedTasks - previous requestLoadId: -1
+09-17 11:46:28.084  2830  2882 I Surface : Creating surface for consumer unnamed-2830-630 with slotExpansion=1 for 64 slots
+09-17 11:46:28.084  1629  1629 D RecentTasksList: invalidateLoadedTasks - previous requestLoadId: -1
+09-17 11:46:28.089   946   946 D Zygote  : Forked child process 31047
+09-17 11:46:28.090  1587  1845 I ActivityManager: Start proc 31047:com.unrealdash.player/u0a53 for top-activity {com.unrealdash.player/com.epicgames.unreal.SplashActivity}
+09-17 11:46:28.091  2830  2882 E ConsumerBase: [ImageReader-480x480f1u2816m2-2830-100] abandonLocked: ConsumerBase is abandoned!
+09-17 11:46:28.093 31047 31047 I libprocessgroup: Created cgroup /sys/fs/cgroup/apps/uid_10053/pid_31047
+09-17 11:46:28.095  2830  2881 D WindowOnBackDispatcher: setTopOnBackInvokedCallback (unwrapped): android.view.ViewRootImpl$$ExternalSyntheticLambda14@b725633
+09-17 11:46:28.095  1587  3102 D CoreBackPreview: Window{255f058 u0 Splash Screen com.unrealdash.player}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@7159bed, mPriority=0, mIsAnimationCallback=false, mOverrideBehavior=0}
+09-17 11:46:28.095  1587  3102 D WindowManager: setClientSurface Surface(name=VRI-Splash Screen com.unrealdash.player#8845)/@0x3ca22 for 255f058 Splash Screen com.unrealdash.player
+09-17 11:46:28.098  1587  1819 V WindowManager: Sent Transition (#1104) createdAt=09-17 11:46:28.063 via request=TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=27176 effectiveUid=10053 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=com.unrealdash.player/com.epicgames.unreal.SplashActivity } baseActivity=ComponentInfo{com.unrealdash.player/com.epicgames.unreal.SplashActivity} topActivity=ComponentInfo{com.unrealdash.player/com.epicgames.unreal.SplashActivity} origActivity=null realActivity=ComponentInfo{com.unrealdash.player/com.epicgames.unreal.SplashActivity} realActivityIsAppLockEnabled=false numActivities=1 lastActiveTime=64101720 supportsMultiWindow=false supportsMultiWindowWithoutConstraints=false resizeMode=0 isResizeable=false minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{17f9cb3 Task{99ae81a #27176 type=standard A=10053:com.unrealdash.player nonResizable}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 204 - 0, 0) topActivityInfo=ActivityInfo{a867270 com.epicgames.unreal.SplashActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=false isInteractive=false isVisible=false isVisibleRequested=false isTopActivityNoDisplay=false isSleeping=true locusId=null displayAreaFeatureId=1 isTopActivityTransparent=false isActivityStackTransparent=false lastNonFullscreenBounds=null leafTaskBoundsFromOptions= false capturedLink=null capturedLinkTimestamp=0 requestedVisibleTypes=503 topActivityRequestOpenInBrowserEducationTimestamp=0 appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false isLeafTask= true eligibleForLetterboxEducation= false isLetterboxEducationEnabled= false isLetterboxDoubleTapEnabled= false eligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 topActivityAppBounds=Rect(0, 0 - 1280, 2856) isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false hasMinAspectRatioOverride=false topActivityLetterboxBounds=null topNonResizableActivityAspectRatio=-1.0} topActivityMainWindowFrame=null isAppBubble=false}, pipChange = null, remoteTransitionInfo = null, displayChanges = null, requestedLocation = null, userChange = null, windowingLayerChange = null, fullscreenRequestChange = null, flags = 0, debugId = 1104 }
+09-17 11:46:28.098  1587  1819 V WindowManager:     startWCT=WindowContainerTransaction { changes= {} hops= [] flags= 0 errorCallbackToken=null taskFragmentOrganizer=null }
+09-17 11:46:28.098  1587  1819 V WindowManager:     info={id=1104 t=OPEN f=0x40 trk=0 r=[] c=[]}
+09-17 11:46:28.098  2830  4682 V WindowManagerShell: onTransitionReady(transaction=6816113346487)
+09-17 11:46:28.098  2830  2881 I Surface : Creating surface for consumer unnamed-2830-631 with slotExpansion=1 for 64 slots
+09-17 11:46:28.098  2830  2854 V WindowManagerShell: onTransitionReady (#1104) android.os.BinderProxy@657479a: {id=1104 t=OPEN f=0x40 trk=0 r=[] c=[]}
+09-17 11:46:28.098  2830  2854 V WindowManagerShell: FocusTransitionObserver: Updating focus state for transition #1104
+09-17 11:46:28.098  2830  2854 V ShellDesktopMode: DesktopModeLogger: taskInfo map after processing changes 0
+09-17 11:46:28.098  2830  2854 V WindowManagerShell: No transition roots in (#1104) android.os.BinderProxy@657479a@0 so abort
+09-17 11:46:28.098  2830  2881 I Surface : Creating surface for consumer VRI[player]#530(BLAST Consumer)530 with slotExpansion=1 for 64 slots
+09-17 11:46:28.098 31047 31047 I Zygote  : Process 31047 created for com.unrealdash.player
+09-17 11:46:28.098  2830  2854 V WindowManagerShell: Transition animation finished (aborted=true), notifying core (#1104) android.os.BinderProxy@657479a@0
+09-17 11:46:28.098 31047 31047 I realdash.player: Late-enabling -Xcheck:jni
+09-17 11:46:28.099  1202 10996 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.099  1202 10996 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.099  1202 10996 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.099  1202 10996 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.099  1202 10996 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.099  1202 10996 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.099  1202 10996 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.099  1202 10996 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.099  1202 10996 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.100  1587  1819 V WindowManager: Finish Transition (#1104): created at 09-17 11:46:28.063 collect-started=0.266ms request-sent=15.37ms started=16.398ms ready=33.325ms sent=33.853ms finished=36.751ms
+09-17 11:46:28.100  2830  2854 V WindowManagerShell: Track 0 became idle
+09-17 11:46:28.100  2830  2854 V WindowManagerShell: All active transition animations finished
+09-17 11:46:28.101  1202 10996 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.101  1202 10996 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.101  1202 10996 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.101  1202 10996 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.101  1202 10996 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.101  1202 10996 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.101  1202 10996 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.101  1202 10996 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.101  1202 10996 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.102  2830  2854 V ShellTaskOrganizer: Task appeared taskId=27176 listener=FullscreenTaskListener
+09-17 11:46:28.102  2830  2854 V ShellTaskOrganizer: Fullscreen Task Appeared: #27176
+09-17 11:46:28.102  2830  2854 D ShellPackageUpdate: PackageUpdateController: Setting handlePackageUpdate for task: 27176
+09-17 11:46:28.102  1587  2588 E TransitionChain: Can't collect into a chain with no transition
+09-17 11:46:28.103  2830  2854 V RecentTasksController: Notify recent tasks changed
+09-17 11:46:28.104  1629  1629 D RecentTasksList: invalidateLoadedTasks - previous requestLoadId: -1
+09-17 11:46:28.111 13383 13383 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:sleep 12'
+09-17 11:46:28.115 31047 31047 I realdash.player: Using generational CollectorTypeCMC GC.
+09-17 11:46:28.120 13383 13392 I adbd    : jdwp connection from 31047
+09-17 11:46:28.129 31047 31047 D nativeloader: Load libframework-connectivity-tiramisu-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity-t.jar: ok
+09-17 11:46:28.142  3012 26190 D UidImportanceSource: onUidImportanceBlock: uid=10053 importance=400
+09-17 11:46:28.142  3012 26190 D UidImportanceSource: onUidImportanceBlock: packages=[com.unrealdash.player] importance=400
+09-17 11:46:28.142  3012 26190 D UidImportanceSource: onUidImportanceBlock: packageName=com.unrealdash.player importance=400
+09-17 11:46:28.143  2999  2999 I HidDeviceService: unregisterAppUid(): uid=10053
+09-17 11:46:28.143  2999  2999 W HidDeviceService: unregisterAppUid(): caller UID doesn't match user UID
+09-17 11:46:28.143  3012  3151 D ImpulseStateSource: Notify clients: 5878
+09-17 11:46:28.143 31798 31804 I pixel-thermal: quiet_therm:31.018 raw data: quiet_therm:31018 
+09-17 11:46:28.147 31798 31804 I pixel-thermal: VIRTUAL-SKIN-MODEL: model_input: [32639.00 27998.00 29408.00 30980.00 31018.00 31962.00 32049.00 28246.00 ]
+09-17 11:46:28.147 31798 31804 I native  : I0000 00:00:1789670788.147886   31804 thermal_tflite_wrapper.cc:270] ThermalTfliteInvoke
+09-17 11:46:28.147 31798 31804 I pixel-thermal: VIRTUAL-SKIN-MODEL: model_output: [30069.4 ]
+09-17 11:46:28.147 31798 31804 I pixel-thermal: VIRTUAL-SKIN-MODEL: predicted_value: [30069.4 ]
+09-17 11:46:28.148 31798 31804 I pixel-thermal: VIRTUAL-SKIN-CHARGE-WIRED:30.0987 raw data: NO_WLC:1 VIRTUAL-SKIN-CHARGE:30098.7 VIRTUAL-SKIN-CHARGE-WIRED:30098.7 VIRTUAL-SKIN-EQ:30098.7 VIRTUAL-SKIN-LEGACY:30173.9 VIRTUAL-SKIN-LEGACY-MODEL-DIFF:104.512 VIRTUAL-SKIN-LEGACY-SHUTDOWN:0 VIRTUAL-SKIN-MODEL:30069.4 VIRTUAL-SKIN-MODEL-CLAMPED:30069.4 VIRTUAL-SKIN-MODEL-LEGACY-DIFF:-104.512 VIRTUAL-SKIN-MODEL-UPDATED:30098.7 VIRTUAL-SKIN-MODEL-UPPER-CLAMPED:30069.4 VIRTUAL-SKIN-SUB-0:30141.3 VIRTUAL-SKIN-SUB-1:30167.4 VIRTUAL-SKIN-SUB-2:30173.9 VIRTUAL-SKIN-SUB-3:29865.6 VIRTUAL-SKIN-SUB-4:29901.7 VT_LEGACY_WEIGHT:0 VT_MODEL_WEIGHT:1 WLC_CHECK:1 charging_therm:32639 disp0_therm:27998 flash_therm:29408 north_therm:30980 quiet_therm:31018 rfpa_therm:31962 soc_therm:32049 thb_hda:54 usb_pwr_therm:28246 
+09-17 11:46:28.148 31798 31804 I pixel-thermal: VIRTUAL-SKIN-CHARGE-PERSIST:30.0987 raw data: VIRTUAL-SKIN-CHARGE:30098.7 VIRTUAL-SKIN-CHARGE-PERSIST:30098.7 
+09-17 11:46:28.276 31047 31047 D nativeloader: Configuring clns-9 for other apk /data/app/~~UKFgAxUe-55aJIxnAKWDHQ==/com.unrealdash.player-pxJULm8utUqwYzYIEkDvbg==/base.apk. target_sdk_version=35, uses_libraries=, library_path=/data/app/~~UKFgAxUe-55aJIxnAKWDHQ==/com.unrealdash.player-pxJULm8utUqwYzYIEkDvbg==/lib/arm64:/data/app/~~UKFgAxUe-55aJIxnAKWDHQ==/com.unrealdash.player-pxJULm8utUqwYzYIEkDvbg==/base.apk!/lib/arm64-v8a, permitted_path=/data:/mnt/expand:/data/user/0/com.unrealdash.player
+09-17 11:46:28.278 31047 31047 D CompatChangeReporter: Compat change id reported: 202956589; UID 10053; state: ENABLED
+09-17 11:46:28.292 31047 31047 V GraphicsEnvironment: Currently set values for:
+09-17 11:46:28.292 31047 31047 V GraphicsEnvironment:   angle_gl_driver_selection_pkgs=[com.android.angle]
+09-17 11:46:28.292 31047 31047 V GraphicsEnvironment:   angle_gl_driver_selection_values=[angle]
+09-17 11:46:28.292 31047 31047 V GraphicsEnvironment: com.unrealdash.player is not listed in per-application setting
+09-17 11:46:28.293 31047 31047 V GraphicsEnvironment: No special selections for ANGLE, returning default driver choice
+09-17 11:46:28.295 31047 31047 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+09-17 11:46:28.325  1587  3102 D ConnectivityService: requestNetwork for uid/pid:10053/31047 activeRequest: null callbackRequest: 8171 [NetworkRequest [ REQUEST id=8172, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10053 RequestorUid: 10053 RequestorPkg: com.unrealdash.player UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false declaredMethods: AVAIL|LOST|NC|BLK
+09-17 11:46:28.328  1587  3102 D CorePackageUpdate: Couldn't find a persistent state for task= 27176
+09-17 11:46:28.328  1587  3102 D CompatChangeReporter: Compat change id reported: 324203798; UID 10053; state: ENABLED
+09-17 11:46:28.329  1587  2685 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=8172, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10053 RequestorUid: 10053 RequestorPkg: com.unrealdash.player UnderlyingNetworks: Null] ]
+09-17 11:46:28.330  1587  2685 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=8172, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10053 RequestorUid: 10053 RequestorPkg: com.unrealdash.player UnderlyingNetworks: Null] ]
+09-17 11:46:28.330  1587  2685 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=8172, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10053 RequestorUid: 10053 RequestorPkg: com.unrealdash.player UnderlyingNetworks: Null] ]
+09-17 11:46:28.330  1587  2698 D ConnectivityService: NetReassign [8172 : null → 111] [c 0] [a 1] [i 3]
+09-17 11:46:28.330  1587  2685 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=8172, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10053 RequestorUid: 10053 RequestorPkg: com.unrealdash.player UnderlyingNetworks: Null] ]
+09-17 11:46:28.331  1587  2591 W AlarmManager: Unrecognized alarm listener com.android.server.usage.AppTimeLimitController$SessionUsageGroup@5c6fec
+09-17 11:46:28.339 31798 31798 I pixel-thermal: VIRTUAL-SKIN-PREDICTION-MODEL: model_input: [30980.00 29408.00 32049.00 31962.00 32639.00 27998.00 28246.00 31018.00 30098.70 ]
+09-17 11:46:28.339 31798 31798 I native  : I0000 00:00:1789670788.339442   31798 thermal_tflite_wrapper.cc:270] ThermalTfliteInvoke
+09-17 11:46:28.340 31798 31798 I pixel-thermal: VIRTUAL-SKIN-PREDICTION-MODEL: model_output: [28806.6 28833.9 28866.1 28905 28946.3 28995.4 29047.6 29105.2 29169.8 29238.6 ]
+09-17 11:46:28.340 31798 31798 I pixel-thermal: VIRTUAL-SKIN-PREDICTION-MODEL: predicted_value: [28806.6 28833.9 28866.1 28905 28946.3 28995.4 29047.6 29105.2 29169.8 29238.6 ]
+09-17 11:46:28.340 31798 31798 I pixel-thermal: EARLY-WARNING-SENSOR:0 raw data: EARLY-EMERGENCY-WARNING-SENSOR:0 EARLY-SHUTDOWN-WARNING-SENSOR:0 EARLY-WARNING-SENSOR:0 VIRTUAL-SKIN:30098.7 VIRTUAL-SKIN-EQ:30098.7 VIRTUAL-SKIN-PREDICTION-MODEL:28806.6 VT-FORECAST-30SEC:28960.3 VT-FORECAST-60SEC:29209.1 charging_therm:32639 disp0_therm:27998 flash_therm:29408 north_therm:30980 quiet_therm:31018 rfpa_therm:31962 soc_therm:32049 usb_pwr_therm:28246 
+09-17 11:46:28.340 31798 31798 I pixel-thermal: VIRTUAL-SKIN-CHARGE-PERSIST:30.0987 raw data: VIRTUAL-SKIN-CHARGE-PERSIST:30098.7 
+09-17 11:46:28.340 31798 31798 I pixel-thermal: VIRTUAL-SKIN-CHARGE-WIRED:30.0987 raw data: VIRTUAL-SKIN-CHARGE-WIRED:30098.7 
+09-17 11:46:28.340 31798 31798 I pixel-thermal: soc_therm:32.049 raw data: soc_therm:32049 
+09-17 11:46:28.340 31798 31798 I pixel-thermal: rfpa_therm:31.962 raw data: rfpa_therm:31962 
+09-17 11:46:28.340 31798 31798 I pixel-thermal: flash_therm:29.408 raw data: flash_therm:29408 
+09-17 11:46:28.340 31798 31798 I pixel-thermal: usb_pwr_therm:28.246 raw data: usb_pwr_therm:28246 
+09-17 11:46:28.340 31798 31798 I pixel-thermal: quiet_therm:31.018 raw data: quiet_therm:31018 
+09-17 11:46:28.340 31798 31798 I pixel-thermal: charging_therm:32.639 raw data: charging_therm:32639 
+09-17 11:46:28.340 31798 31798 I pixel-thermal: VIRTUAL-SKIN:30.0987 raw data: VIRTUAL-SKIN:30098.7 
+09-17 11:46:28.340 31798 31798 I pixel-thermal: north_therm:30.98 raw data: north_therm:30980 
+09-17 11:46:28.341 31798 31798 I pixel-thermal: BG-TASKS-THROTTLING-HINT:0 raw data: BG-TASKS-THROTTLING-EXP-PROPERTY:1 BG-TASKS-THROTTLING-HINT:0 BG_TASKS_THROTTLING_COUNT:2 BG_TASKS_THROTTLING_LEVEL:0 IS_BG_TASKS_THROTTLING_ACTIVE:1 IS_CHARGING:1 VIRTUAL-SKIN:30098.7 battery_capacity:100 thb_hda:54 
+09-17 11:46:28.341 31798 31798 I pixel-thermal: cellular-emergency:30.0987 raw data: VIRTUAL-SKIN:30098.7 cellular-emergency:30098.7 
+09-17 11:46:28.341 31798 31798 I pixel-thermal: disp0_therm:27.998 raw data: disp0_therm:27998 
+09-17 11:46:28.341 31798 31798 I pixel-thermal: VIRTUAL-USB-UI:0 raw data: USB-MINUS-CHARGING:-4393 VIRTUAL-USB-UI:0 usb_pwr_therm:28246 
+09-17 11:46:28.341 31798 31798 I pixel-thermal: VIRTUAL-USB-THROTTLING:0 raw data: USB-MINUS-CHARGING:-4393 VIRTUAL-USB-THROTTLING:0 usb_pwr_therm:28246 
+09-17 11:46:28.341 31798 31798 I pixel-thermal: VIRTUAL-SKIN-SPEAKER:28.9571 raw data: VIRTUAL-SKIN-SPEAKER:28957.1 VIRTUAL-SKIN-SPEAKER-LEGACY:29549.1 VIRTUAL-SKIN-SPEAKER-LEGACY-MODEL-DIFF:573.418 VIRTUAL-SKIN-SPEAKER-MODEL:28975.7 VIRTUAL-SKIN-SPEAKER-MODEL-CLAMPED:28975.7 VIRTUAL-SKIN-SPEAKER-MODEL-LEGACY-DIFF:-573.418 VIRTUAL-SKIN-SPEAKER-MODEL-UPPER-CLAMPED:28975.7 VT_SPEAKER_LEGACY_WEIGHT:0 VT_SPEAKER_MODEL_WEIGHT:1 
+09-17 11:46:28.360 31047 31090 I DisplayManager: Choreographer implicitly registered for the refresh rate.
+09-17 11:46:28.365 31047 31090 D vulkan  : searching for layers in '/data/app/~~UKFgAxUe-55aJIxnAKWDHQ==/com.unrealdash.player-pxJULm8utUqwYzYIEkDvbg==/lib/arm64'
+09-17 11:46:28.366 31047 31090 D vulkan  : searching for layers in '/data/app/~~UKFgAxUe-55aJIxnAKWDHQ==/com.unrealdash.player-pxJULm8utUqwYzYIEkDvbg==/base.apk!/lib/arm64-v8a'
+09-17 11:46:28.378 31047 31089 V UE      : [NetworkChangedManager] Network Capabilities changed, has Internet: true
+09-17 11:46:28.379 31047 31089 V UE      : [NetworkChangedManager] No network state set yet, setting naive network state checking connection fully.
+09-17 11:46:28.399 31047 31089 V UE      : [NetworkChangedManager] Network connectivity changed. New connectivity state: CONNECTION_AVAILABLE
+09-17 11:46:28.400 31047 31089 V UE      : [NetworkChangedManager] Network Blocked Status changed, Blocked: false
+09-17 11:46:28.400 31047 31047 D DesktopExperienceFlags: Toggle override initialized to: false
+09-17 11:46:28.400 31047 31095 V UE      : [NetworkChangedManager] Verifying internet connection with host: https://example.com/
+09-17 11:46:28.383 31047 31047 W RenderThread: type=1400 audit(0.0:17693): avc:  denied  { read } for  name="uevent" dev="sysfs" ino=32791 scontext=u:r:untrusted_app_34:s0:c53,c256,c512,c768 tcontext=u:object_r:sysfs:s0 tclass=file permissive=0 bug=b/487491690 app=com.unrealdash.player
+09-17 11:46:28.508 31047 31100 D nativeloader: Load /system/lib64/libGLESv3.so using class loader ns clns-9 (caller=/data/app/~~UKFgAxUe-55aJIxnAKWDHQ==/com.unrealdash.player-pxJULm8utUqwYzYIEkDvbg==/base.apk!classes13.dex): ok
+09-17 11:46:28.514 31047 31100 D nativeloader: Load /system/lib64/libEGL.so using class loader ns clns-9 (caller=/data/app/~~UKFgAxUe-55aJIxnAKWDHQ==/com.unrealdash.player-pxJULm8utUqwYzYIEkDvbg==/base.apk!classes13.dex): ok
+09-17 11:46:28.515 31047 31100 D nativeloader: Load /system/lib64/libandroid.so using class loader ns clns-9 (caller=/data/app/~~UKFgAxUe-55aJIxnAKWDHQ==/com.unrealdash.player-pxJULm8utUqwYzYIEkDvbg==/base.apk!classes13.dex): ok
+09-17 11:46:28.527 31047 31100 D nativeloader: Load /system/lib64/libOpenSLES.so using class loader ns clns-9 (caller=/data/app/~~UKFgAxUe-55aJIxnAKWDHQ==/com.unrealdash.player-pxJULm8utUqwYzYIEkDvbg==/base.apk!classes13.dex): ok
+09-17 11:46:28.529 31047 31047 D CompatChangeReporter: Compat change id reported: 309578419; UID 10053; state: ENABLED
+09-17 11:46:28.541 31047 31100 D nativeloader: Load /system/lib64/libc.so using class loader ns clns-9 (caller=/data/app/~~UKFgAxUe-55aJIxnAKWDHQ==/com.unrealdash.player-pxJULm8utUqwYzYIEkDvbg==/base.apk!classes13.dex): ok
+09-17 11:46:28.542 31047 31100 D nativeloader: Load /system/lib64/libdl.so using class loader ns clns-9 (caller=/data/app/~~UKFgAxUe-55aJIxnAKWDHQ==/com.unrealdash.player-pxJULm8utUqwYzYIEkDvbg==/base.apk!classes13.dex): ok
+09-17 11:46:28.545 31047 31100 D nativeloader: Load /system/lib64/liblog.so using class loader ns clns-9 (caller=/data/app/~~UKFgAxUe-55aJIxnAKWDHQ==/com.unrealdash.player-pxJULm8utUqwYzYIEkDvbg==/base.apk!classes13.dex): ok
+09-17 11:46:28.546 31047 31100 D nativeloader: Load /system/lib64/libm.so using class loader ns clns-9 (caller=/data/app/~~UKFgAxUe-55aJIxnAKWDHQ==/com.unrealdash.player-pxJULm8utUqwYzYIEkDvbg==/base.apk!classes13.dex): ok
+09-17 11:46:28.548 31047 31100 D nativeloader: Load /system/lib64/libz.so using class loader ns clns-9 (caller=/data/app/~~UKFgAxUe-55aJIxnAKWDHQ==/com.unrealdash.player-pxJULm8utUqwYzYIEkDvbg==/base.apk!classes13.dex): ok
+09-17 11:46:28.548 31047 31107 W ConnectionStatusConfig: Dynamic lookup for intent failed for action: com.google.android.gms.games.internal.connect.service.START
+09-17 11:46:28.584  1587  2588 V GrammaticalInflectionUtils: AttributionSource: android.content.AttributionSource@f5833ac6 does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+09-17 11:46:28.590  1587  2588 D ActivityTaskManager: Temporarily retain top process state for launching app
+09-17 11:46:28.595  1587  2588 V ActivityTaskManager: TaskLaunchParamsModifier: phase=3 task=Task{99ae81a #27176 type=standard A=10053:com.unrealdash.player nonResizable} activity=ActivityRecord{204119039 u0 com.unrealdash.player/com.epicgames.unreal.GameActivity t-1} display-area-from-source=DefaultTaskDisplayArea@141562218 display-id=0 task-display-area-windowing-mode=1 suggested-display-area=DefaultTaskDisplayArea@141562218 inherit-from-source=fullscreen non-freeform-task-display-area display-area=DefaultTaskDisplayArea@141562218 skip-bounds-fullscreen
+09-17 11:46:28.595  1587  2588 I ActivityTaskManager: START u0 {flg=0x10000 xflg=0x4 cmp=com.unrealdash.player/com.epicgames.unreal.GameActivity (has extras)} with LAUNCH_SINGLE_TASK from uid 10053 (com.unrealdash.player) (sr=7280325) (BAL_ALLOW_GRACE_PERIOD) result code=0
+09-17 11:46:28.596  2830  2854 V WindowManagerShell: Transition requested (#1105): android.os.BinderProxy@74552a1 TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=27176 effectiveUid=10053 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=com.unrealdash.player/com.epicgames.unreal.SplashActivity } baseActivity=ComponentInfo{com.unrealdash.player/com.epicgames.unreal.SplashActivity} topActivity=ComponentInfo{com.unrealdash.player/com.epicgames.unreal.GameActivity} origActivity=null realActivity=ComponentInfo{com.unrealdash.player/com.epicgames.unreal.SplashActivity} realActivityIsAppLockEnabled=false numActivities=2 lastActiveTime=64101971 supportsMultiWindow=false supportsMultiWindowWithoutConstraints=false resizeMode=0 isResizeable=false minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.os.BinderProxy@61698cb} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 204 - 0, 0) topActivityInfo=ActivityInfo{1376cc6 com.epicgames.unreal.GameActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isInteractive=false isVisible=false isVisibleRequested=false isTopActivityNoDisplay=false isSleeping=true locusId=null displayAreaFeatureId=1 isTopActivityTransparent=false isActivityStackTransparent=false lastNonFullscreenBounds=null leafTaskBoundsFromOptions= false capturedLink=null capturedLinkTimestamp=0 requestedVisibleTypes=503 topActivityRequestOpenInBrowserEducationTimestamp=0 appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false isLeafTask= true eligibleForLetterboxEducation= false isLetterboxEducationEnabled= false isLetterboxDoubleTapEnabled= false eligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 topActivityAppBounds=Rect(0, 0 - 1280, 2856) isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false hasMinAspectRatioOverride=false topActivityLetterboxBounds=null topNonResizableActivityAspectRatio=2.23125} topActivityMainWindowFrame=null isAppBubble=false}, pipChange = null, remoteTransitionInfo = null, displayChanges = null, requestedLocation = null, userChange = null, windowingLayerChange = null, fullscreenRequestChange = null, flags = 0, debugId = 1105 }
+09-17 11:46:28.596  2830  2854 W DisconnectHandler: No disconnect change found in the transition, not handling request.
+09-17 11:46:28.596  2830  2854 V ShellDesktopMode: DesktopTasksController: skipping handleRequest reason=triggerTask's display doesn't support desktop mode
+09-17 11:46:28.596  2830  2854 D ShellSplitScreen: logExit: no-op, mLoggerSessionId is null
+09-17 11:46:28.610  1587  2588 D CorePackageUpdate: Couldn't find a persistent state for task= 27176
+09-17 11:46:28.612 31047 31047 I Choreographer: Skipped 31 frames!  The application may be doing too much work on its main thread.
+09-17 11:46:28.613  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.613  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.613  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.613  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.613  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.613  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.613  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.613  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.613  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.614  3012 26190 D UidImportanceSource: onUidImportanceBlock: uid=10053 importance=100
+09-17 11:46:28.614  3012 26190 D UidImportanceSource: onUidImportanceBlock: packages=[com.unrealdash.player] importance=100
+09-17 11:46:28.614  3012 26190 D UidImportanceSource: onUidImportanceBlock: packageName=com.unrealdash.player importance=100
+09-17 11:46:28.614  3012  4343 D ImpulseStateSource: Notify clients: 5879
+09-17 11:46:28.616  3431  5754 I GamesConnectBroker: (REDACTED) handling request from %s
+09-17 11:46:28.616  3431  5754 I GetServiceValidatorImpl: (REDACTED) onGetService() from Client SDK version [%s], Module version [%s], PGA version [%s], Account [%s], Calling package [%s], Game package [%s]
+09-17 11:46:28.618  3431  5754 I GamesConnectSrv: (REDACTED) signIn(%s): gamesSignInRequest=%s
+09-17 11:46:28.618  3431  5754 I GamesConnectSrv: (REDACTED) signIn(%s): validatorRequest=%s, signInRequest=%s
+09-17 11:46:28.621  3431 31111 I GetServiceValidatorImpl: (REDACTED) onGetService() from Client SDK version [%s], Module version [%s], PGA version [%s], Account [%s], Calling package [%s], Game package [%s]
+09-17 11:46:28.622 31047 31047 D UE      : [GameActivity] LIFECYCLE: GameActivity.onCreate() called!, this=com.epicgames.unreal.GameActivity@5ef6761
+09-17 11:46:28.622 31047 31047 D UE      : [GameActivity] Found ProjectName = UnRealDash
+09-17 11:46:28.622 31047 31047 D UE      : [GameActivity] Found AppType = 
+09-17 11:46:28.622 31047 31047 D UE      : [GameActivity] UI hiding set to true
+09-17 11:46:28.622 31047 31047 D UE      : [GameActivity] BuildConfiguration set to Shipping
+09-17 11:46:28.623 31047 31047 D UE      : [GameActivity] UseExternalFilesDir set to true
+09-17 11:46:28.623 31047 31047 D UE      : [GameActivity] SupportsVulkan set to true
+09-17 11:46:28.623  1587  2592 D ActivityManager: sync unfroze 24057 com.google.android.gm for 6
+09-17 11:46:28.624 29333 30043 I fghg    : (REDACTED) HDM. appOpsListener %s %s
+09-17 11:46:28.624 29333 30043 I fghg    : (REDACTED) HDM. Ignoring irrelevant audio permission changes for package %s
+09-17 11:46:28.624  3431 31111 I SignInPerformer-39: Requested scopes is empty. Promoting to `games_lite` & `drive_appfolder`. [CONTEXT service_id=1 ]
+09-17 11:46:28.624  3431 31111 I SignInPerformer-39: (REDACTED) Handling request [%s], isFirstPartyCaller [%s]
+09-17 11:46:28.625  3431 31111 I SignInPerformer-39: (REDACTED) java sdk version: [%s]	unity sdk version: [%s]	native sdk version: [%s]
+09-17 11:46:28.625  3431 31111 E SignInPerformer-39: Game (com.unrealdash.player) failed to include a non-numeric Play Games Services application id in their AndroidManifest [CONTEXT service_id=1 ]
+09-17 11:46:28.625  3431 31111 E PlayGamesServices[SignInPerformer]: The Play Games Services application ID includes non-numeric characters. For more information, refer to the troubleshooting guide:
+09-17 11:46:28.625  3431 31111 E PlayGamesServices[SignInPerformer]:  https://developers.google.com/games/services/android/troubleshooting#check_your_metadata_tags
+09-17 11:46:28.626  3431 31111 I SignInPerformer-39: (REDACTED) Reporting unresolvable error for [%s]
+09-17 11:46:28.626  3431 31111 I GamesConnectSignInOp: (REDACTED) signIn(%s): Game connection failed with unresolvable error. Status = %d
+09-17 11:46:28.627  1587  2592 D ActivityManager: sync unfroze 28690 com.android.vending for 6
+09-17 11:46:28.628  1587  2592 D ActivityManager: sync unfroze 15766 com.ultrahuman.android for 6
+09-17 11:46:28.633  3431  7949 I GetServiceValidatorImpl: (REDACTED) onGetService() from Client SDK version [%s], Module version [%s], PGA version [%s], Account [%s], Calling package [%s], Game package [%s]
+09-17 11:46:28.633  3431  7949 I GetGamesServiceReqFacto: (REDACTED) Parsing request with ignored arguments. signInOptionsBundle [%s], isRetryingSignIn [%s], skipWelcomePopup [%s], requireGooglePlus [%s]
+09-17 11:46:28.633  3431  7949 I GetGamesServiceReqFacto: Replacing request for `games` scope with `games_lite`
+09-17 11:46:28.635  3431 31111 I SignInPerformer-40: (REDACTED) Handling request [%s], isFirstPartyCaller [%s]
+09-17 11:46:28.636  3431 31111 I SignInPerformer-40: Successfully brokered first-party unauthenticated GamesService [CONTEXT service_id=1 ]
+09-17 11:46:28.637  3431 31111 I GetGamesServiceV2Op: (REDACTED) Successfully brokered GamesService for request %s
+09-17 11:46:28.638 31047 31114 D UE      : [GameActivity] Using APK commandline
+09-17 11:46:28.638 31047 31114 D UE      : [GameActivity] Parsing commandline: -project="../../../UnRealDash/UnRealDash.uproject"
+09-17 11:46:28.643 31047 31114 D UE      : [GameActivity] failed to get bytes from asset java.io.FileNotFoundException: configrules.bin.png
+09-17 11:46:28.644 31047 31114 D UE      : [GameActivity] $$$ configrules: run config rules
+09-17 11:46:28.644 31047 31114 D UE      : [GameActivity] failed to get bytes from asset java.io.FileNotFoundException: configrules.bin.png
+09-17 11:46:28.645 31047 31114 D UE      : [GameActivity] configrulesversion: no data
+09-17 11:46:28.645 31047 31114 D UE      : [GameActivity] configrulesversion: no data
+09-17 11:46:28.645 31047 31114 D UE      : [GameActivity] configrulesversion: no data
+09-17 11:46:28.645 31047 31114 D UE      : [GameActivity] $$$ configrules: start parsing
+09-17 11:46:28.647 31047 31114 D UE      : [GameActivity] $$$ configrules: run completed
+09-17 11:46:28.687 31047 31047 W realdash.player: type=1400 audit(0.0:17694): avc:  denied  { read } for  name="overcommit_memory" dev="proc" ino=2674603 scontext=u:r:untrusted_app_34:s0:c53,c256,c512,c768 tcontext=u:object_r:proc_overcommit_memory:s0 tclass=file permissive=0 app=com.unrealdash.player
+09-17 11:46:28.711  2830  2854 V RecentTasksController: Notify recent tasks changed
+09-17 11:46:28.713  1629  1629 D RecentTasksList: invalidateLoadedTasks - previous requestLoadId: -1
+09-17 11:46:28.717 31047 31095 V UE      : [NetworkChangedManager] Connectivity hasn't changed. Current state: CONNECTION_AVAILABLE
+09-17 11:46:28.717 31047 31095 V UE      : [NetworkChangedManager] Full network check complete. State: CONNECTION_AVAILABLE
+09-17 11:46:28.717  2830  2854 V RecentTasksController: generateList(getRecentTasks)
+09-17 11:46:28.717  2830  2854 V RecentTasksController: initializeDesksMap - allDeskIds: []
+09-17 11:46:28.717  2830  2854 V RecentTasksController: Task 27176 is not an active desktop task
+09-17 11:46:28.717  2830  2854 V RecentTasksController: Added fullscreen task: 27176
+09-17 11:46:28.717  2830  2854 V RecentTasksController: Task 27129 is not an active desktop task
+09-17 11:46:28.717  2830  2854 V RecentTasksController: Added fullscreen task: 27129
+09-17 11:46:28.717  2830  2854 V RecentTasksController: Task 27151 is not an active desktop task
+09-17 11:46:28.717  2830  2854 V RecentTasksController: Added fullscreen task: 27151
+09-17 11:46:28.717  2830  2854 V RecentTasksController: generateList - complete
+09-17 11:46:28.718  1629  1645 D PreloadThumbnailUseCase: Preloading thumbnails for task ids: [[id=27151 windowingMode=1 user=0 lastActiveTime=62652223] null, [id=27129 windowingMode=1 user=0 lastActiveTime=64064097] null, [id=27176 windowingMode=1 user=0 lastActiveTime=64102253] null]
+09-17 11:46:28.727 15766 15766 D WM-DelayedWorkTracker: Scheduling work e1d295cf-53d8-4076-bcd9-d53d8b24a25f
+09-17 11:46:28.784 15766 15766 D WM-GreedyScheduler: Starting tracking for e1d295cf-53d8-4076-bcd9-d53d8b24a25f
+09-17 11:46:28.859 15766 15766 D WM-SystemJobService: onStartJob for WorkGenerationalId(workSpecId=e1d295cf-53d8-4076-bcd9-d53d8b24a25f, generation=0)
+09-17 11:46:28.863 31047 31047 D nativeloader: Load /data/app/~~UKFgAxUe-55aJIxnAKWDHQ==/com.unrealdash.player-pxJULm8utUqwYzYIEkDvbg==/lib/arm64/libUnreal.so using class loader ns clns-9 (caller=/data/app/~~UKFgAxUe-55aJIxnAKWDHQ==/com.unrealdash.player-pxJULm8utUqwYzYIEkDvbg==/base.apk!classes13.dex): ok
+09-17 11:46:28.868 31047 31047 D nativeloader: Load /data/app/~~UKFgAxUe-55aJIxnAKWDHQ==/com.unrealdash.player-pxJULm8utUqwYzYIEkDvbg==/lib/arm64/libUnreal.so using class loader ns clns-9 (caller=<unknown>): ok
+09-17 11:46:28.872 31047 31047 E PermissionHelper: GVRTransition2DActivity.getActivity() failed. Trying to get GameActivity.
+09-17 11:46:28.872 31047 31047 D PermissionHelper: checkPermission: android.permission.CHANGE_WIFI_MULTICAST_STATE has not granted
+09-17 11:46:28.872 31047 31047 D UE      : [GameActivity] LIFECYCLE: GameActivity.onCreateBody(), activityContext = com.epicgames.unreal.GameActivity@5ef6761
+09-17 11:46:28.876 31047 31047 D CompatChangeReporter: Compat change id reported: 349153669; UID 10053; state: ENABLED
+09-17 11:46:28.904 31047 31047 D InsetsController: Setting requestedVisibleTypes to 496 (was 503)
+09-17 11:46:28.905  1587  3105 W InputChannel-JNI: Channel already disposed.
+09-17 11:46:28.906 15766 15933 D WM-Processor: u: processing WorkGenerationalId(workSpecId=e1d295cf-53d8-4076-bcd9-d53d8b24a25f, generation=0)
+09-17 11:46:28.907 31047 31047 D UE      : [GameActivity] Target SDK is 35.  This may cause issues if permissions are denied by the user.
+09-17 11:46:28.924 31047 31047 D CompatChangeReporter: Compat change id reported: 303326708; UID 10053; state: ENABLED
+09-17 11:46:28.930 15766 15766 D WM-WorkerWrapper: Starting work for com.ultrahuman.utrace.EventSyncWorker
+09-17 11:46:28.935 31047 31047 I ContentCaptureHelper: Setting logging level to OFF
+09-17 11:46:28.938 15766 15933 D WM-ConstraintTracker: c: initial state = true
+09-17 11:46:28.938 15766 15933 D WM-BrdcstRcvrCnstrntTrc: c: registering receiver
+09-17 11:46:28.943 15766 15933 D WM-ConstraintTracker: l: initial state = NetworkState(isConnected=true, isValidated=true, isMetered=false, isNotRoaming=true)
+09-17 11:46:28.943 15766 15933 D WM-NetworkStateTracker: Registering network callback
+09-17 11:46:28.944  1587  3097 D ConnectivityService: requestNetwork for uid/pid:10451/15766 activeRequest: null callbackRequest: 8173 [NetworkRequest [ REQUEST id=8174, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10451 RequestorUid: 10451 RequestorPkg: com.ultrahuman.android UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647 isUidTracked: false declaredMethods: AVAIL|LOST|NC
+09-17 11:46:28.945  1587  2685 D WifiNetworkFactory: got request NetworkRequest [ REQUEST id=8174, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10451 RequestorUid: 10451 RequestorPkg: com.ultrahuman.android UnderlyingNetworks: Null] ]
+09-17 11:46:28.945  1587  2685 D UntrustedWifiNetworkFactory: got request NetworkRequest [ REQUEST id=8174, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10451 RequestorUid: 10451 RequestorPkg: com.ultrahuman.android UnderlyingNetworks: Null] ]
+09-17 11:46:28.945  1587  2685 D OemPaidWifiNetworkFactory: got request NetworkRequest [ REQUEST id=8174, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10451 RequestorUid: 10451 RequestorPkg: com.ultrahuman.android UnderlyingNetworks: Null] ]
+09-17 11:46:28.945  1587  2685 D MultiInternetWifiNetworkFactory: got request NetworkRequest [ REQUEST id=8174, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED Uid: 10451 RequestorUid: 10451 RequestorPkg: com.ultrahuman.android UnderlyingNetworks: Null] ]
+09-17 11:46:28.945  1587  2698 D ConnectivityService: NetReassign [8174 : null → 111] [c 0] [a 1] [i 0]
+09-17 11:46:28.946 15766 15933 D WM-GreedyScheduler: Constraints met: Scheduling work ID WorkGenerationalId(workSpecId=e1d295cf-53d8-4076-bcd9-d53d8b24a25f, generation=0)
+09-17 11:46:28.949 31047 31047 D InsetsController: Setting requestedVisibleTypes to 496 (was 503)
+09-17 11:46:28.950 15766 16063 D WM-NetworkStateTracker: Network capabilities changed: [ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&VALIDATED&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED&NOT_VCN_MANAGED&NOT_BANDWIDTH_CONSTRAINED LinkUpBandwidth>=65200Kbps LinkDnBandwidth>=50419Kbps TransportInfo: <SSID: <unknown ssid>, BSSID: 02:00:00:00:00:00, MAC: 02:00:00:00:00:00, IP: /192.168.50.215, Security type: 4, Supplicant state: COMPLETED, Wi-Fi standard: 11ax, RSSI: -67, Link speed: 408Mbps, Tx Link speed: 408Mbps, Max Supported Tx Link speed: 1200Mbps, Calculated Tx : 193Mbps, Rx Link speed: 432Mbps, Max Supported Rx Link speed: 1200Mbps, Calculated Rx : 349Mbps, Frequency: 5745MHz, Net ID: -1, Metered hint: false, score: 100, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: -1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none><none>MLO Information: , Is TID-To-Link negotiation supported by the AP: false, AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>, Vendor Data: <none>> SignalStrength: -67 UnderlyingNetworks: Null]
+09-17 11:46:28.950  1587  3105 W InputChannel-JNI: Channel already disposed.
+09-17 11:46:28.950 24057 24062 W ogle.android.gm: Reducing the number of considered missed Gc histogram windows from 180 to 100
+09-17 11:46:28.953 31047 31047 I ContentCaptureHelper: Setting logging level to OFF
+09-17 11:46:28.954 31047 31047 D WindowOnBackDispatcher: setTopOnBackInvokedCallback (unwrapped): android.view.ViewRootImpl$$ExternalSyntheticLambda14@2497131
+09-17 11:46:28.954  1587  2588 D CoreBackPreview: Window{32168e2 u0 com.unrealdash.player/com.epicgames.unreal.GameActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@c39ce92, mPriority=0, mIsAnimationCallback=false, mOverrideBehavior=0}
+09-17 11:46:28.954 15766 15933 D WM-Processor: Work WorkGenerationalId(workSpecId=e1d295cf-53d8-4076-bcd9-d53d8b24a25f, generation=0) is already enqueued for processing
+09-17 11:46:28.955  1587  3105 D WindowManager: setClientSurface Surface(name=VRI-com.unrealdash.player/com.epicgames.unreal.GameActivity#8849)/@0x879a063 for 32168e2 com.unrealdash.player/com.epicgames.unreal.GameActivity
+09-17 11:46:28.957  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.957  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.957  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.957  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.957  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.957  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.957  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.957  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.957  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.957  1587  1819 V WindowManager: Sent Transition (#1105) createdAt=09-17 11:46:28.587 via request=TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=27176 effectiveUid=10053 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=com.unrealdash.player/com.epicgames.unreal.SplashActivity } baseActivity=ComponentInfo{com.unrealdash.player/com.epicgames.unreal.SplashActivity} topActivity=ComponentInfo{com.unrealdash.player/com.epicgames.unreal.GameActivity} origActivity=null realActivity=ComponentInfo{com.unrealdash.player/com.epicgames.unreal.SplashActivity} realActivityIsAppLockEnabled=false numActivities=2 lastActiveTime=64101971 supportsMultiWindow=false supportsMultiWindowWithoutConstraints=false resizeMode=0 isResizeable=false minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{17f9cb3 Task{99ae81a #27176 type=standard A=10053:com.unrealdash.player nonResizable}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 204 - 0, 0) topActivityInfo=ActivityInfo{a39a460 com.epicgames.unreal.GameActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isInteractive=false isVisible=false isVisibleRequested=false isTopActivityNoDisplay=false isSleeping=true locusId=null displayAreaFeatureId=1 isTopActivityTransparent=false isActivityStackTransparent=false lastNonFullscreenBounds=null leafTaskBoundsFromOptions= false capturedLink=null capturedLinkTimestamp=0 requestedVisibleTypes=503 topActivityRequestOpenInBrowserEducationTimestamp=0 appCompatTaskInfo=AppCompatTaskInfo { topActivityInSizeCompat=false isLeafTask= true eligibleForLetterboxEducation= false isLetterboxEducationEnabled= false isLetterboxDoubleTapEnabled= false eligibleForUserAspectRatioButton= false topActivityBoundsLetterboxed= false isFromLetterboxDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 topActivityAppBounds=Rect(0, 0 - 1280, 2856) isUserFullscreenOverrideEnabled=false isSystemFullscreenOverrideEnabled=false hasMinAspectRatioOverride=false topActivityLetterboxBounds=null topNonResizableActivityAspectRatio=2.23125} topActivityMainWindowFrame=null isAppBubble=false}, pipChange = null, remoteTransitionInfo = null, displayChanges = null, requestedLocation = null, userChange = null, windowingLayerChange = null, fullscreenRequestChange = null, flags = 0, debugId = 1105 }
+09-17 11:46:28.957  1587  1819 V WindowManager:     startWCT=WindowContainerTransaction { changes= {} hops= [] flags= 0 errorCallbackToken=null taskFragmentOrganizer=null }
+09-17 11:46:28.957  1587  1819 V WindowManager:     info={id=1105 t=OPEN f=0x40 trk=0 r=[] c=[]}
+09-17 11:46:28.958  2830  3634 V WindowManagerShell: onTransitionReady(transaction=6816113346524)
+09-17 11:46:28.958  2830  2854 V WindowManagerShell: onTransitionReady (#1105) android.os.BinderProxy@74552a1: {id=1105 t=OPEN f=0x40 trk=0 r=[] c=[]}
+09-17 11:46:28.958 31047 31047 I Surface : Creating surface for consumer unnamed-31047-0 with slotExpansion=1 for 64 slots
+09-17 11:46:28.958  2830  2854 V WindowManagerShell: FocusTransitionObserver: Updating focus state for transition #1105
+09-17 11:46:28.958  2830  2854 V ShellDesktopMode: DesktopModeLogger: taskInfo map after processing changes 0
+09-17 11:46:28.958  2830  2854 V WindowManagerShell: No transition roots in (#1105) android.os.BinderProxy@74552a1@0 so abort
+09-17 11:46:28.958  2830  2854 V WindowManagerShell: Transition animation finished (aborted=true), notifying core (#1105) android.os.BinderProxy@74552a1@0
+09-17 11:46:28.958 31047 31047 I Surface : Creating surface for consumer VRI[GameActivity]#0(BLAST Consumer)0 with slotExpansion=1 for 64 slots
+09-17 11:46:28.960  2830  2854 V WindowManagerShell: Track 0 became idle
+09-17 11:46:28.960  2830  2854 V WindowManagerShell: All active transition animations finished
+09-17 11:46:28.960  1587  1819 V WindowManager: Finish Transition (#1105): created at 09-17 11:46:28.587 collect-started=0.096ms request-sent=7.92ms started=10.537ms ready=23.615ms sent=369.339ms finished=372.501ms
+09-17 11:46:28.962  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.962  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.962  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.962  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.962  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.962  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.962  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.962  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.962  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.963  3012 10367 D UidImportanceSource: onUidImportanceBlock: uid=10053 importance=325
+09-17 11:46:28.963  3012 10367 D UidImportanceSource: onUidImportanceBlock: packages=[com.unrealdash.player] importance=325
+09-17 11:46:28.963  3012 10367 D UidImportanceSource: onUidImportanceBlock: packageName=com.unrealdash.player importance=325
+09-17 11:46:28.963  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.963  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.964  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.964  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.964  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.964  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.964  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.964  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.964  1202  4279 W libbinder.IPCThreadState: Sending oneway calls to frozen process.
+09-17 11:46:28.964  3012  3151 D ImpulseStateSource: Notify clients: 5880
+09-17 11:46:28.965  2999  2999 I HidDeviceService: unregisterAppUid(): uid=10053
+09-17 11:46:28.965  2999  2999 W HidDeviceService: unregisterAppUid(): caller UID doesn't match user UID
+09-17 11:46:28.965  1587  1819 D HintManagerService: Sent cleanup message for uid 10053
+09-17 11:46:28.967  1587  5180 W WindowManager: Failed looking up window session=Session{87791e0 2830:u0a10257} callers=com.android.server.wm.WindowManagerService.windowForClient:6904 com.android.server.wm.WindowManagerService.relayoutWindow:2577 com.android.server.wm.Session.relayout:294 
+09-17 11:46:28.968  2830  2881 D WindowOnBackDispatcher: setTopOnBackInvokedCallback (unwrapped): null
+09-17 11:46:28.968  1587  5180 W WindowManager: Failed looking up window session=Session{87791e0 2830:u0a10257} callers=com.android.server.wm.WindowManagerService.windowForClient:6904 com.android.server.wm.Session.setOnBackInvokedCallbackInfo:1029 android.view.IWindowSession$Stub.onTransact:1101 
+09-17 11:46:28.968  1587  5180 I WindowManager: setOnBackInvokedCallback(): No window state for package:com.android.systemui
+09-17 11:46:28.968  1587  5180 W WindowManager: Failed looking up window session=Session{87791e0 2830:u0a10257} callers=com.android.server.wm.WindowManagerService.removeClientToken:2325 com.android.server.wm.Session.remove:281 android.view.IWindowSession$Stub.onTransact:637 
+09-17 11:46:28.989   603 11303 E powerhal-libperfmgr: Error: shouldn't report duration during pause state.
+09-17 11:46:28.994 31798 31804 I pixel-thermal: VIRTUAL-SKIN-SPEAKER:28.9571 raw data: VIRTUAL-SKIN-SPEAKER:28957.1 
+09-17 11:46:28.995 31798 31804 I pixel-thermal: rfpa_therm:31.962 raw data: rfpa_therm:31962 
+09-17 11:46:28.995 31798 31804 I pixel-thermal: soc_therm:32.049 raw data: soc_therm:32049 
+09-17 11:46:28.998 31047 31047 D VRI[GameActivity]: WindowInsets changed: 1280x2856 statusBars:[0,204,0,0] mandatorySystemGestures:[0,240,0,96] 
+09-17 11:46:29.000 31047 31047 D WindowOnBackDispatcher: setTopOnBackInvokedCallback (unwrapped): android.view.ViewRootImpl$$ExternalSyntheticLambda14@3914bee
+09-17 11:46:29.001  1587  5180 D CoreBackPreview: Window{967dec7 u0 com.unrealdash.player/com.epicgames.unreal.GameActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@d8c9dea, mPriority=0, mIsAnimationCallback=false, mOverrideBehavior=0}
+09-17 11:46:29.005  1587  5180 D WindowManager: setClientSurface Surface(name=VRI-com.unrealdash.player/com.epicgames.unreal.GameActivity#8850)/@0x9f8b8db for 967dec7 com.unrealdash.player/com.epicgames.unreal.GameActivity
+09-17 11:46:29.013 31047 31047 I Surface : Creating surface for consumer unnamed-31047-1 with slotExpansion=1 for 64 slots
+09-17 11:46:29.014 31047 31047 I Surface : Creating surface for consumer VRI[GameActivity]#1(BLAST Consumer)1 with slotExpansion=1 for 64 slots
+09-17 11:46:29.023 31047 31047 I Surface : Creating surface for consumer unnamed-31047-2 with slotExpansion=1 for 64 slots
+09-17 11:46:29.025 31047 31047 I Surface : Creating surface for consumer 87c1569 SurfaceView[com.unrealdash.player/com.epicgames.unreal.GameActivity]#2(BLAST Consumer)2 with slotExpansion=1 for 64 slots
+09-17 11:46:29.052   603 11303 E powerhal-libperfmgr: Error: shouldn't report duration during pause state.
+09-17 11:46:29.126 31047 31047 D VRI[GameActivity]: visibilityChanged oldVisibility=true newVisibility=false
+09-17 11:46:29.185 29333 30043 I fghg    : (REDACTED) HDM. appOpsListener %s %s
+09-17 11:46:29.185 29333 30043 I fghg    : (REDACTED) HDM. Ignoring irrelevant audio permission changes for package %s
+09-17 11:46:29.899 31047 31055 I realdash.player: Compiler allocated 5297KB to compile void android.view.ViewRootImpl.performTraversals(long)
+09-17 11:46:29.967 29333 30043 I fghg    : (REDACTED) HDM. appOpsListener %s %s
+09-17 11:46:29.968 29333 30043 I fghg    : (REDACTED) HDM. Ignoring irrelevant audio permission changes for package %s
+09-17 11:46:29.968  1587  2626 D HintManagerService: Starts cleaning for 10053
+09-17 11:46:30.513 15766 15885 I WM-WorkerWrapper: Worker result SUCCESS for Work [ id=e1d295cf-53d8-4076-bcd9-d53d8b24a25f, tags={ com.ultrahuman.utrace.EventSyncWorker,EventSyncWorker } ]
+09-17 11:46:30.555 15766 15766 D WM-Processor: u e1d295cf-53d8-4076-bcd9-d53d8b24a25f executed; reschedule = false
+09-17 11:46:30.556 15766 15766 D WM-GreedyScheduler: Stopping tracking for WorkGenerationalId(workSpecId=e1d295cf-53d8-4076-bcd9-d53d8b24a25f, generation=0)
+09-17 11:46:30.559 15766 15766 D WM-SystemJobService: e1d295cf-53d8-4076-bcd9-d53d8b24a25f executed on JobScheduler
+09-17 11:46:30.585 28690 28690 I Finsky  : [2] Memory trim requested to level 40
+09-17 11:46:30.585 28690 28690 I Finsky  : [2] Flushing in-memory image cache
+09-17 11:46:30.588 15766 15885 D WM-GreedyScheduler: Cancelling work ID e1d295cf-53d8-4076-bcd9-d53d8b24a25f
+09-17 11:46:30.615 15766 15885 D WM-SystemJobScheduler: Scheduling work ID e1d295cf-53d8-4076-bcd9-d53d8b24a25fJob ID 13807
+09-17 11:46:30.629 15766 15885 D WM-BrdcstRcvrCnstrntTrc: c: unregistering receiver
+09-17 11:46:30.633 15766 15885 D WM-NetworkStateTracker: Unregistering network callback
+09-17 11:46:31.329  3012  3151 D TemperatureStateSource: sequence=4131 actualDelay=10001
+09-17 11:46:31.332  3012  3151 D TemperatureStateSource: Reading temperature: sequence=4132
+09-17 11:46:31.344 31798 31798 I pixel-thermal: VIRTUAL-SKIN:30.087 raw data: VIRTUAL-SKIN:30087 VIRTUAL-SKIN-EQ:30087 VIRTUAL-SKIN-LEGACY:30160.9 VIRTUAL-SKIN-LEGACY-MODEL-DIFF:91.5195 VIRTUAL-SKIN-LEGACY-SHUTDOWN:0 VIRTUAL-SKIN-MODEL:30069.4 VIRTUAL-SKIN-MODEL-CLAMPED:30069.4 VIRTUAL-SKIN-MODEL-LEGACY-DIFF:-91.5195 VIRTUAL-SKIN-MODEL-UPDATED:30087 VIRTUAL-SKIN-MODEL-UPPER-CLAMPED:30069.4 VIRTUAL-SKIN-SUB-0:30131.6 VIRTUAL-SKIN-SUB-1:30155.1 VIRTUAL-SKIN-SUB-2:30160.9 VIRTUAL-SKIN-SUB-3:29835.4 VIRTUAL-SKIN-SUB-4:29895.5 VT_LEGACY_WEIGHT:0 VT_MODEL_WEIGHT:1 charging_therm:32623 disp0_therm:27996 flash_therm:29405 north_therm:30969 quiet_therm:30939 rfpa_therm:31905 soc_therm:32068 usb_pwr_therm:28253 
+09-17 11:46:31.346  3012  3151 D TemperatureStateSource: getDeviceTemperatures: sequence=4132 deviceTemperatureType=3 temperatureSource=0 temperatures=[30.086994]
+09-17 11:46:31.346  3012  3151 D TemperatureStateSource: sequence=4132 waitTime=10000
+09-17 11:46:31.349  3012  3151 D ImpulseStateSource: Notify clients: 5881
+09-17 11:46:32.014 31798 31804 I pixel-thermal: BG-TASKS-THROTTLING-HINT:0 raw data: BG-TASKS-THROTTLING-EXP-PROPERTY:1 BG-TASKS-THROTTLING-HINT:0 BG_TASKS_THROTTLING_COUNT:2 BG_TASKS_THROTTLING_LEVEL:0 IS_BG_TASKS_THROTTLING_ACTIVE:1 IS_CHARGING:1 VIRTUAL-SKIN:30087 battery_capacity:100 thb_hda:54 
+09-17 11:46:32.015 31798 31804 I pixel-thermal: BG_TASKS_THROTTLING_TRIGGER:30087 raw data: BG_TASKS_THROTTLING_TRIGGER:30087 VIRTUAL-SKIN:30087 
+09-17 11:46:32.775   974   974 W TracingMuxer: type=1400 audit(0.0:17695): avc:  denied  { write } for  name="traced_producer" dev="tmpfs" ino=1564 scontext=u:r:hal_camera_default:s0 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+09-17 11:46:32.860  1587  3105 W ProcessStats: Tracking association SourceState{160ec2e com.unrealdash.player/10053 Top #172995} whose proc state 1 is better than process ProcessState{fa4095c com.google.android.gms/10150 pkg=com.google.android.gms} proc state 2 (80 skipped)
+09-17 11:46:33.539  2960 32312 D IpClient/wlan0: interfaceLinkStateChanged: ifindex 47 up
+09-17 11:46:33.585 31047 31161 D ProfileInstaller: Installing profile for com.unrealdash.player
+09-17 11:46:33.989  1587  2698 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+09-17 11:46:33.999  1587  2698 D InetDiagMessage: Destroyed 1 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+09-17 11:46:33.999  1587  2698 D InetDiagMessage: Destroyed live tcp sockets for uids={10053} in 17ms
+09-17 11:46:34.006  1587  2698 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+09-17 11:46:34.013  1587  2698 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+09-17 11:46:34.014  1587  2698 D InetDiagMessage: Destroyed live tcp sockets for uids={20053} in 15ms
+09-17 11:46:34.123 29333 29342 I libbinder.IPCThreadState: oneway function results for code 2 on binder at 0xb400007d9ce7dbd0 will be dropped but finished with status UNKNOWN_TRANSACTION
+09-17 11:46:35.192 31798 31804 I pixel-thermal: quiet_therm:30.889 raw data: quiet_therm:30889 
+09-17 11:46:35.197 31798 31804 I pixel-thermal: VIRTUAL-SKIN-MODEL: model_input: [32628.00 27996.00 29405.00 30953.00 30889.00 31868.00 32065.00 28253.00 ]
+09-17 11:46:35.197 31798 31804 I native  : I0000 00:00:1789670795.197392   31804 thermal_tflite_wrapper.cc:270] ThermalTfliteInvoke
+09-17 11:46:35.198 31798 31804 I pixel-thermal: VIRTUAL-SKIN-MODEL: model_output: [30079.1 ]
+09-17 11:46:35.199 31798 31804 I pixel-thermal: VIRTUAL-SKIN-MODEL: predicted_value: [30079.1 ]
+09-17 11:46:35.200 31798 31804 I pixel-thermal: VIRTUAL-SKIN-CHARGE-WIRED:30.0839 raw data: NO_WLC:1 VIRTUAL-SKIN-CHARGE:30083.9 VIRTUAL-SKIN-CHARGE-WIRED:30083.9 VIRTUAL-SKIN-EQ:30083.9 VIRTUAL-SKIN-LEGACY:30150.9 VIRTUAL-SKIN-LEGACY-MODEL-DIFF:71.7754 VIRTUAL-SKIN-LEGACY-SHUTDOWN:0 VIRTUAL-SKIN-MODEL:30079.1 VIRTUAL-SKIN-MODEL-CLAMPED:30079.1 VIRTUAL-SKIN-MODEL-LEGACY-DIFF:-71.7754 VIRTUAL-SKIN-MODEL-UPDATED:30083.9 VIRTUAL-SKIN-MODEL-UPPER-CLAMPED:30079.1 VIRTUAL-SKIN-SUB-0:30122.9 VIRTUAL-SKIN-SUB-1:30150.9 VIRTUAL-SKIN-SUB-2:30148.5 VIRTUAL-SKIN-SUB-3:29815.6 VIRTUAL-SKIN-SUB-4:29891.9 VT_LEGACY_WEIGHT:0 VT_MODEL_WEIGHT:1 WLC_CHECK:1 charging_therm:32628 disp0_therm:27996 flash_therm:29405 north_therm:30953 quiet_therm:30889 rfpa_therm:31868 soc_therm:32065 thb_hda:54 usb_pwr_therm:28253 
+09-17 11:46:35.200 31798 31804 I pixel-thermal: VIRTUAL-SKIN-CHARGE-PERSIST:30.0839 raw data: VIRTUAL-SKIN-CHARGE:30083.9 VIRTUAL-SKIN-CHARGE-PERSIST:30083.9 
+09-17 11:46:35.938  1587  1842 D ActivityManager: sync unfroze 29743 com.android.settings for 10
+09-17 11:46:35.945  1587  1842 D ActivityManager: sync unfroze 19192 com.google.android.apps.wellbeing for 10
+09-17 11:46:35.947  1587  1842 D ActivityManager: sync unfroze 23384 com.android.keychain for 10
+09-17 11:46:35.950  1587  1842 D ActivityManager: sync unfroze 9306 com.android.DeviceAsWebcam for 10
+09-17 11:46:36.023  1776  1793 I mitigation-module: AUDIO_MITIGATION: mitigate event filtered
+09-17 11:46:36.044 31798 31804 I pixel-thermal: VIRTUAL-SKIN-SPEAKER-MODEL: model_input: [32628.00 27996.00 29405.00 30953.00 30889.00 31868.00 32065.00 28253.00 ]
+09-17 11:46:36.045 31798 31804 I native  : I0000 00:00:1789670796.045036   31804 thermal_tflite_wrapper.cc:270] ThermalTfliteInvoke
+09-17 11:46:36.045 31798 31804 I pixel-thermal: VIRTUAL-SKIN-SPEAKER-MODEL: model_output: [28938.3 ]
+09-17 11:46:36.045 31798 31804 I pixel-thermal: VIRTUAL-SKIN-SPEAKER-MODEL: predicted_value: [28938.3 ]
+09-17 11:46:36.045 31798 31804 I pixel-thermal: VIRTUAL-SKIN-SPEAKER:28.9496 raw data: VIRTUAL-SKIN-SPEAKER:28949.6 VIRTUAL-SKIN-SPEAKER-LEGACY:29524 VIRTUAL-SKIN-SPEAKER-LEGACY-MODEL-DIFF:585.691 VIRTUAL-SKIN-SPEAKER-MODEL:28938.3 VIRTUAL-SKIN-SPEAKER-MODEL-CLAMPED:28938.3 VIRTUAL-SKIN-SPEAKER-MODEL-LEGACY-DIFF:-585.691 VIRTUAL-SKIN-SPEAKER-MODEL-UPPER-CLAMPED:28938.3 VIRTUAL-SKIN-SPEAKER-SUB-0:29524 VT_SPEAKER_LEGACY_WEIGHT:0 VT_SPEAKER_MODEL_WEIGHT:1 charging_therm:32628 disp0_therm:27996 flash_therm:29405 north_therm:30953 quiet_therm:30889 rfpa_therm:31868 soc_therm:32065 usb_pwr_therm:28253 
+09-17 11:46:36.046 31798 31804 I pixel-thermal: rfpa_therm:31.868 raw data: rfpa_therm:31868 
+09-17 11:46:36.046 31798 31804 I pixel-thermal: soc_therm:32.065 raw data: soc_therm:32065 
+09-17 11:46:36.465 15766 15766 D WM-DelayedWorkTracker: Scheduling work a4ea223c-8aba-4fbe-8c0d-75276f53e671
+09-17 11:46:36.465 15766 15766 D WM-GreedyScheduler: Starting tracking for a4ea223c-8aba-4fbe-8c0d-75276f53e671
+09-17 11:46:36.471 15766 15936 D WM-ConstraintTracker: c: initial state = true
+09-17 11:46:36.473 15766 15936 D WM-BrdcstRcvrCnstrntTrc: c: registering receiver
+09-17 11:46:36.478 15766 15936 D WM-GreedyScheduler: Constraints met: Scheduling work ID WorkGenerationalId(workSpecId=a4ea223c-8aba-4fbe-8c0d-75276f53e671, generation=0)
+09-17 11:46:36.491 15766 15936 D WM-Processor: u: processing WorkGenerationalId(workSpecId=a4ea223c-8aba-4fbe-8c0d-75276f53e671, generation=0)
+09-17 11:46:36.631 15766 15766 D WM-WorkerWrapper: Starting work for com.ultrahuman.android.tina.PeriodicRingDataWorker
+09-17 11:46:36.890  2999  3377 I stack_app: system/stack/gatt/stack_app.cc:118 appRegister: Allocated name:com.ultrahuman.android uuid:17f3717d-5c31-5c8e-0c9a-1a43f9c65651 app_id:166 eatt_support:false
+09-17 11:46:36.893  2999  3377 I stack_app: system/stack/gatt/stack_app.cc:59 appStartIf: GATT interface 166 already has connected device xx:xx:xx:xx:15:6e
+09-17 11:46:36.893  2999  3377 I stack_app: system/stack/gatt/stack_app.cc:62 appStartIf: Invoking callback with connection id 422
+09-17 11:46:36.895 15766 26410 D BluetoothGatt: onClientRegistered(0)
+09-17 11:46:36.923  2999  3377 I bt_btif_gattc: system/btif/src/btif_gatt_client.cc:391 btif_gattc_open_impl: Transport=BT_TRANSPORT_LE, device_type=BLE, address=xx:xx:xx:xx:da:d2, addr_type=random, conn_type=0, auto_mtu_enabled=false
+09-17 11:46:36.925  2999  3377 I bt_bta_gattc: system/bta/gatt/bta_gattc_conn.cc:81 BTA_GATTC_Open: app_id=166 addr_type=1 connection_type=0 transport=2 prefer_relax_mode=false auto_mtu_enabled=false path_loss_threshold=127 rssi_threshold=127 remote_bda=xx:xx:xx:xx:da:d2
+09-17 11:46:36.946  1293  1293 D AOC     : A3:MSG: controller.cc, 933: SysMem: ipc: C-F1-Ar, cmd ID: 0x00c8, tag: 0x12, rc: 0
+09-17 11:46:36.948  1293  1293 D AOC     : A3:MSG: controller.cc, 933: SysMem: ipc: C-F1-Ar, cmd ID: 0x00c8, tag: 0x13, rc: 0
+09-17 11:46:36.948  1293  1293 D AOC     : A3:MSG: controller.cc, 933: SysMem: ipc: C-F1-Ar, cmd ID: 0x00c8, tag: 0x14, rc: 0
+09-17 11:46:36.976  2999  3382 I bluetooth: system/gd/hci/le_address_manager.cc:776 OnCommandComplete: Received command complete with op_code LE_ADD_DEVICE_TO_FILTER_ACCEPT_LIST(0x2011)
+09-17 11:46:36.976  2999  3382 I bluetooth: system/gd/hci/le_address_manager.cc:391 resume_registered_clients: Resuming registered clients
+09-17 11:46:36.979  2999  3382 I bt_gd_shim: system/gd/hci/acl_manager/le_impl.h:1256 choose_connection_mode: Connection mode: AGGRESSIVE
+09-17 11:46:36.979  2999  3382 I bt_gd_shim: system/gd/hci/acl_manager/le_impl.h:1129 arm_connectability: Support RPA offload, set own address type RESOLVABLE_OR_RANDOM_ADDRESS
+09-17 11:46:36.988   983  1012 W CHRE    : @ 64113.062: HCI Command Complete event unexpected type
+09-17 11:46:36.996  2999  3382 I bt_gd_shim: system/gd/hci/acl_manager/le_impl.h:1001 update_connectability_state_after_armed: Le connection state machine armed state:ConnectabilityState::ARMED status:SUCCESS(0x00)
+09-17 11:46:38.192  1587  2625 D ActivityManager: freezing 11799 com.google.android.youtube
+09-17 11:46:38.194  1075  1917 D AudioFlinger: onStateChanged: pid:11799  uid:10229  state:frozen - no freeze activity
+09-17 11:46:38.228  1587  2698 D InetDiagMessage: Destroyed 2 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+09-17 11:46:38.235  1587  2698 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+09-17 11:46:38.235  1587  2698 D InetDiagMessage: Destroyed live tcp sockets for uids={10229} in 16ms
+09-17 11:46:38.379   974   974 W TracingMuxer: type=1400 audit(0.0:17696): avc:  denied  { write } for  name="traced_producer" dev="tmpfs" ino=1564 scontext=u:r:hal_camera_default:s0 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+09-17 11:46:38.967  1587  2625 D ActivityManager: freezing 24057 com.google.android.gm
+09-17 11:46:38.996  1587  2698 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+09-17 11:46:39.003  1587  2698 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+09-17 11:46:39.003  1587  2698 D InetDiagMessage: Destroyed live tcp sockets for uids={10233} in 17ms
+09-17 11:46:39.049 31798 31804 I pixel-thermal: BG-TASKS-THROTTLING-HINT:0 raw data: BG-TASKS-THROTTLING-EXP-PROPERTY:1 BG-TASKS-THROTTLING-HINT:0 BG_TASKS_THROTTLING_COUNT:2 BG_TASKS_THROTTLING_LEVEL:0 IS_BG_TASKS_THROTTLING_ACTIVE:1 IS_CHARGING:1 VIRTUAL-SKIN:30082 VIRTUAL-SKIN-EQ:30082 VIRTUAL-SKIN-LEGACY:30125 VIRTUAL-SKIN-LEGACY-MODEL-DIFF:45.875 VIRTUAL-SKIN-LEGACY-SHUTDOWN:0 VIRTUAL-SKIN-MODEL:30079.1 VIRTUAL-SKIN-MODEL-CLAMPED:30079.1 VIRTUAL-SKIN-MODEL-LEGACY-DIFF:-45.875 VIRTUAL-SKIN-MODEL-UPDATED:30082 VIRTUAL-SKIN-MODEL-UPPER-CLAMPED:30079.1 VIRTUAL-SKIN-SUB-0:30098 VIRTUAL-SKIN-SUB-1:30125 VIRTUAL-SKIN-SUB-2:30107 VIRTUAL-SKIN-SUB-3:29794.5 VIRTUAL-SKIN-SUB-4:29868.8 VT_LEGACY_WEIGHT:0 VT_MODEL_WEIGHT:1 battery_capacity:100 charging_therm:32568 disp0_therm:27996 flash_therm:29402 north_therm:30873 quiet_therm:30849 rfpa_therm:31813 soc_therm:31983 thb_hda:54 usb_pwr_therm:28249 
+09-17 11:46:39.050 31798 31804 I pixel-thermal: BG_TASKS_THROTTLING_TRIGGER:30082 raw data: BG_TASKS_THROTTLING_TRIGGER:30082 VIRTUAL-SKIN:30082 
+09-17 11:46:39.454   983  1012 I CHRE    : @ 64115.528: PW : btproxy: AclConnection ctor. transport_: 1, connection_handle_: 0x41
+09-17 11:46:39.454   983  1012 I CHRE    : @ 64115.528: PW : btproxy: L2capChannel ctor - transport_: 1, connection_handle_ : 65, local_cid_ : 0x5, remote_cid_: 0x5
+09-17 11:46:39.454   983  1012 I CHRE    : @ 64115.528: PW : btproxy: ChannelProxy ctor - this: 0x78137010, this(Holder): 0x781370d4
+09-17 11:46:39.454   983  1012 I CHRE    : @ 64115.529: PW : btproxy: BasicL2capChannel ctor
+09-17 11:46:39.455   983  1012 I CHRE    : @ 64115.529: PW : btproxy: L2capChannel initialized: transport_: 1, connection_handle_ : 65, local_cid_ : 0x5, remote_cid_: 0x5
+09-17 11:46:39.462   973  1004 I bluetooth_hal.bt_activities: HandleBleMetaEvent: LE Connection Complete 0x0a, connection handle: 0x0041, BD address: XX:XX:XX:XX:DA:D2.
+09-17 11:46:39.467  2999  3382 I bluetooth: system/gd/hci/acl_manager/round_robin_scheduler.cc:58 Register: registering acl_queue handle=65, acl_credits=12, le_credits=13
+09-17 11:46:39.467  2999  3382 I bluetooth: system/gd/hci/acl_manager/round_robin_scheduler.cc:61 Register: start round robin
+09-17 11:46:39.468  2999  3382 I bluetooth: system/gd/hci/acl_manager/le_impl.h:564 on_le_connection_complete: addr=xx:xx:xx:xx:da:d2[RANDOM_DEVICE_ADDRESS(0x01)], conn_interval=12
+09-17 11:46:39.469  2999  3377 I ble_sec : system/stack/btm/btm_ble_sec.cc:1312 btm_ble_connected: Update timestamp for ble connection:xx:xx:xx:xx:da:d2
+09-17 11:46:39.471  2999  3377 W l2c_ble : system/stack/l2cap/l2c_ble.cc:1141 l2c_ble_link_adjust_allocation: link_xmit_data_q is null
+09-17 11:46:39.474  2999  3377 I l2c_ble : system/stack/l2cap/l2c_ble.cc:251 l2cble_conn_comp: conn_interval=12, max_conn_interval_aggressive=16, is_aggressive_initial_param=true
+09-17 11:46:39.474  2999  3377 I btm_acl : system/stack/acl/btm_acl.cc:403 btm_acl_created: Created new ACL connection peer:xx:xx:xx:xx:da:d2[random][BT_TRANSPORT_LE] role:central handle:0x0041
+09-17 11:46:39.497  2999  3382 I bluetooth: system/gd/hci/le_address_manager.cc:776 OnCommandComplete: Received command complete with op_code LE_REMOVE_DEVICE_FROM_FILTER_ACCEPT_LIST(0x2012)
+09-17 11:46:39.497  2999  3382 I bluetooth: system/gd/hci/le_address_manager.cc:391 resume_registered_clients: Resuming registered clients
+09-17 11:46:39.499   983  1012 W CHRE    : @ 64115.575: HCI Command Complete event unexpected type
+09-17 11:46:39.503  2999  3377 E bt_btu_hcif: system/stack/btu/btu_hcif.cc:1192 btu_hcif_hdl_command_status: Command status for opcode:0x2016 should not be handled here status:HCI_SUCCESS
+09-17 11:46:39.525  2999  3377 I gatt_subrate_mgr: system/stack/gatt/gatt_subrate_manager.cc:290 gatt_init_subrate_cb: addr:xx:xx:xx:xx:da:d2
+09-17 11:46:39.529   983  1012 W CHRE    : @ 64115.605: HCI Command Complete event unexpected type
+09-17 11:46:39.530  2999  3377 E bt_btu_hcif: system/stack/btu/btu_hcif.cc:1192 btu_hcif_hdl_command_status: Command status for opcode:0x41d should not be handled here status:HCI_SUCCESS
+09-17 11:46:39.537  2999  3377 I bluetooth: system/stack/gatt/gatt_attr.cc:1183 gatt_sr_init_cl_status: bda=xx:xx:xx:xx:da:d2, cl_supp_feat=0x0, aware=true
+09-17 11:46:39.539  2999  3377 I bluetooth: system/stack/gatt/gatt_main.cc:261 gatt_update_app_hold_link_status: added app_id=166
+09-17 11:46:39.540  2999  3377 I bluetooth: system/stack/gatt/gatt_main.cc:344 gatt_update_app_use_link_flag: disable link idle timer for xx:xx:xx:xx:da:d2
+09-17 11:46:39.540  2999  3377 I bt_l2cap: system/stack/l2cap/l2c_api.cc:1557 L2CA_MarkLeLinkAsActive: setting link to xx:xx:xx:xx:da:d2 as active
+09-17 11:46:39.540  2999  3377 I bluetooth: system/stack/gatt/gatt_main.cc:303 gatt_set_idle_timeout: idle_timeout=65535, is_active=true, status=true (1-OK 0-not performed)
+09-17 11:46:39.540  2999  3377 I bt_l2cap: system/stack/l2cap/l2c_api.cc:1557 L2CA_MarkLeLinkAsActive: setting link to xx:xx:xx:xx:da:d2 as active
+09-17 11:46:39.540  2999  3377 I bluetooth: system/stack/gatt/gatt_main.cc:303 gatt_set_idle_timeout: idle_timeout=65535, is_active=true, status=true (1-OK 0-not performed)
+09-17 11:46:39.544  2999  3485 I BtGatt.GattServerManager: onClientConnected(XX:XX:XX:XX:DA:D2, LE, connected=true, connId=59, serverIf=59): Has its first bearer and is now connected
+09-17 11:46:39.545  2999  3377 I bt_bta_gattc: system/bta/gatt/bta_gattc_conn.cc:276 bta_gattc_conn_db_cache_init: xx:xx:xx:xx:da:d2 conn_id=0xa6 Will load gatt_database
+09-17 11:46:39.545  2999  3377 I bt_bta_gattc: system/bta/gatt/bta_gattc_conn.cc:280 bta_gattc_conn_db_cache_init: Connected to xx:xx:xx:xx:da:d2, robust caching support is 1
+09-17 11:46:39.546  2999  3377 I bt_bta_gattc: system/bta/gatt/bta_gattc_service_discovery.cc:671 bta_gattc_continue_with_version_and_cache_known: service_discovery(xx:xx:xx:xx:da:d2): read db hash first
+09-17 11:46:39.546  2999  3377 I bluetooth: system/bta/ras/ras_server.cc:381 OnGattConnect: Address: xx:xx:xx:xx:da:d2, conn_id:46
+09-17 11:46:39.546  2999  3377 W bluetooth: system/bta/ras/ras_server.cc:388 OnGattConnect: Create new tracker
+09-17 11:46:39.548  2999  3377 I bluetooth: system/stack/gap/gap_ble.cc:324 client_connect_cback: No active GAP service found for peer:xx:xx:xx:xx:da:d2 callback:Connected
+09-17 11:46:39.549  2999  3485 I BtGatt.GattServerManager: onClientConnected(XX:XX:XX:XX:DA:D2, LE, connected=true, connId=58, serverIf=58): Has its first bearer and is now connected
+09-17 11:46:39.550  2999  3485 I BtGatt.GattServerManager: onClientConnected(XX:XX:XX:XX:DA:D2, LE, connected=true, connId=55, serverIf=55): Has its first bearer and is now connected
+09-17 11:46:39.550  3431  3441 D BluetoothGattServer: onConnectionState(): status=0, connected=true, device=XX:XX:XX:XX:DA:D2
+09-17 11:46:39.552  2999  3485 I BtGatt.GattServerManager: onClientConnected(XX:XX:XX:XX:DA:D2, LE, connected=true, connId=53, serverIf=53): Has its first bearer and is now connected
+09-17 11:46:39.553  2999  3485 I BtGatt.GattServerManager: onClientConnected(XX:XX:XX:XX:DA:D2, LE, connected=true, connId=52, serverIf=52): Has its first bearer and is now connected
+09-17 11:46:39.556  4993  8232 D BluetoothGattServer: onConnectionState(): status=0, connected=true, device=XX:XX:XX:XX:DA:D2
+09-17 11:46:39.559   983  1012 W CHRE    : @ 64115.627: HCI Command Complete event unexpected type
+09-17 11:46:39.559  2999  3382 I bluetooth: system/gd/hci/distance_measurement_manager_impl.cc:768 handle_ras_server_connected: initialize the responder tracker for 65 with xx:xx:xx:xx:da:d2
+09-17 11:46:39.560 15766 26410 D BluetoothGatt: onConnectionState() - status=0 connected=true device=XX:XX:XX:XX:DA:D2
+09-17 11:46:39.567  2999  3377 I bluetooth: system/stack/gatt/gatt_main_le.cc:185 check_cached_model_name: Device xx:xx:xx:xx:da:d2 no cached model name
+09-17 11:46:39.568  2999  3377 I bluetooth: system/stack/connection_manager/connection_manager.cc:746 on_connection_complete: Le connection completed to device:xx:xx:xx:xx:da:d2
+09-17 11:46:39.569  2999  3382 W bluetooth: system/gd/hci/acl_manager/le_impl.h:954 remove_device_from_accept_list: Device not in acceptlist and cannot be removed: xx:xx:xx:xx:da:d2[RANDOM_DEVICE_ADDRESS(0x01)]
+09-17 11:46:39.570  2999  3377 I bt_bta_dm: system/bta/dm/bta_dm_act.cc:713 bta_dm_acl_up: Acl connected peer:xx:xx:xx:xx:da:d2 transport:BT_TRANSPORT_LE handle:65
+09-17 11:46:39.570  2999  3377 W btm_acl : system/stack/acl/btm_acl.cc:1685 acl_peer_supports_sniff_subrating: Unable to find active acl
+09-17 11:46:39.570  2999  3377 I bt_btif_dm: system/btif/src/btif_dm.cc:828 btif_update_remote_version_property: Remote version info valid:true [xx:xx:xx:xx:da:d2]:0xf,0x59,0x1069
+09-17 11:46:39.571  2999  3443 I BluetoothRemoteDevices: [XX:XX:XX:XX:DA:D2] aclStateChangeCallback: State:Connected, tranport:LE, Address type:Random, reason:0, Adapter state:ON
+09-17 11:46:39.572  2999  3443 W LeAudioService: isLeAudioSuppressed: No valid descriptor for device: XX:XX:XX:XX:DA:D2
+09-17 11:46:39.649  1587  1842 D ActivityManager: sync unfroze 7889 com.google.android.projection.gearhead:shared for 3
+09-17 11:46:39.662  2999  3377 W smp_act : system/stack/smp/smp_act.cc:2138 smp_link_encrypted: SMP state machine busy so skipping encryption enable:1 device:xx:xx:xx:xx:da:d2
+09-17 11:46:39.666  2999  3377 I bluetooth: system/stack/eatt/eatt_impl.h:969 connect: Device xx:xx:xx:xx:da:d2, role central
+09-17 11:46:39.666  2999  3377 I bluetooth: system/bta/le_audio/client.cc:3141 OnEncryptionComplete: xx:xx:xx:xx:da:d2 status tBTM_STATUS::BTM_SUCCESS
+09-17 11:46:39.666  2999  3377 W bluetooth: system/bta/le_audio/client.cc:3144 OnEncryptionComplete: Skipping device which is  null
+09-17 11:46:39.666  2999  3377 E bluetooth: system/bta/vcp/vcp_controller.cc:223 OnEncryptionComplete: Skipping unknown device xx:xx:xx:xx:da:d2
+09-17 11:46:39.666  2999  3377 E bluetooth-asha: system/bta/hearing_aid/hearing_aid.cc:687 OnEncryptionComplete: unknown device: bd_addr=xx:xx:xx:xx:da:d2
+09-17 11:46:39.666  2999  3377 W bluetooth: system/bta/has/has_client.cc:2018 OnLeEncryptionComplete: Skipping unknown devicexx:xx:xx:xx:da:d2
+09-17 11:46:39.668  2999  3377 I bluetooth: system/bta/csis/csis_client.cc:2235 OnLeEncryptionComplete: xx:xx:xx:xx:da:d2
+09-17 11:46:39.668  2999  3377 W bluetooth: system/bta/csis/csis_client.cc:2238 OnLeEncryptionComplete: Skipping unknown device xx:xx:xx:xx:da:d2
+09-17 11:46:39.673  1587  1842 D ActivityManager: sync unfroze 3399 com.google.android.projection.gearhead:provider for 10
+09-17 11:46:39.675  1587  1842 D ActivityManager: sync unfroze 19797 com.google.android.projection.gearhead:car for 10
+09-17 11:46:39.692  2999  3377 I bluetooth: system/stack/gatt/gatt_sr.cc:903 gatts_process_mtu_req: MTU 247 request from remote (xx:xx:xx:xx:da:d2), resulted MTU 247
+09-17 11:46:39.692  2999  3377 I ble     : system/stack/btm/btm_ble.cc:442 BTM_SetBleDataLength: bd_addr:xx:xx:xx:xx:da:d2, tx_pdu_length:251
+09-17 11:46:39.693  2999  3377 I ble     : system/stack/btm/btm_ble.cc:540 BTM_SetBleDataLength: Requesting actual tx_pdu_length:251 and tx_time:17040 for bd_addr:xx:xx:xx:xx:da:d2
+09-17 11:46:39.694  2999  3377 I bluetooth: system/bta/ras/ras_server.cc:401 OnGattMtuChanged: mtu is changed as 247
+09-17 11:46:39.695  2999  3382 I bluetooth: system/gd/hci/distance_measurement_manager_impl.cc:788 handle_mtu_changed: gatt mtu is changed as 247
+09-17 11:46:39.713  3431  3441 I NearbyDiscovery: (REDACTED) %s: onDeviceConnected
+09-17 11:46:39.716  2830  2898 D CachedBluetoothDevice: onAclStateChanged: device XX:XX:XX:XX:DA:D2, state 2, transport 2
+09-17 11:46:39.716  2830  2898 D CachedBluetoothDevice: onAclStateChanged: device XX:XX:XX:XX:DA:D2, connect time is updated: 64113358, le connection status: false, br/edr connection status: false
+09-17 11:46:39.722  2999  3377 E bt_btu_hcif: system/stack/btu/btu_hcif.cc:1083 btu_hcif_hdl_command_complete: Command complete for opcode:0x2022 should not be handled here
+09-17 11:46:39.726  2999  3443 I BluetoothRemoteDevices: [XX:XX:XX:XX:DA:D2] encryptionChangeCallback: status=0, enabled=true, transport=LE, encryptionAlgo=AES, keySize=16
+09-17 11:46:39.729  1587  1842 D ActivityManager: sync unfroze 10537 com.samsung.android.oneconnect:Core for 3
+09-17 11:46:39.738  7889  8001 I GH.ConnLoggerV2: Session fded922a-b6b2-4f1a-92a7-5f75fca97132 obsolete
+09-17 11:46:39.750  1587  1842 D ActivityManager: sync unfroze 17289 com.samsung.android.oneconnect:BeaconManagerControlService for 10
+09-17 11:46:39.764  1587  1842 D ActivityManager: sync unfroze 17551 com.samsung.android.oneconnect for 10
+09-17 11:46:39.783  1587  1842 D ActivityManager: sync unfroze 10689 com.google.android.apps.tips for 3
+09-17 11:46:39.785  2999  3377 W l2c_ble_conn_params: system/stack/l2cap/l2c_ble_conn_params.cc:156 L2CA_LockBleConnParamsForServiceDiscovery: xx:xx:xx:xx:da:d2 service discovery already locked/unlocked conn params: false
+09-17 11:46:39.785  2999  3377 I l2c_ble_conn_params: system/stack/l2cap/l2c_ble_conn_params.cc:171 L2CA_LockBleConnParamsForServiceDiscovery: Service discovery is skipped. Checking if we need to change connection parameters.
+09-17 11:46:39.785  2999  3377 I l2c_ble_conn_params: system/stack/l2cap/l2c_ble_conn_params.cc:185 L2CA_LockBleConnParamsForServiceDiscovery: Service discovery completed/skipped. Loading preferred connection parameters for xx:xx:xx:xx:da:d2
+09-17 11:46:39.785  2999  3377 I bluetooth: system/stack/l2cap/l2c_ble_conn_params.cc:586 l2cble_use_preferred_conn_params: Preferred connection parameters are loaded. addr=xx:xx:xx:xx:da:d2
+09-17 11:46:39.785  2999  3377 I l2c_ble_conn_params: system/stack/l2cap/l2c_ble_conn_params.cc:200 L2CA_LockBleConnParamsForServiceDiscovery: xx:xx:xx:xx:da:d2 Locking/unlocking conn params for service discovery: false
+09-17 11:46:39.788  1587  1842 D ActivityManager: sync unfroze 2209 com.google.android.crossdeviceaccessservice for 3
+09-17 11:46:39.788 10537 10537 I [-0700]oneconnect[1.8.47.24_01][CORE]: QcApplication.onTrimMemory - ************** lvl=40 elapsed=4ms
+09-17 11:46:39.793   983  1012 W CHRE    : @ 64115.869: HCI Command Complete event unexpected type
+09-17 11:46:39.801 10537 10537 I [-0700]oneconnect[1.8.47.24_01][CORE]: QcApplication.onTrimMemory - ************** lvl=40 elapsed=0ms
+09-17 11:46:39.812  1587  1820 W Looper  : Slow dispatch took 179ms android.ui app=system_server main=false group=FOREGROUND h=com.android.server.am.ActivityManagerService$UiHandler c=null m=68
+09-17 11:46:39.822  4993  8232 D BluetoothGattServer: onMtuChanged(): device=XX:XX:XX:XX:DA:D2, mtu=247
+09-17 11:46:39.829  2999  3377 I bluetooth: system/stack/eatt/eatt_impl.h:851 supported_features_cb: xx:xx:xx:xx:da:d2 is_eatt_supported = 0
+09-17 11:46:39.829 29333 29342 I fghg    : (REDACTED) HDM. appOpsListener %s %s
+09-17 11:46:39.830 29333 29342 I fghg    : (REDACTED) HDM. Ignoring irrelevant audio permission changes for package %s
+09-17 11:46:39.830  3431  3441 D BluetoothGattServer: onMtuChanged(): device=XX:XX:XX:XX:DA:D2, mtu=247
+09-17 11:46:39.840  2999  3377 W bluetooth-asha: system/bta/hearing_aid/hearing_aid.cc:708 OnPhyUpdateEvent: unknown device: conn_id=0x32
+09-17 11:46:39.845  3431  5754 D BluetoothGattServer: onPhyUpdate(): device=XX:XX:XX:XX:DA:D2, txPhy=2, rxPhy=2, status=0
+09-17 11:46:39.846  4993  8232 D BluetoothGattServer: onPhyUpdate(): device=XX:XX:XX:XX:DA:D2, txPhy=2, rxPhy=2, status=0
+09-17 11:46:39.848 15766 26410 D BluetoothGatt: onPhyUpdate() - status=0 device=XX:XX:XX:XX:DA:D2 txPhy=2 rxPhy=2
+09-17 11:46:39.849  2209  2209 I CDAS-App: On Bluetooth broadcast, action=android.bluetooth.device.action.ACL_CONNECTED
+09-17 11:46:39.851  2209  2283 I CDAS-LockOnDisconnect: TriggerFeatureUseCaseImpl: intent: Intent { act=android.bluetooth.device.action.ACL_CONNECTED flg=0x5000010 xflg=0x4 cmp=com.google.android.crossdeviceaccessservice/.primary.core.intent.bluetooth.BluetoothBroadcastReceiver (has extras) }
+09-17 11:46:39.852  7889  7889 I GH.WifiBluetoothRcvr: Connection action: android.bluetooth.device.action.ACL_CONNECTED, device XX:XX:XX:XX:DA:D2
+09-17 11:46:39.855  1587  1842 D ActivityManager: sync unfroze 30831 com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0 for 10
+09-17 11:46:39.856  2209  2283 I CDAS-LockOnDisconnect: Pause duration is never set, returns None
+09-17 11:46:39.856  2209  2283 I CDAS-LockOnDisconnect: Getting enrolled associated node id
+09-17 11:46:39.861  1587  1842 D ActivityManager: sync unfroze 7172 com.google.android.gms.ui for 10
+09-17 11:46:39.861  1587  1842 D ActivityManager: sync unfroze 1305 com.google.android.gms:snet for 10
+09-17 11:46:39.862  1587  1842 D ActivityManager: sync unfroze 32633 com.google.android.gms.learning for 10
+09-17 11:46:39.874  7889  7889 I GH.SharedService: Shared Service destroyed
+09-17 11:46:39.875  7889  7889 I GH.WifiBluetoothRcvr: Wireless projection is available on this phone.
+09-17 11:46:39.897  7889  7895 W gearhead:shared: Reducing the number of considered missed Gc histogram windows from 181 to 100
+09-17 11:46:39.899  7889 31178 I GH.CarSvcDataStorage: Using DB version: 13
+09-17 11:46:39.900  1587  5180 W ActivityManager: Skipping manifest association check for null package. SourceUid: -1, SourcePkg: null, TargetUid: 10130, TargetPkg: com.google.android.projection.gearhead
+09-17 11:46:39.904  7889 31179 I CAR.BTCapsStore: Checking device with address C6:49:88:10:DA:D2
+09-17 11:46:39.910  7889  8001 I GH.ConnLoggerV2: Session expired, will start a new session
+09-17 11:46:39.910  7889 31179 I GH.WifiBluetoothRcvr: Bluetooth device XX:XX:XX:XX:DA:D2 cached null list of UUIDs
+09-17 11:46:39.916  1587  2698 D ConnectivityService: NetReassign [no changes] [c 0] [a 2] [i 8]
+09-17 11:46:39.919  7889 31179 W CAR.BTCapsStore: Error while obtaining cached UUIDs.
+09-17 11:46:39.919  7889 31179 W CAR.BTCapsStore: Device have invalid UUIDs and won't request SDP.
+09-17 11:46:39.919  7889 31179 I CAR.BTCapsStore: AAW status (UNKNOWN_AND_DONT_TRY_RFCOMM).
+09-17 11:46:39.920  7889 31178 I CAR.BTCapsStore: Checking device with address C6:49:88:10:DA:D2
+09-17 11:46:39.925  7889 31178 W CAR.BTCapsStore: Error while obtaining cached UUIDs.
+09-17 11:46:39.925  7889 31178 W CAR.BTCapsStore: Device have invalid UUIDs and won't request SDP.
+09-17 11:46:39.925  7889 31178 I CAR.BTCapsStore: AAW status (UNKNOWN_AND_DONT_TRY_RFCOMM).
+09-17 11:46:39.927  7889  8001 I GH.ConnLoggerV2: Started session e9ebbfca-776b-4abe-8db0-c4502d43cbd6, start time = 64113552
+09-17 11:46:39.932 10537 10537 W [-0700]oneconnect[1.8.47.24_01][CORE]: QcReceiver.handleIntent - owner mode: android.bluetooth.device.action.ACL_CONNECTED
+09-17 11:46:39.933 10537 10537 W [-0700]oneconnect[1.8.47.24_01][CORE]: QcReceiver.handleBluetoothDeviceStateChanged - Bluetooth Profile: 0 / Bundle[{android.bluetooth.device.extra.DEVICE=XX:XX:XX:XX:DA:D2, android.bluetooth.device.extra.TRANSPORT=2}]
+09-17 11:46:39.936  7889  8001 I GH.ConnLoggerV2: Session e9ebbfca-776b-4abe-8db0-c4502d43cbd6, event 0, detail OptionalInt.empty, SESSION_STARTED, at 64113552 
+09-17 11:46:39.936  7889  8001 I GH.ConnLoggerV2: Session e9ebbfca-776b-4abe-8db0-c4502d43cbd6, event 1, detail OptionalInt[2158], WIRELESS_SDP_MANAGER_NULL_UUIDS, at 64113552 
+09-17 11:46:39.941  1587  2588 W ActivityManager: Skipping manifest association check for null package. SourceUid: -1, SourcePkg: null, TargetUid: 10130, TargetPkg: com.google.android.projection.gearhead
+09-17 11:46:39.945  1587  1842 D ActivityManager: sync unfroze 22547 com.google.android.googlequicksearchbox:googleapp for 10
+09-17 11:46:39.946  1587  1842 D ActivityManager: sync unfroze 15150 com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:1 for 10
+09-17 11:46:39.951  3431  3431 I ActiveUnlock: (REDACTED) BluetoothDevice %s connection state changed: %s, transport: %d, hashcode: %s
+09-17 11:46:39.975  2999  3377 E gatt_subrate_mgr: system/stack/gatt/gatt_subrate_manager.cc:473 gatt_handle_conn_parameter_cback_status: xx:xx:xx:xx:da:d2 does not exist in gatt_cb.subrate_info
+09-17 11:46:39.975  2999  3377 E bluetooth-asha: system/bta/hearing_aid/hearing_aid.cc:587 OnConnectionUpdateComplete: unknown device: conn_id=0x32
+09-17 11:46:39.976  3431  5700 D BluetoothGattServer: onConnectionUpdated(): device=XX:XX:XX:XX:DA:D2 interval=24 latency=5 timeout=500 status=0
+09-17 11:46:39.977  4993  8232 D BluetoothGattServer: onConnectionUpdated(): device=XX:XX:XX:XX:DA:D2 interval=24 latency=5 timeout=500 status=0
+09-17 11:46:39.983 15766 26410 D BluetoothGatt: onConnectionUpdated() - device=XX:XX:XX:XX:DA:D2 interval=24 latency=5 timeout=500 status=0
+09-17 11:46:39.999  7889  7889 I GH.SharedService: Shared Service created
+09-17 11:46:40.004  7889  7889 I GH.SharedServiceConnect: onServiceConnected(ComponentName:ComponentInfo{com.google.android.projection.gearhead/com.google.android.gearhead.service.SharedService}, service:mkg@9a99e67)
+09-17 11:46:40.015 29333 29333 I adod    : onReceive
+09-17 11:46:40.017  3431  3431 D WearableService: Creating wearable service asynchronously.
+09-17 11:46:40.025  1587  1842 D ActivityManager: sync unfroze 13940 com.amazon.dee.app:alexa_accessories for 3
+09-17 11:46:40.041 29333 29342 I fghg    : (REDACTED) HDM. appOpsListener %s %s
+09-17 11:46:40.041 29333 29342 I fghg    : (REDACTED) HDM. Ignoring irrelevant audio permission changes for package %s
+09-17 11:46:40.055 10689 10763 I FortniteBluetoothEventR: onReceive() - intent Intent { act=android.bluetooth.device.action.ACL_CONNECTED flg=0x5000010 xflg=0x4 (has extras) }
+09-17 11:46:40.065  3431 31186 I Nearby  : (REDACTED) is blocked device type %s, isAuto=%s, isIot=%s, isLatchsky=%s, isChinaWearable=%s, isTv=%s, isWearable=%s (supportWearOs=%s), isChromeOsDevice=%s (supportChromeOs=%s)
+09-17 11:46:40.073 10689 10763 I FortniteBluetoothEventR: address = C6:49:88:10:DA:D2, name = UH_C6498810DAD2
+09-17 11:46:40.076  3431  3431 I NearbyDiscovery: (REDACTED) DiscoveryService onStartCommand action: %s
+09-17 11:46:40.081  3431  3431 I NearbyDiscovery: (REDACTED) onAclChange: state=%s, transport=%s, %s
+09-17 11:46:40.087 10689 10693 W droid.apps.tips: Reducing the number of considered missed Gc histogram windows from 181 to 100
+09-17 11:46:40.089  1587  1842 D ActivityManager: sync unfroze 27738 com.google.android.apps.wearables.maestro.companion for 3
+09-17 11:46:40.091  1075  4481 D AudioFlinger: onStateChanged: pid:27738  uid:10156  state:unfrozen - no freeze activity
+09-17 11:46:40.113 30831 30841 W ocessService0:0: Reducing the number of considered missed Gc histogram windows from 181 to 100
+09-17 11:46:40.115  1587  1842 V GrammaticalInflectionUtils: AttributionSource: android.content.AttributionSource@704e01d2 does not have READ_SYSTEM_GRAMMATICAL_GENDER permission.
+09-17 11:46:40.124  3431  5700 D WearableService: onGetService: waiting for onCreate to be completed.
+09-17 11:46:40.125 13940 14046 I MetricsTransmissionManager: typeOfFilesLoaded: non_KPI, numberOfFilesLoaded: 0
+09-17 11:46:40.125 13940 14046 I MetricsTransmissionManager: Transmitter.run....Rescheduling next transmission.
+09-17 11:46:40.129 29333 29399 I afgu    : (REDACTED) bluetoothConnectionStateChanged. Action: %s
+09-17 11:46:40.129 29333 29399 I affp    : Registering Gemini service client
+09-17 11:46:40.133   946   946 D Zygote  : Forked child process 31200
+09-17 11:46:40.134  1587  1845 I ActivityManager: Start proc 31200:com.microsoft.teams/u0a425 for broadcast {com.microsoft.teams/com.microsoft.skype.teams.app.BluetoothBroadcastReceiver}
+09-17 11:46:40.135 13940 14046 I MetricsTransmissionManager: typeOfFilesLoaded: KPI, numberOfFilesLoaded: 1
+09-17 11:46:40.135 13940 14046 I MetricsTransmissionManager: transmitKPIMetricBatch started
+09-17 11:46:40.141 31200 31200 I libprocessgroup: Created cgroup /sys/fs/cgroup/apps/uid_10425/pid_31200
+09-17 11:46:40.145 13940 14259 I AlexaApplication: MemoryStats nativeHeap=1288kB javaHeap=844kB code=2924kB stack=464kB graphics=0kB privateOther=1372kB totalPss=22787kB
+09-17 11:46:40.150  3431 19135 I Wear_Controller: Wearable module requires a companion app to be installed.
+09-17 11:46:40.150  3431 19135 I WearableService: Wearable Services not starting. Wear is not available on this device: MISSING_COMPANION_APP
+09-17 11:46:40.150 31200 31200 I Zygote  : Process 31200 created for com.microsoft.teams
+09-17 11:46:40.151 31200 31200 I microsoft.teams: Using generational CollectorTypeCMC GC.
+09-17 11:46:40.152 29333 29399 I affv    : Initializing PhoneMediaHandler
+09-17 11:46:40.153 13940 14046 I MetricsTransporter: Acquiring wifi lock.
+09-17 11:46:40.153  3431  5700 W WearableService: onGetService: Wear is not available on this device. Calling package: com.google.android.crossdeviceaccessservice
+09-17 11:46:40.154  2209  2282 W GoogleApiManager: Not showing notification since connectionResult is not user-facing: ConnectionResult{statusCode=API_UNAVAILABLE, resolution=null, message=null, clientMethodKey=null}
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: Error during getEnrolledAssociatedNodeId
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: com.google.android.gms.common.api.ApiException: 17: API: Wearable.API is not available on this device. Connection failed with: ConnectionResult{statusCode=API_UNAVAILABLE, resolution=null, message=null, clientMethodKey=null}
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.internal.ApiExceptionUtil.fromStatus(ApiExceptionUtil.java:3)
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.internal.zzbf.onComplete(PendingResultUtil.java:4)
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.api.internal.BasePendingResult.zzb(BasePendingResult.java:7)
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.api.internal.BasePendingResult.setResult(BasePendingResult.java:4)
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.api.internal.BaseImplementation$ApiMethodImpl.setFailedResult(BaseImplementation.java:5)
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.api.internal.zze.reportFailure(ApiCallRunner.java:1)
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.api.internal.GoogleApiManager$ClientConnection.zzq(GoogleApiManager.java:7)
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.api.internal.GoogleApiManager$ClientConnection.zzp(GoogleApiManager.java:2)
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.api.internal.GoogleApiManager$ClientConnection.onConnectionFailed(GoogleApiManager.java:31)
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.api.internal.GoogleApiManager$ClientConnection.onConnectionFailed(GoogleApiManager.java:1)
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.internal.zzy.onConnectionFailed(GmsClient.java:1)
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.internal.zzf.zzb(BaseGmsClient.java:2)
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.internal.zza.zza(BaseGmsClient.java:7)
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.internal.zzc.zzd(BaseGmsClient.java:3)
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.internal.zzb.handleMessage(BaseGmsClient.java:33)
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at android.os.Handler.dispatchMessageImpl(Handler.java:142)
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at android.os.Handler.dispatchMessage(Handler.java:125)
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.libs.punchclock.threads.TracingHandler.dispatchMessageTraced(TracingHandler.java:1)
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.libs.punchclock.threads.TracingHandler.dispatchMessage(TracingHandler.java:1)
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at android.os.Looper.loopOnce(Looper.java:296)
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at android.os.Looper.loop(Looper.java:397)
+09-17 11:46:40.162  2209  2283 W CDAS-LockOnDisconnect: 	at android.os.HandlerThread.run(HandlerThread.java:139)
+09-17 11:46:40.162  2209  2283 I CDAS-LockOnDisconnect: CheckPreconditionUseCaseImpl: no associated node enrolled
+09-17 11:46:40.162  2209  2283 I CDAS-LockOnDisconnect: TriggerFeatureUseCaseImpl: checkPrecondition returned false
+09-17 11:46:40.162  1587  3105 I WifiService: acquireWifiLock uid=10395 lockMode=3 packageName=com.amazon.dee.app
+09-17 11:46:40.163 31200 31200 D nativeloader: Load libframework-connectivity-tiramisu-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity-t.jar: ok
+09-17 11:46:40.167 13940 14046 I MetricsTransporter: Acquiring wakelock.
+09-17 11:46:40.171  3431  8129 I NearbyDiscovery: (REDACTED) FastPair: lock scan rate if needed, %s, bondState=%s
+09-17 11:46:40.172  3431  8129 I NearbyDiscovery: (REDACTED) ApFastPairScanner: isScreenOn=%s, isLocationEnabled=%s, disableLocationRequirement=%s, isDiscoveryScanningEnabled=%s, during24GhzWifiWarmingUpPeriod=%s
+09-17 11:46:40.172  3431  8129 D BluetoothAdapter: isLeEnabled(): ON
+09-17 11:46:40.172  3431  8129 I NearbyDiscovery: (REDACTED) ApFastPairScanner: eventType=%s, intReq=%s, scanning=%s, scanAllowed=%s, bleEnabled=%s, lockScanRate=%s, startScanningByLowPowerMode=%s
+09-17 11:46:40.175  3431  5700 W WearableService: onGetService: Wear is not available on this device. Calling package: com.google.android.crossdeviceaccessservice
+09-17 11:46:40.176  2999  2999 I HidDeviceService: unregisterAppUid(): uid=10425
+09-17 11:46:40.176  2999  2999 W HidDeviceService: unregisterAppUid(): caller UID doesn't match user UID
+09-17 11:46:40.176  3012 10367 D UidImportanceSource: onUidImportanceBlock: uid=10425 importance=400
+09-17 11:46:40.176  3012 10367 D UidImportanceSource: onUidImportanceBlock: packages=[com.microsoft.teams] importance=400
+09-17 11:46:40.176  3012 10367 D UidImportanceSource: onUidImportanceBlock: packageName=com.microsoft.teams importance=400
+09-17 11:46:40.177  3012  3181 D ImpulseStateSource: Notify clients: 5882
+09-17 11:46:40.180 29333 29342 I fghg    : (REDACTED) HDM. appOpsListener %s %s
+09-17 11:46:40.180 29333 29342 I fghg    : (REDACTED) HDM. Ignoring irrelevant audio permission changes for package %s
+09-17 11:46:40.185 31200 31200 D ApplicationLoaders: Returning zygote-cached class loader: /system/framework/org.apache.http.legacy.jar
+09-17 11:46:40.185 31200 31200 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+09-17 11:46:40.185 31200 31200 D ApplicationLoaders: Returning zygote-cached class loader: /system_ext/framework/androidx.window.sidecar.jar
+09-17 11:46:40.193  3431  5754 W WearableService: onGetService: Wear is not available on this device. Calling package: com.google.android.googlequicksearchbox
+09-17 11:46:40.195 13940 14046 I MetricsTransporter: Using device type: d7ae3d206ce5366b0f0105dc74e8b013274baf9c15fd9588c12a576fa3ac95c, region: us-east-1
+09-17 11:46:40.202 13940 13945 W exa_accessories: Reducing the number of considered missed Gc histogram windows from 181 to 100
+09-17 11:46:40.203 29333 29369 W GoogleApiManager: Not showing notification since connectionResult is not user-facing: ConnectionResult{statusCode=API_UNAVAILABLE, resolution=null, message=null, clientMethodKey=null, errorResolutionInfo=null}
+09-17 11:46:40.205  2209  2282 W GoogleApiManager: Not showing notification since connectionResult is not user-facing: ConnectionResult{statusCode=API_UNAVAILABLE, resolution=null, message=null, clientMethodKey=null}
+09-17 11:46:40.206  2209  2283 W CDAS-LockOnDisconnect: Failed to get local node ID
+09-17 11:46:40.206  2209  2283 W CDAS-LockOnDisconnect: com.google.android.gms.common.api.ApiException: 17: API: Wearable.API is not available on this device. Connection failed with: ConnectionResult{statusCode=API_UNAVAILABLE, resolution=null, message=null, clientMethodKey=null}
+09-17 11:46:40.206  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.internal.ApiExceptionUtil.fromStatus(ApiExceptionUtil.java:3)
+09-17 11:46:40.206  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.api.internal.ApiExceptionMapper.getException(ApiExceptionMapper.java:1)
+09-17 11:46:40.206  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.api.internal.zzg.reportFailure(ApiCallRunner.java:1)
+09-17 11:46:40.206  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.api.internal.GoogleApiManager$ClientConnection.zzq(GoogleApiManager.java:7)
+09-17 11:46:40.206  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.api.internal.GoogleApiManager$ClientConnection.zzp(GoogleApiManager.java:2)
+09-17 11:46:40.206  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.api.internal.GoogleApiManager$ClientConnection.onConnectionFailed(GoogleApiManager.java:31)
+09-17 11:46:40.206  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.api.internal.GoogleApiManager$ClientConnection.onConnectionFailed(GoogleApiManager.java:1)
+09-17 11:46:40.206  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.internal.zzy.onConnectionFailed(GmsClient.java:1)
+09-17 11:46:40.206  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.internal.zzf.zzb(BaseGmsClient.java:2)
+09-17 11:46:40.206  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.internal.zza.zza(BaseGmsClient.java:7)
+09-17 11:46:40.206  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.internal.zzc.zzd(BaseGmsClient.java:3)
+09-17 11:46:40.206  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.common.internal.zzb.handleMessage(BaseGmsClient.java:33)
+09-17 11:46:40.206  2209  2283 W CDAS-LockOnDisconnect: 	at android.os.Handler.dispatchMessageImpl(Handler.java:142)
+09-17 11:46:40.206  2209  2283 W CDAS-LockOnDisconnect: 	at android.os.Handler.dispatchMessage(Handler.java:125)
+09-17 11:46:40.206  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.libs.punchclock.threads.TracingHandler.dispatchMessageTraced(TracingHandler.java:1)
+09-17 11:46:40.206  2209  2283 W CDAS-LockOnDisconnect: 	at com.google.android.gms.libs.punchclock.threads.TracingHandler.dispatchMessage(TracingHandler.java:1)
+09-17 11:46:40.206  2209  2283 W CDAS-LockOnDisconnect: 	at android.os.Looper.loopOnce(Looper.java:296)
+09-17 11:46:40.206  2209  2283 W CDAS-LockOnDisconnect: 	at android.os.Looper.loop(Looper.java:397)
+09-17 11:46:40.206  2209  2283 W CDAS-LockOnDisconnect: 	at android.os.HandlerThread.run(HandlerThread.java:139)
+09-17 11:46:40.206  2209  2283 E CDAS-LockOnDisconnect: ShowPromoNotificationUseCaseImpl: bluetoothDeviceNodeId must not be empty if promo notification should be shown
+09-17 11:46:40.212 13383 13383 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color:export ANDROID_LOG_TAGS=''; exec logcat '-d' '-b' 'main,crash,system''
+09-17 11:46:40.215 13940 14259 I AlexaApplication: MemoryStats nativeHeap=1460kB javaHeap=4592kB code=6572kB stack=468kB graphics=0kB privateOther=2388kB totalPss=26468kB
+09-17 11:46:40.218 13940 14046 E ComponentRegistry: Optional will be absent
+09-17 11:46:40.218 13940 14046 E ComponentRegistry: java.lang.IllegalStateException: Unbound api:interface com.amazon.alexa.identity.api.IdentityService
+09-17 11:46:40.218 13940 14046 E ComponentRegistry: 	at rx.Single$$ExternalSyntheticBUOutline0.m$1(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:3)
+09-17 11:46:40.218 13940 14046 E ComponentRegistry: 	at com.amazon.alexa.protocols.service.api.DefaultComponentRegistry.getOrThrow(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:53)
+09-17 11:46:40.218 13940 14046 E ComponentRegistry: 	at com.amazon.alexa.protocols.service.api.DefaultComponentRegistry.get(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:1)
+09-17 11:46:40.218 13940 14046 E ComponentRegistry: 	at com.amazon.alexa.mobilytics.internal.MinervaMetricsFactoryProvider$DefaultOAuthProvider.getAccessToken(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:13)
+09-17 11:46:40.218 13940 14046 E ComponentRegistry: 	at com.amazon.minerva.client.common.internal.transport.OAuthProviderAdapter.getAccessToken(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:3)
+09-17 11:46:40.218 13940 14046 E ComponentRegistry: 	at com.amazon.minerva.client.thirdparty.transport.MetricsTransporter.getOAuthToken(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:9)
+09-17 11:46:40.218 13940 14046 E ComponentRegistry: 	at com.amazon.minerva.client.thirdparty.transport.MetricsTransporter.transmit(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:147)
+09-17 11:46:40.218 13940 14046 E ComponentRegistry: 	at com.amazon.minerva.client.thirdparty.transport.MetricsTransmissionManager.transmit(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:35)
+09-17 11:46:40.218 13940 14046 E ComponentRegistry: 	at com.amazon.minerva.client.thirdparty.transport.MetricsTransmissionManager$2.run(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:65)
+09-17 11:46:40.218 13940 14046 E ComponentRegistry: 	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:520)
+09-17 11:46:40.218 13940 14046 E ComponentRegistry: 	at java.util.concurrent.FutureTask.run(FutureTask.java:328)
+09-17 11:46:40.218 13940 14046 E ComponentRegistry: 	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:323)
+09-17 11:46:40.218 13940 14046 E ComponentRegistry: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1100)
+09-17 11:46:40.218 13940 14046 E ComponentRegistry: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+09-17 11:46:40.218 13940 14046 E ComponentRegistry: 	at java.lang.Thread.run(Thread.java:1571)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: AccessoryReceiver: Error occurred in determining if connecting device PeripheralDevice{address='C6:49:88:10:DA:D2', type=BLUETOOTH_LE, name='UH_C6498810DAD2'} is an  accessory, finishing pendingResult immediately
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: java.lang.UnsupportedOperationException: SDP record not applicable to BLE
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at com.amazon.alexa.accessory.internal.bluetooth.DefaultSdpRepository.getOrFetch(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:47)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at com.amazon.alexa.accessory.AccessoryReceiver.lambda$isAccessory$2(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:11)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at com.amazon.alexa.accessory.AccessoryReceiver.$r8$lambda$y0fJcNl3qHboZqGfEc2nnx9SO0s(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:1)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at com.amazon.alexa.biloba.storage.CardsStore$$ExternalSyntheticLambda0.subscribe(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:82)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at io.reactivex.rxjava3.internal.operators.single.SingleCreate.subscribeActual(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:11)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at io.reactivex.rxjava3.core.Single.subscribe(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:15)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at io.reactivex.rxjava3.internal.operators.single.SingleTimeout.subscribeActual(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:33)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at io.reactivex.rxjava3.core.Single.subscribe(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:15)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at io.reactivex.rxjava3.core.Single.subscribe(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:43)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at com.amazon.alexa.accessory.AccessoryReceiver.aclDeviceConnected(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:40)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at com.amazon.alexa.accessory.AccessoryReceiver.onReceive(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:96)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at android.app.ActivityThread.handleReceiver(ActivityThread.java:5386)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at android.app.ActivityThread.-$$Nest$mhandleReceiver(ActivityThread.java:0)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2786)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at android.os.Handler.dispatchMessageImpl(Handler.java:142)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at android.os.Handler.dispatchMessage(Handler.java:125)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at android.os.Looper.loopOnce(Looper.java:296)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at android.os.Looper.loop(Looper.java:397)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at android.app.ActivityThread.main(ActivityThread.java:9523)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at java.lang.reflect.Method.invoke(Native Method)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:575)
+09-17 11:46:40.221 13940 13940 E AlexaAccessory: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:939)
+09-17 11:46:40.231 13940 13940 E AlexaAccessory: DefaultAccessoryExplorer: Error fetching SDP records for peripheral: PeripheralDevice{address='[REDACTED]', type=BLUETOOTH_LE, name='UH_C6498810DAD2'}
+09-17 11:46:40.231 13940 13940 E AlexaAccessory: java.lang.UnsupportedOperationException: SDP record not applicable to BLE
+09-17 11:46:40.231 13940 13940 E AlexaAccessory: 	at com.amazon.alexa.accessory.internal.bluetooth.DefaultSdpRepository.getOrFetch(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:47)
+09-17 11:46:40.231 13940 13940 E AlexaAccessory: 	at com.amazon.alexa.accessory.internal.bluetooth.DefaultAccessoryExplorer$DeviceConnectivityObserver.handlePossibleUnknownAccessoryConnected(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:114)
+09-17 11:46:40.231 13940 13940 E AlexaAccessory: 	at com.amazon.alexa.accessory.internal.bluetooth.DefaultAccessoryExplorer$DeviceConnectivityObserver.lambda$handlePossibleAccessoryConnected$6(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:12)
+09-17 11:46:40.231 13940 13940 E AlexaAccessory: 	at com.amazon.alexa.accessory.internal.bluetooth.DefaultAccessoryExplorer$DeviceConnectivityObserver.$r8$lambda$bnbYCTmoZPGmmaHqIQwIue_qLTc(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:1)
+09-17 11:46:40.231 13940 13940 E AlexaAccessory: 	at com.amazon.alexa.accessory.internal.bluetooth.DefaultAccessoryExplorer$DeviceConnectivityObserver$$ExternalSyntheticLambda12.accept(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:22)
+09-17 11:46:40.231 13940 13940 E AlexaAccessory: 	at io.reactivex.rxjava3.internal.observers.CallbackCompletableObserver.onError(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:3)
+09-17 11:46:40.231 13940 13940 E AlexaAccessory: 	at io.reactivex.rxjava3.internal.operators.single.SingleFlatMapCompletable$FlatMapCompletableObserver.onError(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:3)
+09-17 11:46:40.231 13940 13940 E AlexaAccessory: 	at io.reactivex.rxjava3.internal.operators.single.SingleObserveOn$ObserveOnSingleObserver.run(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:7)
+09-17 11:46:40.231 13940 13940 E AlexaAccessory: 	at io.reactivex.rxjava3.android.schedulers.HandlerScheduler$ScheduledRunnable.run(r8-map-id-51efb7898dc3128cbe0a624634dd9c10e578cc2f5a41eab121a7e0211635f321:3)
+09-17 11:46:40.231 13940 13940 E AlexaAccessory: 	at android.os.Handler.handleCallback(Handler.java:1095)
+09-17 11:46:40.231 13940 13940 E AlexaAccessory: 	at android.os.Handler.dispatchMessageImpl(Handler.java:135)
+09-17 11:46:40.231 13940 13940 E AlexaAccessory: 	at android.os.Handler.dispatchMessage(Handler.java:125)
+09-17 11:46:40.231 13940 13940 E AlexaAccessory: 	at android.os.Looper.loopOnce(Looper.java:296)
+09-17 11:46:40.231 13940 13940 E AlexaAccessory: 	at android.os.Looper.loop(Looper.java:397)
+09-17 11:46:40.231 13940 13940 E AlexaAccessory: 	at android.app.ActivityThread.main(ActivityThread.java:9523)
+09-17 11:46:40.231 13940 13940 E AlexaAccessory: 	at java.lang.reflect.Method.invoke(Native Method)
+09-17 11:46:40.231 13940 13940 E AlexaAccessory: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:575)
+09-17 11:46:40.231 13940 13940 E AlexaAccessory: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:939)
+09-17 11:46:40.232  3399  3410 W arhead:provider: Reducing the number of considered missed Gc histogram windows from 295 to 100
+09-17 11:46:40.236  3431  5754 W WearableService: onGetService: Wear is not available on this device. Calling package: com.google.android.crossdeviceaccessservice
+09-17 11:46:40.244  2209  2282 W GoogleApiManager: Not showing notification since connectionResult is not user-facing: ConnectionResult{statusCode=API_UNAVAILABLE, resolution=null, message=null, clientMethodKey=null}
+09-17 11:46:40.245  2209  2283 W CDAS-LeftBehind: Failed to get local node ID
+09-17 11:46:40.245  2209  2283 W CDAS-LeftBehind: com.google.android.gms.common.api.ApiException: 17: API: Wearable.API is not available on this device. Connection failed with: ConnectionResult{statusCode=API_UNAVAILABLE, resolution=null, message=null, clientMethodKey=null}
+09-17 11:46:40.245  2209  2283 W CDAS-LeftBehind: 	at com.google.android.gms.common.internal.ApiExceptionUtil.fromStatus(ApiExceptionUtil.java:3)
+09-17 11:46:40.245  2209  2283 W CDAS-LeftBehind: 	at com.google.android.gms.common.api.internal.ApiExceptionMapper.getException(ApiExceptionMapper.java:1)
+09-17 11:46:40.245  2209  2283 W CDAS-LeftBehind: 	at com.google.android.gms.common.api.internal.zzg.reportFailure(ApiCallRunner.java:1)
+09-17 11:46:40.245  2209  2283 W CDAS-LeftBehind: 	at com.google.android.gms.common.api.internal.GoogleApiManager$ClientConnection.zzq(GoogleApiManager.java:7)
+09-17 11:46:40.245  2209  2283 W CDAS-LeftBehind: 	at com.google.android.gms.common.api.internal.GoogleApiManager$ClientConnection.zzp(GoogleApiManager.java:2)
+09-17 11:46:40.245  2209  2283 W CDAS-LeftBehind: 	at com.google.android.gms.common.api.internal.GoogleApiManager$ClientConnection.onConnectionFailed(GoogleApiManager.java:31)
+09-17 11:46:40.245  2209  2283 W CDAS-LeftBehind: 	at com.google.android.gms.common.api.internal.GoogleApiManager$ClientConnection.onConnectionFailed(GoogleApiManager.java:1)
+09-17 11:46:40.245  2209  2283 W CDAS-LeftBehind: 	at com.google.android.gms.common.internal.zzy.onConnectionFailed(GmsClient.java:1)
+09-17 11:46:40.245  2209  2283 W CDAS-LeftBehind: 	at com.google.android.gms.common.internal.zzf.zzb(BaseGmsClient.java:2)
+09-17 11:46:40.245  2209  2283 W CDAS-LeftBehind: 	at com.google.android.gms.common.internal.zza.zza(BaseGmsClient.java:7)
+09-17 11:46:40.245  2209  2283 W CDAS-LeftBehind: 	at com.google.android.gms.common.internal.zzc.zzd(BaseGmsClient.java:3)
+09-17 11:46:40.245  2209  2283 W CDAS-LeftBehind: 	at com.google.android.gms.common.internal.zzb.handleMessage(BaseGmsClient.java:33)
+09-17 11:46:40.245  2209  2283 W CDAS-LeftBehind: 	at android.os.Handler.dispatchMessageImpl(Handler.java:142)
+09-17 11:46:40.245  2209  2283 W CDAS-LeftBehind: 	at android.os.Handler.dispatchMessage(Handler.java:125)
+09-17 11:46:40.245  2209  2283 W CDAS-LeftBehind: 	at com.google.android.gms.libs.punchclock.threads.TracingHandler.dispatchMessageTraced(TracingHandler.java:1)
+09-17 11:46:40.245  2209  2283 W CDAS-LeftBehind: 	at com.google.android.gms.libs.punchclock.threads.TracingHandler.dispatchMessage(TracingHandler.java:1)
+09-17 11:46:40.245  2209  2283 W CDAS-LeftBehind: 	at android.os.Looper.loopOnce(Looper.java:296)
+09-17 11:46:40.245  2209  2283 W CDAS-LeftBehind: 	at android.os.Looper.loop(Looper.java:397)
+09-17 11:46:40.245  2209  2283 W CDAS-LeftBehind: 	at android.os.HandlerThread.run(HandlerThread.java:139)
+09-17 11:46:40.245  2209  2283 E CDAS-LeftBehind: ShowPromoNotificationUseCaseImpl: bluetoothDeviceNodeId must not be empty if promo notification should be shown
+09-17 11:46:40.261 31200 31200 W microsoft.teams: Failed to find entry 'classes.dex': Entry not found
+09-17 11:46:40.262 31200 31200 W microsoft.teams: Failed to find entry 'classes.dex': Entry not found
+09-17 11:46:40.262 31200 31200 W microsoft.teams: Failed to find entry 'classes.dex': Entry not found
+09-17 11:46:40.263 31200 31200 D nativeloader: Configuring clns-9 for other apk /data/app/~~AgsFJElN267_gpfRMM2p9Q==/com.microsoft.teams-hweESax_YJxDQRW4QuswkA==/base.apk:/data/app/~~AgsFJElN267_gpfRMM2p9Q==/com.microsoft.teams-hweESax_YJxDQRW4QuswkA==/split_config.arm64_v8a.apk:/data/app/~~AgsFJElN267_gpfRMM2p9Q==/com.microsoft.teams-hweESax_YJxDQRW4QuswkA==/split_config.en.apk:/data/app/~~AgsFJElN267_gpfRMM2p9Q==/com.microsoft.teams-hweESax_YJxDQRW4QuswkA==/split_config.xxhdpi.apk. target_sdk_version=36, uses_libraries=, library_path=/data/app/~~AgsFJElN267_gpfRMM2p9Q==/com.microsoft.teams-hweESax_YJxDQRW4QuswkA==/lib/arm64:/data/app/~~AgsFJElN267_gpfRMM2p9Q==/com.microsoft.teams-hweESax_YJxDQRW4QuswkA==/base.apk!/lib/arm64-v8a:/data/app/~~AgsFJElN267_gpfRMM2p9Q==/com.microsoft.teams-hweESax_YJxDQRW4QuswkA==/split_config.arm64_v8a.apk!/lib/arm64-v8a:/data/app/~~AgsFJElN267_gpfRMM2p9Q==/com.microsoft.teams-hweESax_YJxDQRW4QuswkA==/split_config.en.apk!/lib/arm64-v8a:/data/app/~~AgsFJElN267_gpfRMM2p9Q==/com.microsoft.teams-hweESax_YJxDQRW4QuswkA==/split_c

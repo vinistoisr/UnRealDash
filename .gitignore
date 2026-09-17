@@ -27,3 +27,9 @@ packages/*/build-*/
 
 # Written by the Unreal Android deploy step from engine templates
 runtime/UnRealDash/Build/Android/src/
+
+# Build-machine RHI overrides
+runtime/UnRealDash/Config/Generated*.ini
+
+# Written by the cook and package steps, not source
+runtime/UnRealDash/Build/*/FileOpenOrder/
