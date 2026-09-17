@@ -1,6 +1,6 @@
 # Build chunk 10: the package loader
 
-Status: revision 2, after a DeepSeek spec review that returned VERDICT: REVISE with one blocker and four majors, and after the Android filesystem question was answered on the device rather than left as a risk. Frozen for a Codex build session. Covers PLAN.md task 4.4. Read PLAN.md (task 4.4, tasks 3.4 and 3.6, task 4.0's player.json, task 4.5's note that it owns the primitives, the Sequencing block) and docs/ARCHITECTURE.md before writing anything. PLAN.md is the authority on what; this file adds the exact mechanisms, proof commands and implementation constraints. If the two disagree, PLAN.md wins and the disagreement goes in the report.
+Status: revision 3. A build session refused revision 2 on a prerequisite error: the spec said 1 accepted case and 42 rejected, where cases.json has 7 and 36. It also found that moving the schemas would break the Python tools rule in ARCHITECTURE.md line 22, so they are now staged rather than moved. Revision 2 followed a DeepSeek spec review that returned VERDICT: REVISE with one blocker and four majors, and after the Android filesystem question was answered on the device rather than left as a risk. Frozen for a Codex build session. Covers PLAN.md task 4.4. Read PLAN.md (task 4.4, tasks 3.4 and 3.6, task 4.0's player.json, task 4.5's note that it owns the primitives, the Sequencing block) and docs/ARCHITECTURE.md before writing anything. PLAN.md is the authority on what; this file adds the exact mechanisms, proof commands and implementation constraints. If the two disagree, PLAN.md wins and the disagreement goes in the report.
 
 ## Goal
 
@@ -19,7 +19,19 @@ Read out of the tree, not assumed. If one is wrong, stop and report it rather th
 - One `PackageReader::Read` already handles both forms: it branches on `std::filesystem::is_directory` at `src/PackageReader.cpp:127`. docs/ARCHITECTURE.md requires exactly one interface, one bound set and one path resolver for both. Do not add a second reader.
 - `std::filesystem` is load-bearing for security, not convenience. `src/PackageReader.cpp` uses `symlink_status`, `is_symlink`, `hard_link_count` and `canonical` to implement the traversal, symlink, hard-link and case-collision rejections. **Do not replace it with an injected file-system interface.** Unreal's `IPlatformFile` does not expose hard-link counts or symlink status, so the substitution would silently weaken checks that 43 fixtures currently prove. This is the one place where docs/ARCHITECTURE.md's "inject the file system" rule loses to a stronger requirement, and the report must say so.
 - `Error` carries `code`, `pointer` and `message`, and `CodeName(ErrorCode)` returns a stable string. The on-screen error in PLAN 4.4's gate is built from these three; no new error type is needed.
-- `tests/fixtures/packages/` holds 43 cases in `cases.json`, each with a `name` and an expected `code`. `well-formed` is the valid one.
+- `tests/fixtures/packages/` holds 43 cases in `cases.json`, each with a `name` and an expected `code`. **An empty `code` means the case must be ACCEPTED.**
+
+  The split is **7 accepted and 36 rejected**, not 1 and 42. An earlier revision of this spec said `well-formed` was the only valid one, reasoning from its name; that is wrong and a build session correctly refused to proceed on it. The seven accepted cases are `gray-image`, `normalized-manifest-key`, `normalized-reference-dot`, `normalized-reference-slashes`, `rgb-image`, `well-formed` and `windows-attributes-entry`. They exist to prove that valid-but-awkward forms are **not** rejected, which is exactly the kind of case a loader tends to break.
+
+  Cross-tabulated against `archive_only`, because the criteria need both axes:
+
+  | | accepted | rejected | total |
+  | --- | ---: | ---: | ---: |
+  | both forms | 6 | 20 | 26 |
+  | archive only | 1 | 16 | 17 |
+  | **total** | **7** | **36** | **43** |
+
+  The one accepted archive-only case is `windows-attributes-entry`. Derive all of these from `cases.json` at runtime rather than hardcoding them; the numbers are here so a miscount is visible rather than silent.
 - **17 of the 43 carry `"archive_only": true` and have no meaningful directory form.** They are the ones a filesystem cannot represent: malformed zip bytes, zip64 structures, ZIP central-directory bounds, DOS attribute and reparse flags, and path forms no filesystem will create (`absolute-path`, `drive-letter`, `path-traversal`, `symlink`, `duplicate-normalized`, `case-collision`, `unicode-case-collision`, `unix-device-entry`). A `<name>/` directory exists on disk for some of them, but it does not reproduce the defect and must not be treated as a second form.
 
   The archive-versus-directory parity in PLAN 4.4's gate therefore applies to the **26 cases without the flag**. Read the flag from `cases.json` at runtime rather than hardcoding it, and do not count directories on disk. The two sets as they stand today, so a miscount is visible rather than silent:
@@ -49,7 +61,7 @@ This is a **move, not a copy.** After it, exactly one copy of each source file e
 1. `git mv packages/dashboard-spec/include/dashboard_spec/*` to `runtime/UnRealDash/Source/DashboardSpec/Public/dashboard_spec/`, and `packages/dashboard-spec/src/*` to `runtime/UnRealDash/Source/DashboardSpec/Private/`. Delete the emptied directories.
 2. The public headers include each other as `dashboard_spec/Foo.h`, so the include root is the directory **containing** `dashboard_spec/`. Both builds must see the same root: UBT gets `PublicIncludePaths.Add(.../DashboardSpec/Public)` and CMake gets `target_include_directories(dashboard_spec PUBLIC .../DashboardSpec/Public)`. `Private/` is an include root for neither; `Private/Internal.h` and `Private/PackageInternal.h` are included by path relative to the including file, exactly as they are today.
 3. Update `packages/dashboard-spec/CMakeLists.txt`'s source list to the new paths, and exclude the module-registration file.
-4. Update `DASHBOARD_SCHEMA_DIR` to the new schema location from deliverable 1a.
+4. `DASHBOARD_SCHEMA_DIR` is unchanged: the schemas stay where they are, per deliverable 1a.
 5. The doctest suite and `tests/fixtures/` do **not** move. Check every relative path the tests and tools resolve against `CMAKE_CURRENT_SOURCE_DIR` or `REPO_ROOT` and fix any that assumed the sources sat beside them. `REPO_ROOT` is already defined in the CMakeLists for this purpose.
 6. Update `.github/workflows/spec-tools.yml` and `signal-core.yml` for any path that names `packages/dashboard-spec/src` or `include`. Both workflows are currently green; they must stay green.
 
@@ -61,10 +73,14 @@ This is a **move, not a copy.** After it, exactly one copy of each source file e
 
 `Validator` reads its five schemas with `std::ifstream`, so they must exist on the filesystem of whatever machine runs the player.
 
-- Copy `packages/dashboard-spec/schema/` to `runtime/UnRealDash/Schema/` and make that the one source of truth. The CMake build and the CLI keep pointing at it through `DASHBOARD_SCHEMA_DIR`, so there is still exactly one copy of each schema in the repository.
-- In `DashboardSpec.Build.cs`, add each schema file as a `RuntimeDependency` with `StagedFileType.NonUFS`, so packaging puts them on the filesystem rather than inside the `.pak`. **Pin the staged destination explicitly** with the two-argument form, so each file lands at `$(ProjectDir)/Schema/<name>.schema.json`. Do not let the destination default: the default mirrors the source path, the five files would land somewhere under the source tree, and the resolver below would look in the right place and find nothing. That failure looks identical on Windows, where the source tree is present anyway, and only appears on device.
-- `UnRealDashCore` resolves the directory as `FPaths::ProjectDir()` joined with `Schema`, passed through `IPlatformFile::GetPlatformPhysical().**ConvertToAbsolutePathForExternalAppForRead**`. Use the read variant, not the write one. The 4.0 smoke spike used `...ForWrite` because it was resolving an output directory; this is an input directory, and on Android the two can resolve to different physical roots. Log the resolved path once at startup.
-- Prove it on the device, not just on Windows: list the five files at the resolved path on the Pixel, and read one of them with the validator, before claiming this works. A Windows pass proves nothing here, because on Windows the repository copy is present at a path that happens to work.
+**The schemas do not move.** They stay at `packages/dashboard-spec/schema/`. An earlier revision of this spec moved them to `runtime/UnRealDash/Schema/`, which would have broken an explicit rule: docs/ARCHITECTURE.md line 22 says Python tools under `tools/` depend on `packages/dashboard-spec/schema/` and **never import from the runtime tree**, and `tools/dashboard_spec/schema.py:14` resolves that exact path. Moving the schemas would have forced a Python tool to read the runtime tree to keep working.
+
+Staging, not moving, is the answer:
+
+- In `DashboardSpec.Build.cs`, add each of the five schema files as a `RuntimeDependency` whose **source** is `packages/dashboard-spec/schema/<name>.schema.json` and whose **staged destination is pinned** to `$(ProjectDir)/Schema/<name>.schema.json`, with `StagedFileType.NonUFS` so packaging puts them on the filesystem rather than inside the `.pak`. Do not let the destination default: the default mirrors the source path, and the resolver below would look in the right place and find nothing. That failure is invisible on Windows, where the repository copy exists anyway, and only appears on device.
+- `UnRealDashCore` resolves the directory as `FPaths::ProjectDir()` joined with `Schema`, passed through `IPlatformFile::GetPlatformPhysical().ConvertToAbsolutePathForExternalAppForRead`. Use the **read** variant, not the write one. The 4.0 smoke spike used `...ForWrite` because it was resolving an output directory; this is an input directory, and on Android the two can resolve to different physical roots. Log the resolved path once at startup.
+- `DASHBOARD_SCHEMA_DIR`, the CMake build and the Python tools are all unchanged by this, which is the point of staging rather than moving.
+- Prove it on the device, not just on Windows: list the five files at the resolved path on the Pixel, and read one of them with the validator, before claiming this works.
 
 **`std::filesystem` and `std::ifstream` are already proven on the device.** This was measured on 2026-09-17 on the Pixel 10 Pro, Vulkan, Development, by a probe in the 4.0 smoke spike reading a real pushed file under the app-specific external storage path. Results, all with `error=0`:
 
@@ -189,16 +205,16 @@ A rejected package leaves the player running and showing the error. It does not 
 
 1. `DashboardSpec` builds under UBT for Win64 **and** Android ARM64, and the Android result is reported explicitly whichever way it goes.
 2. The CMake `dashboard-spec` build stays green on Windows and Linux with exceptions and RTTI off, and its doctest case and assertion counts do not drop.
-3. All 43 fixtures load through the engine loader in archive form, each under the profile `cases.json` gives it. `well-formed` succeeds; the other 42 are rejected with the code `cases.json` expects.
+3. All 43 fixtures load through the engine loader in archive form, each under the profile `cases.json` gives it. The **7 accepted** cases load successfully and the **36 rejected** cases fail with the code `cases.json` expects. An accepted case that is rejected is a failure, and so is the reverse.
 4. For each of the **26 cases without `archive_only`**, both forms reach the same verdict and, when that verdict is a rejection, carry an **identical** code and JSON pointer. A mismatch is a failure, not a note.
 
    Two traps to close, because tail equality alone is a weaker gate than it looks:
    - A case that is rejected in one form and **accepted** in the other fails this criterion. Do not compare codes only among the cases that happened to reject in both.
-   - `well-formed` must be accepted in both forms. A gate that only checks rejections would pass if every case were rejected for the same reason.
+   - The **6 accepted both-form cases** must be accepted in both forms. A gate that only checks rejections would pass if every case were rejected for the same reason, so the accepted cases are what stop that.
 
    The 17 archive-only cases run in archive form only. The report states that count, so a deliberate exclusion cannot later be mistaken for a skipped test.
 5. Launching with `well-formed` renders the placeholder widget tree, in both packed and unpacked form.
-6. Launching with each of the 42 rejection cases shows the on-screen error naming the file and the pointer, and does not crash. Run all 42, not a sample.
+6. Launching with each of the **36 rejection** cases shows the on-screen error naming the file and the pointer, and does not crash. Run all 36, not a sample. Launching with each of the 7 accepted cases renders instead of showing an error.
 7. `scripts/doctor.ps1 -Profile workstation` exits 0 including the extended layering check, and the full Pester suite passes with no reduction in count.
 8. The device half of the PLAN 4.4 gate runs on the desk device (the Pixel), not the head unit, per PLAN 4.4. **This requires the phone connected over USB and is Claude's to run, not Codex's.**
 
