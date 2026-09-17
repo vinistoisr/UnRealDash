@@ -1,6 +1,6 @@
 # Build chunk 08: connector interface and acquisition threading
 
-Status: revision 3. Revision 1 drew 22 review findings, revision 2 drew a further five including one blocker. Both rounds are resolved here. Frozen for a Codex build session. Covers PLAN.md task 4.3. Read PLAN.md (task 4.3, task 2.13, task 2.5, task 2.2, task 4.2's Win64 half, task 4.8's event-log section, the Sequencing block) and docs/ARCHITECTURE.md and docs/CONNECTORS.md before writing anything. PLAN.md is the authority on what; this file adds the exact mechanisms, proof commands and implementation constraints. If the two disagree, PLAN.md wins and the disagreement goes in the report.
+Status: revision 4. Codex stopped on revision 3 with a correct finding: the spec claimed three allocation assertions where the tree has two, and prohibited two assertions that live inside scenarios it also told the builder not to recount. Revision 1 drew 22 review findings, revision 2 drew a further five including one blocker. Both rounds are resolved here. Frozen for a Codex build session. Covers PLAN.md task 4.3. Read PLAN.md (task 4.3, task 2.13, task 2.5, task 2.2, task 4.2's Win64 half, task 4.8's event-log section, the Sequencing block) and docs/ARCHITECTURE.md and docs/CONNECTORS.md before writing anything. PLAN.md is the authority on what; this file adds the exact mechanisms, proof commands and implementation constraints. If the two disagree, PLAN.md wins and the disagreement goes in the report.
 
 ## Goal
 
@@ -22,6 +22,17 @@ Read out of the tree, not assumed. If one is wrong, stop and report it rather th
 - `ExpirySchedule` is a caller-storage ordered set with `Arm`, `Cancel`, `Earliest()` and `PopDue(now, expiry)`.
 - `Clock` is an injected `{void* context, Time (*now)(void*)}` pair. Nothing in signal-core reads a wall clock, and nothing in this chunk may either.
 - `packages/signal-core/tests/test_threading_stress.cpp` holds six `TEST_CASE`s. Five are 2.13 scenarios; `review 7 heap counter observes scalar array aligned and nothrow allocations` is a self-test of the test harness's own heap counter and is **not** a 2.13 scenario.
+- Counted out of the file, the five scenarios hold these assertions today:
+
+  | scenario | assertions | of which |
+  | --- | --- | --- |
+  | sustained publication with a continuously swapping reader | 5 | 2 allocation (lines 79, 80), 1 `WriterBlockedCount` (line 81) |
+  | stalled reader holds a snapshot across 1000 publications | 2 | 1 `WriterBlockedCount` (line 131) |
+  | repeated acquires with the writer idle | 1 | |
+  | generation change mid stream rejects in-flight older samples | 3 | |
+  | bounded queue above capacity drops and counts | 4 | |
+
+  So there are **two** allocation assertions in 2.13, not three; the three at lines 97 to 99 belong to the self-test. And the two `WriterBlockedCount` assertions live **inside** 2.13 scenarios, so removing them necessarily changes those scenarios' counts.
 - `test_heap::Read()` in `tests/support/HeapCounter.h` replaces global `operator new`. Unreal replaces global `operator new` in `ModuleBoilerplate.h`, so that counter cannot link into an engine module.
 - `UnRealDashCore.Build.cs` lists `SignalCore` in `PublicDependencyModuleNames`, so the game module inherits signal-core's include path and link and **can** call signal-core directly. The linker does not enforce the layering rule, and the game module already breaks it.
 
@@ -210,9 +221,11 @@ Parameterized on:
 
 **Case and assertion accounting, so criterion 6 is mechanically checkable.** The suite exposes `RunScenario(index, ...)` for indices 0 to 4 and reports per-scenario counts. `test_threading_stress.cpp` keeps **one `TEST_CASE` per scenario**, each calling exactly one `RunScenario`, so doctest's case count is unchanged at six including the heap-counter self-test, and each scenario's `CHECK` count is unchanged. Both runners print one line per scenario: `scenario=<n> checks=<n> failures=<n> skipped=<n>`. The gate compares those lines, not a single total, which removes the need to subtract the self-test.
 
-**The allocation probe.** Three assertions compare heap allocation counts across a measured window and cannot run in-engine. When `Supported()` is false the suite **does not call `ReportCheck` for those assertions and increments a skipped counter instead**, naming each skipped check. It must not report them as passing. A check that cannot fail is a defect class an earlier review of this project already caught, and a fake pass would hide the allocation regression the assertion exists to find. The owner confirmed this approach on 2026-09-17.
+**The allocation probe.** Two assertions compare heap allocation counts across a measured window and cannot run in-engine. Both are in the `sustained publication` scenario, at lines 79 and 80. The other three allocation comparisons in the file belong to the heap-counter self-test, which is not moved and not rerun in-engine. When `Supported()` is false the suite **does not call `ReportCheck` for those assertions and increments a skipped counter instead**, naming each skipped check. It must not report them as passing. A check that cannot fail is a defect class an earlier review of this project already caught, and a fake pass would hide the allocation regression the assertion exists to find. The owner confirmed this approach on 2026-09-17.
 
-This makes PLAN 4.3's gate wording "the same assertion count and zero failures" unsatisfiable as literally written. The gate this chunk implements is: **per scenario, in-engine `checks + skipped` equals the CMake run's `checks`; in-engine `failures` is zero; and `skipped` totals exactly the three named allocation checks.** Record this in the report as a proposed PLAN amendment. Do not edit PLAN.md.
+**Remove the two `WriterBlockedCount` assertions** while moving the scenarios, at lines 81 and 131. They cannot fail, for the reason in the Facts section. Removing them lowers `sustained publication` from 5 assertions to 4 and `stalled reader` from 2 to 1, and that is the intended change, not a regression.
+
+This makes PLAN 4.3's gate wording "the same assertion count and zero failures" unsatisfiable as literally written. The gate this chunk implements is: **per scenario, in-engine `checks + skipped` equals the CMake run's `checks`; in-engine `failures` is zero; and `skipped` totals exactly the two named allocation checks, both in `sustained publication`.** Record this in the report as a proposed PLAN amendment. Do not edit PLAN.md.
 
 **Determinism: no wall-clock sleeps anywhere in the suite.** The producer already drives an injected `FakeClock`. The consumer's 60 Hz cadence and the 2 second stall are expressed as scripted advances of that same fake clock, with the consumer acquiring only at scripted points. A `std::this_thread::sleep_for` anywhere in the suite is a build failure, and a `yield` used only to spin on an atomic is not.
 
@@ -267,7 +280,9 @@ Do not fix this by loosening the check to allow the smoke files, and do not make
 
 Each is a command that exits non-zero on failure.
 
-1. The CMake `signal-core` build compiles with exceptions and RTTI off on Windows and Linux, its doctest suite passes, and `test_threading_stress.cpp` still reports **six** cases with unchanged per-scenario `CHECK` counts.
+1. The CMake `signal-core` build compiles with exceptions and RTTI off on Windows and Linux, its doctest suite passes, and `test_threading_stress.cpp` still reports **six** cases.
+
+   Per-scenario assertion counts change in exactly two intended ways and no others. Removing the two `WriterBlockedCount` assertions takes `sustained publication` from 5 to 4 and `stalled reader` from 2 to 1. Criterion 2's gate scenarios then **add** assertions on top of that. No assertion that exists today is lost for any other reason. Record the before and after count for all five scenarios in the report so this is checkable rather than asserted.
 2. The three PLAN 4.3 gate scenarios exist as doctest cases and pass:
    - **200 Hz into 60 Hz.** `display.Depth()` never exceeds its bound at any observation, `DisplayDrops()` is greater than zero, every transition the acquisition side counted is present in the sink, and the allocation probe reports no growth. Do **not** assert `WriterBlockedCount()`.
    - **Consumer stalled 2 simulated seconds mid-stream.** The queue stays bounded, no rule transition is lost, and the producer's `Pump` iteration count over the stall matches the un-stalled control run within the scripted tolerance recorded in the test. The iteration count is the real evidence that the producer never blocked.
@@ -283,7 +298,7 @@ Each is a command that exits non-zero on failure.
    State in the report that you verified this test fails against an implementation that evaluates rules from the queue.
 4. ThreadSanitizer on the Linux runner reports zero data races over the whole suite, including the new cases.
 5. UBT builds `SignalCore`, `UnRealDashCore` and `UnRealDash` for Win64.
-6. The commandlet runs with `-stress` and prints one line per scenario. Per scenario, `checks + skipped` equals the CMake run's `checks`; `failures` totals zero; `skipped` totals exactly the three named allocation checks.
+6. The commandlet runs with `-stress` and prints one line per scenario. Per scenario, `checks + skipped` equals the CMake run's `checks`; `failures` totals zero; `skipped` totals exactly **two**, both in `sustained publication`, and both named in the output.
 7. The commandlet still runs without `-stress` and still satisfies 4.2's gate unchanged.
 8. `scripts/doctor.ps1 -Profile workstation` exits 0 including the new layering check, and the full Pester suite passes with no reduction in count.
 
