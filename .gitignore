@@ -19,3 +19,10 @@ Thumbs.db
 
 # Test output
 testResults.xml
+
+# Local CMake build directories
+build/
+build-*/
+
+# Written by the Unreal Android deploy step from engine templates
+runtime/UnRealDash/Build/Android/src/

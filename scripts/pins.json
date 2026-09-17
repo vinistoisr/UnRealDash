@@ -154,12 +154,12 @@
     {
       "id": "studio",
       "component": "Android Studio",
-      "expected": "installed, with a bundled JDK (jbr)",
+      "expected": "installed, with a bundled JDK (jbr) in the supported major-version range",
       "detect": "studio",
       "profiles": [
         "android"
       ],
-      "note": "The engine pins the SDK platform, build-tools, cmake and NDK in Engine/Config/Android/Android_SDK.json; it does not pin an Android Studio version. Studio is required because Epic's SetupAndroid script uses its sdkmanager and its bundled JDK, so this row checks for the install and the runtime, not a version."
+      "note": "The engine pins the SDK platform, build-tools, cmake and NDK in Engine/Config/Android/Android_SDK.json; it does not pin an Android Studio version. Studio is required because Epic's SetupAndroid script uses its sdkmanager, and because UnrealBuildTool substitutes Studio's bundled JDK for JAVA_HOME when its SDK layout check is not satisfied. That substitution is why this row checks the bundled JDK's version and not only that it exists: a Studio release whose JDK is newer than the engine's gradle compiles the native library and then fails the APK step."
     },
     {
       "id": "ndk",
@@ -174,7 +174,7 @@
     {
       "id": "jdk",
       "component": "JDK",
-      "expected": "a JDK on JAVA_HOME or the search PATH, major version 17 or newer",
+      "expected": "a JDK on JAVA_HOME or the search PATH, within the supported major-version range",
       "detect": "jdk",
       "profiles": [
         "android"
@@ -182,8 +182,7 @@
       "command": "java",
       "arguments": [
         "-version"
-      ],
-      "minimum_major": 17
+      ]
     },
     {
       "id": "android-sdk",
@@ -321,5 +320,10 @@
         "preinstall"
       ]
     }
-  ]
+  ],
+  "jdk": {
+    "minimum_major": 17,
+    "maximum_major": 23,
+    "note": "The floor is the engine's gradle config, which sets sourceCompatibility and targetCompatibility to 17. The ceiling is the gradle the engine ships: gradle 8.13 cannot read a class file newer than Java 23 and fails the APK step with \"Unsupported class file major version\". Two rows enforce this range because UnrealBuildTool does not always use JAVA_HOME: when its Android SDK layout check is not satisfied it substitutes the JDK bundled with Android Studio, so that one has to be in range as well."
+  }
 }

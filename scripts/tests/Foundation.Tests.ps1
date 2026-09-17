@@ -246,14 +246,15 @@ exit 9
         Assert-Row (Invoke-Child 'doctor.ps1' $invokeArguments) 'C: free space' 'FAIL' 1
     }
 
-    It 'JDK prefers JAVA_HOME and enforces the major-version floor' {
+    It 'JDK prefers JAVA_HOME and enforces both ends of the supported major-version range' {
         $data = New-FixturePins @('jdk')
         $file = Save-FixturePins $data
-        $floor = $data.rows[0].minimum_major
+        $floor = $data.jdk.minimum_major
+        $ceiling = $data.jdk.maximum_major
         $jdkHome = Join-Path $TestDrive 'jdk-home'
         $directory = Join-Path $TestDrive 'java-path'
         Write-Wrapper $directory 'java.cmd' "@echo off`r`necho openjdk version `"$floor.0.1`""
-        Write-Wrapper (Join-Path $jdkHome 'bin') 'java.ps1' "Write-Output 'openjdk version `"21.0.3`"'"
+        Write-Wrapper (Join-Path $jdkHome 'bin') 'java.ps1' "Write-Output 'openjdk version `"$floor.0.3`"'"
         $arguments = @('-Profile', 'android', '-PinsFile', $file, '-SearchPath', $directory)
         $matching = Invoke-Child 'doctor.ps1' $arguments @{ JAVA_HOME = $jdkHome }
         Assert-Row $matching 'JDK' 'PASS' 0
@@ -264,6 +265,16 @@ exit 9
         Assert-Row $mismatch 'JDK' 'FAIL' 1
         $mismatch.Text | Should -Match 'JAVA_HOME'
         $mismatch.Text | Should -Match '11\.0\.2'
+        # A JDK above the ceiling also fails. Android Studio bundles one, and it compiles the native
+        # library and then fails the APK step, so the doctor has to reject it before the build does.
+        $above = $ceiling + 1
+        Write-Wrapper (Join-Path $jdkHome 'bin') 'java.ps1' "Write-Output 'openjdk version `"$above.0.1`"'"
+        $tooNew = Invoke-Child 'doctor.ps1' $arguments @{ JAVA_HOME = $jdkHome }
+        Assert-Row $tooNew 'JDK' 'FAIL' 1
+        $tooNew.Text | Should -Match 'too new'
+        # The ceiling itself is supported.
+        Write-Wrapper (Join-Path $jdkHome 'bin') 'java.ps1' "Write-Output 'openjdk version `"$ceiling.0.1`"'"
+        Assert-Row (Invoke-Child 'doctor.ps1' $arguments @{ JAVA_HOME = $jdkHome }) 'JDK' 'PASS' 0
         $fallback = Invoke-Child 'doctor.ps1' $arguments @{ JAVA_HOME = $null }
         Assert-Row $fallback 'JDK' 'PASS' 0
         $fallback.Text | Should -Match 'search PATH'

@@ -17,5 +17,9 @@ public class SignalCore : ModuleRules
         // _Doraise overrides. The CMake build sets it for its own translation units instead.
         PublicDependencyModuleNames.Add("Core");
         PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "Public"));
+        // Vendored fast_float supplies the correctly rounded decimal to double conversion that
+        // std::from_chars does not provide on every toolchain. A system include path keeps the
+        // header out of this module's warnings-as-errors.
+        PublicSystemIncludePaths.Add(Path.Combine(ModuleDirectory, "../../../../third_party/fast_float"));
     }
 }

@@ -51,6 +51,8 @@ foreach(source IN LISTS normalized_sources)
 endforeach()
 add_library(signal_core STATIC ${signal_sources})
 target_include_directories(signal_core PUBLIC ../../runtime/UnRealDash/Source/SignalCore/Public PRIVATE ../../runtime/UnRealDash/Source/SignalCore/Private)
+# SYSTEM so the vendored header is exempt from this project's warnings-as-errors settings.
+target_include_directories(signal_core SYSTEM PRIVATE ../../third_party/fast_float)
 option(SIGNAL_CORE_BUILD_TOOLS_AND_TESTS "Build standalone signal-core tools and tests" ${PROJECT_IS_TOP_LEVEL})
 if(SIGNAL_CORE_BUILD_TOOLS_AND_TESTS)
     find_package(Threads REQUIRED)

@@ -150,7 +150,13 @@ function Test-Row($Row, $Pins) {
                 $output = Invoke-Tool $java $Row.arguments
                 $major = [regex]::Match($output, '(?m)version "(\d+)').Groups[1].Value
                 $found = "$source; $(($output -split '\r?\n')[0])"
-                $ok = $major -and ([int]$major -ge [int]$Row.minimum_major)
+                # A ceiling as well as a floor. The engine's gradle rejects a class file format
+                # newer than it knows, so a too-new JDK builds the native library and then fails
+                # the APK step. Android Studio's bundled JBR is above the ceiling.
+                $ok = $major -and ([int]$major -ge [int]$Pins.jdk.minimum_major) -and ([int]$major -le [int]$Pins.jdk.maximum_major)
+                if ($major -and [int]$major -gt [int]$Pins.jdk.maximum_major) {
+                    $found += "; too new for the engine's gradle, point JAVA_HOME at a JDK $($Pins.jdk.minimum_major) to $($Pins.jdk.maximum_major) install"
+                }
             }
             'presence' { $found = Find-Tool $Row.command; $ok = $true }
             'powershell' { $found = $PSVersionTable.PSVersion.ToString(); $ok = $PSVersionTable.PSVersion.Major -ge $Row.minimum }
@@ -228,8 +234,14 @@ function Test-Row($Row, $Pins) {
                 if (-not $ok) { $found += "; not installed under $sdk" }
             }
             'studio' {
+                # Resolved the way UnrealBuildTool resolves it, so this row reports the install the
+                # engine will actually use. ANDROID_STUDIO_HOME stays first as a test seam.
                 $studio = $env:ANDROID_STUDIO_HOME
-                if (-not $studio) { $studio = Join-Path $env:ProgramFiles 'Android/Android Studio' }
+                if (-not $studio) {
+                    $key = Get-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Android Studio' -ErrorAction SilentlyContinue
+                    if ($key -and $key.Path) { $studio = $key.Path }
+                }
+                if (-not $studio) { $studio = Join-Path $env:LOCALAPPDATA 'Programs/Android Studio' }
                 $product = Join-Path $studio 'product-info.json'
                 $runtime = Join-Path $studio 'jbr/bin/java.exe'
                 $version = 'unknown'
@@ -238,8 +250,22 @@ function Test-Row($Row, $Pins) {
                     $version = $info.version
                     if ($info.versionSuffix) { $version += " $($info.versionSuffix)" }
                 }
-                $found = "$studio; version $version; bundled runtime: $(Test-Path -LiteralPath $runtime)"
-                $ok = (Test-Path -LiteralPath $product) -and (Test-Path -LiteralPath $runtime)
+                # UnrealBuildTool hands this JDK to gradle in place of JAVA_HOME whenever its Android
+                # SDK layout check is not satisfied, so its major version has to be in range too.
+                $release = Join-Path $studio 'jbr/release'
+                $bundled = 'absent'
+                $bundledMajor = 0
+                if (Test-Path -LiteralPath $release) {
+                    $line = (Get-Content -LiteralPath $release | Where-Object { $_ -like 'JAVA_VERSION=*' } | Select-Object -First 1)
+                    $bundled = [regex]::Match($line, 'JAVA_VERSION="([^"]+)"').Groups[1].Value
+                    $bundledMajor = [int]([regex]::Match($bundled, '^(\d+)').Groups[1].Value)
+                }
+                $found = "$studio; version $version; bundled JDK $bundled"
+                $ok = (Test-Path -LiteralPath $product) -and (Test-Path -LiteralPath $runtime) -and
+                    $bundledMajor -ge [int]$Pins.jdk.minimum_major -and $bundledMajor -le [int]$Pins.jdk.maximum_major
+                if ($bundledMajor -gt [int]$Pins.jdk.maximum_major) {
+                    $found += "; too new for the engine's gradle, install a Studio release whose bundled JDK is $($Pins.jdk.minimum_major) to $($Pins.jdk.maximum_major)"
+                }
             }
             'environment' { $found = [Environment]::GetEnvironmentVariable($Row.variable); $ok = $found -and (Test-Path -LiteralPath $found -PathType Container) }
             'linux-toolchain' {

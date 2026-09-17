@@ -1,6 +1,13 @@
 #include "JsonLinesText.h"
 #include <charconv>
 #include <cmath>
+// std::from_chars for floating point is not available on every toolchain this project
+// builds with: the Android NDK r27 libc++ declares that overload deleted. A per-platform
+// fallback would give two conversion paths that can disagree in the last place, which the
+// byte-identical recording round trip in task 2.7 would catch. fast_float is the same
+// correctly rounded implementation newer libc++ releases use, so every target runs the
+// same code. Integer parsing stays on std::from_chars, which every toolchain provides.
+#include "fast_float.h"
 namespace signal_core::json_lines {
 void Writer::Text(std::string_view text) {
     if (status_.Ok())
@@ -172,7 +179,8 @@ bool Reader::Number(double &value) {
             return false;
     }
     (void)integral;
-    auto result = std::from_chars(line_.data() + start, line_.data() + cursor_, value);
+    auto result = fast_float::from_chars(line_.data() + start, line_.data() + cursor_, value,
+                                        fast_float::chars_format::general);
     return result.ec == std::errc{} && result.ptr == line_.data() + cursor_ && std::isfinite(value);
 }
 bool Reader::Boolean(bool &value) {
