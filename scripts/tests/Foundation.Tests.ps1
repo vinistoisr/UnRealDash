@@ -252,6 +252,29 @@ exit 9
         $fallback.Text | Should -Match 'search PATH'
     }
 
+    It 'engine platform detection accepts either marker location' {
+        # Linux ships under Binaries/Win64/Linux, Android under Platforms/Android. Both must count.
+        $root = New-Item (Join-Path $TestDrive 'engine-root') -ItemType Directory -Force
+        $engine = New-Item (Join-Path $root.FullName 'Engine') -ItemType Directory -Force
+        New-Item (Join-Path $engine.FullName 'Build') -ItemType Directory -Force | Out-Null
+        Set-Content (Join-Path $engine.FullName 'Build/Build.version') '{"MajorVersion":5,"MinorVersion":8,"PatchVersion":2}'
+        Set-Content (Join-Path $engine.FullName 'Build/InstalledBuild.txt') ''
+        New-Item (Join-Path $engine.FullName 'Platforms/Android') -ItemType Directory -Force | Out-Null
+        New-Item (Join-Path $engine.FullName 'Binaries/Win64/Linux') -ItemType Directory -Force | Out-Null
+        $pins = Get-Content (Join-Path $PSScriptRoot '../pins.json') -Raw | ConvertFrom-Json
+        $pins.engine.root = $root.FullName
+        $file = Join-Path $TestDrive 'engine-pins.json'
+        $pins | ConvertTo-Json -Depth 20 | Set-Content $file
+        $result = Invoke-Child 'doctor.ps1' @('-Profile', 'workstation', '-PinsFile', $file)
+        $result.Text | Should -Match '(?m)^Unreal Engine\s+.*PASS'
+        $result.Text | Should -Not -Match 'Linux missing'
+
+        Remove-Item (Join-Path $engine.FullName 'Binaries/Win64/Linux') -Recurse -Force
+        $missing = Invoke-Child 'doctor.ps1' @('-Profile', 'workstation', '-PinsFile', $file)
+        $missing.Text | Should -Match 'Linux missing'
+        $missing.Code | Should -Be 1
+    }
+
     It 'Windows SDK kits_root override changes from FAIL to PASS when pinned Include exists' {
         $data = New-FixturePins @('windows-sdk')
         $sdk = Join-Path $TestDrive 'custom-kits'

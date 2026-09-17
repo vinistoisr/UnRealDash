@@ -132,7 +132,17 @@
       "platforms": [
         "Android",
         "Linux"
-      ]
+      ],
+      "platform_markers": {
+        "Android": [
+          "Platforms/Android",
+          "Binaries/Win64/Android"
+        ],
+        "Linux": [
+          "Binaries/Win64/Linux",
+          "Platforms/Linux"
+        ]
+      }
     },
     {
       "id": "studio",

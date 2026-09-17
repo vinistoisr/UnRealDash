@@ -146,8 +146,16 @@ function Test-Row($Row, $Pins) {
                 $version = Get-Content (Join-Path $engine 'Build/Build.version') -Raw | ConvertFrom-Json
                 $found = "$($version.MajorVersion).$($version.MinorVersion).$($version.PatchVersion)"
                 $ok = $found -eq $Row.version -and (Test-Path (Join-Path $engine 'Build/InstalledBuild.txt'))
+                # A target platform is installed under Platforms/<name> (restricted platforms) or
+                # Binaries/Win64/<name> (the rest, Linux among them). pins.json lists the candidates.
                 foreach ($platform in $Row.platforms) {
-                    if (-not (Test-Path (Join-Path $engine "Platforms/$platform"))) { $ok = $false; $found += "; $platform missing" }
+                    $markers = @($Row.platform_markers.$platform)
+                    if ($markers.Count -eq 0) { $markers = @("Platforms/$platform") }
+                    $present = $false
+                    foreach ($marker in $markers) {
+                        if (Test-Path (Join-Path $engine $marker)) { $present = $true; break }
+                    }
+                    if (-not $present) { $ok = $false; $found += "; $platform missing" }
                 }
             }
             'android-sdk' {
