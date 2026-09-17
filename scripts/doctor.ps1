@@ -60,6 +60,11 @@ function Invoke-Tool([string]$Path, [string[]]$Arguments) {
         $stdout = $process.StandardOutput.ReadToEndAsync()
         $stderr = $process.StandardError.ReadToEndAsync()
         if (-not $process.WaitForExit(15000)) { $process.Kill($true); throw 'tool timed out after 15 seconds' }
+        # The process has exited, but a daemon it spawned can still hold the inherited pipe, so the
+        # reads are bounded too. adb is the known case; the bound keeps any such tool from hanging a run.
+        if (-not [Threading.Tasks.Task]::WaitAll(@($stdout, $stderr), 5000)) {
+            throw 'tool exited but left its output pipe open for more than 5 seconds'
+        }
         $output = ($stdout.GetAwaiter().GetResult() + $stderr.GetAwaiter().GetResult()).Trim()
         if ($process.ExitCode -ne 0) { throw "tool exit $($process.ExitCode): $output" }
         return $output
@@ -75,6 +80,37 @@ function Get-VisualStudio([string[]]$Requirements) {
 
 # The installed engine states which Android SDK platform, build-tools, cmake and NDK it needs.
 # Reading it here means the doctor cannot drift from the engine the way a duplicated pin can.
+# adb ships inside the Android SDK's platform-tools, which is not on PATH by default.
+# Look there first so a correct SDK install does not need a PATH edit, then fall back to the search PATH.
+function Find-Adb {
+    # The search path wins, so -SearchPath stays a usable seam and an explicit adb is respected.
+    # Otherwise fall back to the SDK's platform-tools, which is where a correct install puts it.
+    $adb = $null
+    try { $adb = Find-Tool 'adb' } catch { $adb = $null }
+    if (-not $adb) {
+        $sdk = Get-AndroidSdkRoot
+        if ($sdk) {
+            $candidate = Join-Path $sdk 'platform-tools/adb.exe'
+            if (Test-Path -LiteralPath $candidate -PathType Leaf) { $adb = $candidate }
+        }
+    }
+    if (-not $adb) { throw 'adb not found on the search PATH or in the Android SDK' }
+    # The first adb command starts a daemon that inherits the caller's pipes. Start it here with no
+    # redirection so the queries that follow return their own output and nothing keeps a pipe open.
+    if (-not $script:AdbServerStarted -and $adb -like '*.exe') {
+        $script:AdbServerStarted = $true
+        $start = [Diagnostics.ProcessStartInfo]::new()
+        $start.FileName = $adb
+        $start.UseShellExecute = $false
+        $start.CreateNoWindow = $true
+        [void]$start.ArgumentList.Add('start-server')
+        $server = [Diagnostics.Process]::Start($start)
+        [void]$server.WaitForExit(15000)
+        $server.Dispose()
+    }
+    return $adb
+}
+
 function Get-EngineAndroidManifest($Pins) {
     $path = Join-Path $Pins.engine.root 'Engine/Config/Android/Android_SDK.json'
     if (-not (Test-Path -LiteralPath $path)) { throw "engine Android manifest not found at $path" }
@@ -210,11 +246,11 @@ function Test-Row($Row, $Pins) {
                 $ok = $version -eq $Row.version
             }
             'adb' {
-                $found = Invoke-Tool (Find-Tool 'adb') @('-s', $Pins.device.adb_address, 'get-state')
+                $found = Invoke-Tool (Find-Adb) @('-s', $Pins.device.adb_address, 'get-state')
                 $ok = $found.Trim() -eq 'device'
             }
             'device-storage' {
-                $output = Invoke-Tool (Find-Tool 'adb') @('-s', $Pins.device.adb_address, 'shell', 'df', '-k', '/data')
+                $output = Invoke-Tool (Find-Adb) @('-s', $Pins.device.adb_address, 'shell', 'df', '-k', '/data')
                 $line = @($output -split '\r?\n' | Where-Object { $_.Trim() -match '^/.*\s/data\s*$' }) | Select-Object -Last 1
                 $fields = $line.Trim() -split '\s+'
                 $available = 0L
