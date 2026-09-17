@@ -24,8 +24,15 @@ Read out of the tree, not assumed. If one is wrong, stop and report it rather th
 
   The archive-versus-directory parity in PLAN 4.4's gate therefore applies to the **26 cases without the flag**. Read the flag from `cases.json`; do not hardcode the list, and do not count directories on disk.
 - `cases.json` entries may also carry a `profile` key, which selects `mobile` or `desktop` and therefore which texture budget applies. Honour it rather than running every case under one profile.
+- **Every file read in `dashboard-spec` goes through one function**, `ReadBounded` in `src/BoundedParse.cpp:10`, and it uses `std::ifstream` over a `std::filesystem::path`. Three callers: the schema loader (`SchemaValidation.cpp:54`), the directory-form package entry reader (`PackageReader.cpp:233`) and the CLI (`validate_main.cpp:11`).
+
+  This is the single most important Android fact in this chunk. `std::ifstream` reads the **real filesystem**. A file staged as UFS lives inside the `.pak` and `std::ifstream` cannot see it at all, so anything this library must read has to be staged as **non-UFS** or pushed to the device. The `-udash=` package is already a real file, so it is fine; the schema files are not, and deliverable 1a fixes that.
+
+  Do not "fix" this by routing `ReadBounded` through `IPlatformFile`. That would drag an Unreal type into a library the CMake build compiles with no engine on the path, which breaks the enforcement in docs/ARCHITECTURE.md.
+- The five schema files live in `packages/dashboard-spec/schema/`. `DASHBOARD_SCHEMA_DIR` is a **compile-time absolute path used only by the CLI** (`validate_main.cpp:87`); it is a build-machine path and is meaningless on a device. `Validator`'s constructor takes the directory as a string, so the engine must supply a real runtime path.
 - `Document` is opaque: it exposes only `Storage&`. Whatever the widget builder needs must come through an accessor added in deliverable 2, not by reaching into `Storage`.
-- Unreal's UBT compiles `.c` files in a module, so `miniz.c` can be built in-module. Confirm this rather than assuming it.
+- Unreal's UBT compiles `.c` files in a module, so `miniz.c` builds in-module. Checked, not assumed: `Engine/Source/Programs/UnrealBuildTool/Configuration/UEBuildModuleCPP.cs:3078` lists `.c` among the compiled extensions and line 3129 branches on it. `third_party/miniz/miniz.c` is present.
+- The CMake presets are named **`default`** (and `tsan` for signal-core), not `windows-msvc`, and each presets file lives inside its package directory, so preset commands run from there. This is what CI already uses in `signal-core.yml` and `spec-tools.yml`.
 
 ## Deliverables
 
@@ -37,6 +44,15 @@ Follow the arrangement PLAN 4.2 established for `SignalCore` exactly, because it
 - Change `packages/dashboard-spec/CMakeLists.txt` to compile those same files from their new location. `packages/dashboard-spec/` keeps its `CMakeLists.txt`, its doctest suite, its `schema/` directory, its tools and its README. Its build must stay green on `windows-latest` and `ubuntu-latest` with exceptions and RTTI off, and its case and assertion counts must not drop.
 - `DashboardSpec.Build.cs`: `CppStandard = Cpp20`, `bEnableExceptions = false`, `bUseRTTI = false`, public dependency on `SignalCore`, private on `Core`, and system include paths to `third_party/rapidjson/include` and `third_party/valijson/include`. Compile `third_party/miniz/miniz.c` in the module. Do not define `_HAS_EXCEPTIONS` by hand; UBT sets it from `bEnableExceptions`, and chunk 01 already recorded that lesson in `SignalCore.Build.cs`.
 - No Unreal header, Unreal type or engine macro enters any `DashboardSpec` source file except the module-registration file, which the CMake build excludes. Extend chunk 08's layering check in `scripts/doctor.ps1` to cover this module on the same terms as `SignalCore`.
+
+#### 1a. Get the schema files onto the device as real files
+
+`Validator` reads its five schemas with `std::ifstream`, so they must exist on the filesystem of whatever machine runs the player.
+
+- Copy `packages/dashboard-spec/schema/` to `runtime/UnRealDash/Schema/` and make that the one source of truth. The CMake build and the CLI keep pointing at it through `DASHBOARD_SCHEMA_DIR`, so there is still exactly one copy of each schema in the repository.
+- In `DashboardSpec.Build.cs`, add each schema file as a `RuntimeDependency` with `StagedFileType.NonUFS`, so packaging puts them on the filesystem rather than inside the `.pak`.
+- `UnRealDashCore` resolves the directory as `FPaths::ProjectDir()` joined with `Schema`, passed through `IPlatformFile::GetPlatformPhysical().ConvertToAbsolutePathForExternalAppForWrite`. That is the same call the 4.0 smoke spike needed for `ProjectSavedDir`, and for the same reason: on Android the project-relative path is virtual and `ConvertRelativePathToFull` does not resolve it. Log the resolved path once at startup.
+- Prove it on the device, not just on Windows: list the five files at the resolved path on the Pixel before claiming this works.
 
 **Prove `std::filesystem` on Android before building anything else.** Unreal's Android toolchain is not guaranteed to link it, and the entire directory-form path depends on it. Build the module for Android ARM64 as the **first** thing in this chunk and report the result. If it does not link, stop and report it; do not work around it by disabling the directory form, because the rejection-code parity in the gate requires both forms.
 
@@ -91,7 +107,7 @@ A rejected package leaves the player running and showing the error. It does not 
 - No `dashboard_spec::` or `signal_core::` name appears in the `UnRealDash` game module. `UnRealDashCore` is the only wrapper. The doctor check from chunk 08 enforces it.
 - Nothing in `DashboardSpec/` gains an Unreal header outside the module-registration file.
 - Errors are values everywhere. No `check()`, `verify()` or `ensure()` on any path a hostile package can reach. A malformed package is expected input, not a programming error.
-- The schema files in `packages/dashboard-spec/schema/` must reach a packaged build. State how you did it and prove it on Windows; the device proof is Claude's.
+- The schema files must reach a packaged build as real files, per deliverable 1a. State how you did it. The device proof is Claude's.
 - No em dashes in any file, comment or printed string.
 
 ## Non-goals
