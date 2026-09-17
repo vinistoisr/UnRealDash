@@ -40,6 +40,7 @@ Read out of the tree, not assumed. If one is wrong, stop and report it rather th
   Whole file today: 6 cases, 24 assertions. The five 2.13 scenarios account for 20.
 
   So 2.13 holds **two** allocation assertions, not three; the three at lines 97 to 99 belong to the self-test. And the two `WriterBlockedCount` assertions sit **inside** 2.13 scenarios, so removing them necessarily changes those scenarios' counts.
+- The CMake presets in `packages/signal-core/CMakePresets.json` are named **`default`** and **`tsan`**, both Ninja, and the presets file lives in `packages/signal-core`, so preset commands run from that directory. There is no `windows-msvc` preset; an earlier revision of this spec told the builder to use one. `tsan` is the Linux CI preset.
 - `test_heap::Read()` in `tests/support/HeapCounter.h` replaces global `operator new`. Unreal replaces global `operator new` in `ModuleBoilerplate.h`, so that counter cannot link into an engine module.
 - `UnRealDashCore.Build.cs` lists `SignalCore` in `PublicDependencyModuleNames`, so the game module inherits signal-core's include path and link and **can** call signal-core directly. The linker does not enforce the layering rule, and the game module already breaks it.
 
@@ -316,8 +317,9 @@ Each is a command that exits non-zero on failure.
 Codex runs these and pastes the output verbatim. Codex has no engine and no device; anything marked `[claude]` it must not attempt and must list as not run.
 
 ```
-cmake --preset windows-msvc && cmake --build --preset windows-msvc
-ctest --preset windows-msvc --output-on-failure
+cd packages/signal-core && cmake --preset default && cmake --build --preset default
+cd packages/signal-core && ctest --preset default --output-on-failure
+packages/signal-core/build/default/signal-core-tests.exe "--source-file=*test_threading_stress.cpp" --reporters=xml
 pwsh -NoProfile -File scripts/doctor.ps1 -Profile workstation; echo "exit=$LASTEXITCODE"
 pwsh -NoProfile -Command "Invoke-Pester -Path scripts/tests -Output Detailed"
 git status --short

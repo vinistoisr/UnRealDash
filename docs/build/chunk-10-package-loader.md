@@ -118,8 +118,8 @@ A rejected package leaves the player running and showing the error. It does not 
 Codex runs these and pastes the output verbatim. Codex has no engine, no Android toolchain and no device.
 
 ```
-cmake --preset windows-msvc && cmake --build --preset windows-msvc
-ctest --preset windows-msvc --output-on-failure
+cd packages/dashboard-spec && cmake --preset default && cmake --build --preset default
+cd packages/dashboard-spec && ctest --preset default --output-on-failure
 pwsh -NoProfile -File scripts/doctor.ps1 -Profile workstation; echo "exit=$LASTEXITCODE"
 pwsh -NoProfile -Command "Invoke-Pester -Path scripts/tests -Output Detailed"
 git status --short
