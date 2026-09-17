@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "signals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "number",
+              "boolean"
+            ]
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "dimensionless",
+              "K",
+              "degC",
+              "degF",
+              "Pa",
+              "kPa",
+              "bar",
+              "psi",
+              "m/s",
+              "km/h",
+              "mph",
+              "rad/s",
+              "rpm"
+            ]
+          },
+          "freshness_deadline_ms": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "discrete": {
+            "type": "boolean"
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "connector": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "connector",
+              "field"
+            ]
+          },
+          "display_unit": {
+            "type": "string",
+            "enum": [
+              "dimensionless",
+              "K",
+              "degC",
+              "degF",
+              "Pa",
+              "kPa",
+              "bar",
+              "psi",
+              "m/s",
+              "km/h",
+              "mph",
+              "rad/s",
+              "rpm"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "unit",
+          "freshness_deadline_ms",
+          "discrete"
+        ]
+      }
+    }
+  },
+  "required": [
+    "signals"
+  ]
+}

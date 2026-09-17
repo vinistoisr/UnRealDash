@@ -1,0 +1,1 @@
+{"signals":[{"id":"temperature","type":"number","unit":"K","freshness_deadline_ms":250,"discrete":false},{"id":"warning","type":"boolean","unit":"dimensionless","freshness_deadline_ms":100,"discrete":true}]}

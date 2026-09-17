@@ -1,0 +1,1641 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "reference_viewport": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "width",
+        "height"
+      ]
+    },
+    "components": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z0-9][a-z0-9_.-]{0,63}$": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "readout",
+                "image",
+                "shape",
+                "analog_dial",
+                "bar_gauge",
+                "indicator",
+                "history_graph",
+                "container",
+                "page_switch"
+              ]
+            },
+            "parent": {
+              "type": "string"
+            },
+            "rect": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "width": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "height": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              },
+              "required": [
+                "x",
+                "y",
+                "width",
+                "height"
+              ]
+            },
+            "anchor": {
+              "type": "string",
+              "enum": [
+                "top_left",
+                "top",
+                "top_right",
+                "left",
+                "center",
+                "right",
+                "bottom_left",
+                "bottom",
+                "bottom_right"
+              ]
+            },
+            "scaling": {
+              "type": "string",
+              "enum": [
+                "uniform",
+                "stretch",
+                "none"
+              ]
+            },
+            "clipping": {
+              "type": "boolean"
+            },
+            "aspect_policy": {
+              "type": "string",
+              "enum": [
+                "preserve",
+                "stretch",
+                "inherit"
+              ]
+            },
+            "missing_data": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "stale": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "presentation": {
+                      "type": "string",
+                      "enum": [
+                        "dash",
+                        "hidden",
+                        "last_value_dimmed",
+                        "icon"
+                      ]
+                    },
+                    "token": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "presentation",
+                    "token"
+                  ]
+                },
+                "unavailable": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "presentation": {
+                      "type": "string",
+                      "enum": [
+                        "dash",
+                        "hidden",
+                        "last_value_dimmed",
+                        "icon"
+                      ]
+                    },
+                    "token": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "presentation",
+                    "token"
+                  ]
+                },
+                "invalid": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "presentation": {
+                      "type": "string",
+                      "enum": [
+                        "dash",
+                        "hidden",
+                        "last_value_dimmed",
+                        "icon"
+                      ]
+                    },
+                    "token": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "presentation",
+                    "token"
+                  ]
+                },
+                "age_unknown": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "presentation": {
+                      "type": "string",
+                      "enum": [
+                        "dash",
+                        "hidden",
+                        "last_value_dimmed",
+                        "icon"
+                      ]
+                    },
+                    "token": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "presentation",
+                    "token"
+                  ]
+                }
+              },
+              "required": [
+                "stale",
+                "unavailable",
+                "invalid",
+                "age_unknown"
+              ]
+            },
+            "properties": {}
+          },
+          "required": [
+            "type",
+            "rect",
+            "anchor",
+            "scaling",
+            "clipping",
+            "aspect_policy",
+            "missing_data",
+            "properties"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "readout"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "properties": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "text": {
+                        "type": "string"
+                      },
+                      "colour": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^#[0-9a-f]{6}([0-9a-f]{2})?(?![\\s\\S])"
+                          },
+                          {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                              "token": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "token"
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "text"
+                    ]
+                  }
+                }
+              },
+              "else": {
+                "if": {
+                  "properties": {
+                    "type": {
+                      "const": "image"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "properties": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "asset": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "asset"
+                      ]
+                    }
+                  }
+                },
+                "else": {
+                  "if": {
+                    "properties": {
+                      "type": {
+                        "const": "shape"
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "properties": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "line",
+                              "rectangle",
+                              "ellipse"
+                            ]
+                          },
+                          "colour": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "pattern": "^#[0-9a-f]{6}([0-9a-f]{2})?(?![\\s\\S])"
+                              },
+                              {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                  "token": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "token"
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "colour"
+                        ]
+                      }
+                    }
+                  },
+                  "else": {
+                    "if": {
+                      "properties": {
+                        "type": {
+                          "const": "analog_dial"
+                        }
+                      }
+                    },
+                    "then": {
+                      "properties": {
+                        "properties": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "minimum": {
+                              "type": "number"
+                            },
+                            "maximum": {
+                              "type": "number"
+                            },
+                            "colour": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "pattern": "^#[0-9a-f]{6}([0-9a-f]{2})?(?![\\s\\S])"
+                                },
+                                {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "token": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "token"
+                                  ]
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "minimum",
+                            "maximum",
+                            "colour"
+                          ]
+                        }
+                      }
+                    },
+                    "else": {
+                      "if": {
+                        "properties": {
+                          "type": {
+                            "const": "bar_gauge"
+                          }
+                        }
+                      },
+                      "then": {
+                        "properties": {
+                          "properties": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                              "minimum": {
+                                "type": "number"
+                              },
+                              "maximum": {
+                                "type": "number"
+                              },
+                              "circular": {
+                                "type": "boolean"
+                              },
+                              "colour": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "pattern": "^#[0-9a-f]{6}([0-9a-f]{2})?(?![\\s\\S])"
+                                  },
+                                  {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "token": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "token"
+                                    ]
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "minimum",
+                              "maximum",
+                              "circular",
+                              "colour"
+                            ]
+                          }
+                        }
+                      },
+                      "else": {
+                        "if": {
+                          "properties": {
+                            "type": {
+                              "const": "indicator"
+                            }
+                          }
+                        },
+                        "then": {
+                          "properties": {
+                            "properties": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "properties": {
+                                "colour": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "pattern": "^#[0-9a-f]{6}([0-9a-f]{2})?(?![\\s\\S])"
+                                    },
+                                    {
+                                      "type": "object",
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "token": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "token"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "colour"
+                              ]
+                            }
+                          }
+                        },
+                        "else": {
+                          "if": {
+                            "properties": {
+                              "type": {
+                                "const": "history_graph"
+                              }
+                            }
+                          },
+                          "then": {
+                            "properties": {
+                              "properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                  "history_samples": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                  },
+                                  "colour": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "pattern": "^#[0-9a-f]{6}([0-9a-f]{2})?(?![\\s\\S])"
+                                      },
+                                      {
+                                        "type": "object",
+                                        "additionalProperties": false,
+                                        "properties": {
+                                          "token": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "token"
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "history_samples",
+                                  "colour"
+                                ]
+                              }
+                            }
+                          },
+                          "else": {
+                            "if": {
+                              "properties": {
+                                "type": {
+                                  "const": "container"
+                                }
+                              }
+                            },
+                            "then": {
+                              "properties": {
+                                "properties": {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "properties": {},
+                                  "required": []
+                                }
+                              }
+                            },
+                            "else": {
+                              "if": {
+                                "properties": {
+                                  "type": {
+                                    "const": "page_switch"
+                                  }
+                                }
+                              },
+                              "then": {
+                                "properties": {
+                                  "properties": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "pages": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "initial_page": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "pages",
+                                      "initial_page"
+                                    ]
+                                  }
+                                }
+                              },
+                              "else": {
+                                "properties": {
+                                  "type": false
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "theme": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "day": {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z0-9][a-z0-9_.-]{0,63}$": {
+              "type": "string",
+              "pattern": "^#[0-9a-f]{6}([0-9a-f]{2})?(?![\\s\\S])"
+            }
+          }
+        },
+        "night": {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z0-9][a-z0-9_.-]{0,63}$": {
+              "type": "string",
+              "pattern": "^#[0-9a-f]{6}([0-9a-f]{2})?(?![\\s\\S])"
+            }
+          }
+        }
+      },
+      "required": [
+        "day",
+        "night"
+      ]
+    },
+    "bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z0-9][a-z0-9_.-]{0,63}$": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "property": {
+              "type": "string"
+            },
+            "signal": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "property",
+            "signal"
+          ]
+        }
+      }
+    },
+    "rules": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z0-9][a-z0-9_.-]{0,63}$": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "expression": {
+              "$ref": "#/definitions/expression"
+            },
+            "hysteresis": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "value": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "dimensionless",
+                    "K",
+                    "degC",
+                    "degF",
+                    "Pa",
+                    "kPa",
+                    "bar",
+                    "psi",
+                    "m/s",
+                    "km/h",
+                    "mph",
+                    "rad/s",
+                    "rpm"
+                  ]
+                }
+              },
+              "required": [
+                "value",
+                "unit"
+              ]
+            },
+            "debounce_ms": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "missing_input_policy": {
+              "type": "string",
+              "enum": [
+                "hold_last",
+                "treat_unavailable",
+                "force_warn"
+              ]
+            },
+            "maximum_hold_ms": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "targets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "expression",
+            "hysteresis",
+            "debounce_ms",
+            "missing_input_policy",
+            "targets"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "missing_input_policy": {
+                    "const": "hold_last"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "maximum_hold_ms"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "pages": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z0-9][a-z0-9_.-]{0,63}$": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "reference_viewport",
+    "components",
+    "theme",
+    "bindings",
+    "rules",
+    "pages"
+  ],
+  "definitions": {
+    "expression": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "op": {
+          "type": "string",
+          "enum": [
+            "literal",
+            "signal",
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "less",
+            "less_or_equal",
+            "greater",
+            "greater_or_equal",
+            "equal",
+            "not_equal",
+            "logical_and",
+            "logical_or",
+            "logical_not",
+            "minimum",
+            "maximum",
+            "clamp",
+            "absolute_value"
+          ]
+        },
+        "value": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "dimensionless",
+            "K",
+            "degC",
+            "degF",
+            "Pa",
+            "kPa",
+            "bar",
+            "psi",
+            "m/s",
+            "km/h",
+            "mph",
+            "rad/s",
+            "rpm"
+          ]
+        },
+        "signal": {
+          "type": "string"
+        },
+        "a": {
+          "$ref": "#/definitions/expression"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/expression"
+          }
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "literal"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "value",
+              "unit"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "signal"
+                  ]
+                },
+                {
+                  "required": [
+                    "a"
+                  ]
+                },
+                {
+                  "required": [
+                    "args"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "signal"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "signal"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "unit"
+                  ]
+                },
+                {
+                  "required": [
+                    "a"
+                  ]
+                },
+                {
+                  "required": [
+                    "args"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "add"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "unit"
+                  ]
+                },
+                {
+                  "required": [
+                    "signal"
+                  ]
+                },
+                {
+                  "required": [
+                    "a"
+                  ]
+                }
+              ]
+            },
+            "properties": {
+              "args": {
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "subtract"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "unit"
+                  ]
+                },
+                {
+                  "required": [
+                    "signal"
+                  ]
+                },
+                {
+                  "required": [
+                    "a"
+                  ]
+                }
+              ]
+            },
+            "properties": {
+              "args": {
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "multiply"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "unit"
+                  ]
+                },
+                {
+                  "required": [
+                    "signal"
+                  ]
+                },
+                {
+                  "required": [
+                    "a"
+                  ]
+                }
+              ]
+            },
+            "properties": {
+              "args": {
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "divide"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "unit"
+                  ]
+                },
+                {
+                  "required": [
+                    "signal"
+                  ]
+                },
+                {
+                  "required": [
+                    "a"
+                  ]
+                }
+              ]
+            },
+            "properties": {
+              "args": {
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "less"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "unit"
+                  ]
+                },
+                {
+                  "required": [
+                    "signal"
+                  ]
+                },
+                {
+                  "required": [
+                    "a"
+                  ]
+                }
+              ]
+            },
+            "properties": {
+              "args": {
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "less_or_equal"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "unit"
+                  ]
+                },
+                {
+                  "required": [
+                    "signal"
+                  ]
+                },
+                {
+                  "required": [
+                    "a"
+                  ]
+                }
+              ]
+            },
+            "properties": {
+              "args": {
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "greater"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "unit"
+                  ]
+                },
+                {
+                  "required": [
+                    "signal"
+                  ]
+                },
+                {
+                  "required": [
+                    "a"
+                  ]
+                }
+              ]
+            },
+            "properties": {
+              "args": {
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "greater_or_equal"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "unit"
+                  ]
+                },
+                {
+                  "required": [
+                    "signal"
+                  ]
+                },
+                {
+                  "required": [
+                    "a"
+                  ]
+                }
+              ]
+            },
+            "properties": {
+              "args": {
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "equal"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "unit"
+                  ]
+                },
+                {
+                  "required": [
+                    "signal"
+                  ]
+                },
+                {
+                  "required": [
+                    "a"
+                  ]
+                }
+              ]
+            },
+            "properties": {
+              "args": {
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "not_equal"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "unit"
+                  ]
+                },
+                {
+                  "required": [
+                    "signal"
+                  ]
+                },
+                {
+                  "required": [
+                    "a"
+                  ]
+                }
+              ]
+            },
+            "properties": {
+              "args": {
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "logical_and"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "unit"
+                  ]
+                },
+                {
+                  "required": [
+                    "signal"
+                  ]
+                },
+                {
+                  "required": [
+                    "a"
+                  ]
+                }
+              ]
+            },
+            "properties": {
+              "args": {
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "logical_or"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "unit"
+                  ]
+                },
+                {
+                  "required": [
+                    "signal"
+                  ]
+                },
+                {
+                  "required": [
+                    "a"
+                  ]
+                }
+              ]
+            },
+            "properties": {
+              "args": {
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "logical_not"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "a"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "unit"
+                  ]
+                },
+                {
+                  "required": [
+                    "signal"
+                  ]
+                },
+                {
+                  "required": [
+                    "args"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "minimum"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "unit"
+                  ]
+                },
+                {
+                  "required": [
+                    "signal"
+                  ]
+                },
+                {
+                  "required": [
+                    "a"
+                  ]
+                }
+              ]
+            },
+            "properties": {
+              "args": {
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "maximum"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "unit"
+                  ]
+                },
+                {
+                  "required": [
+                    "signal"
+                  ]
+                },
+                {
+                  "required": [
+                    "a"
+                  ]
+                }
+              ]
+            },
+            "properties": {
+              "args": {
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "clamp"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "args"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "unit"
+                  ]
+                },
+                {
+                  "required": [
+                    "signal"
+                  ]
+                },
+                {
+                  "required": [
+                    "a"
+                  ]
+                }
+              ]
+            },
+            "properties": {
+              "args": {
+                "minItems": 3,
+                "maxItems": 3
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "absolute_value"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "a"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "unit"
+                  ]
+                },
+                {
+                  "required": [
+                    "signal"
+                  ]
+                },
+                {
+                  "required": [
+                    "args"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

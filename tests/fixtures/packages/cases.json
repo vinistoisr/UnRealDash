@@ -1,0 +1,367 @@
+[
+  {
+    "name": "unicode-case-collision",
+    "code": "E_PKG_CASE_COLLISION",
+    "archive_only": true,
+    "entries": [
+      {
+        "name": "assets/É.png",
+        "text": "a"
+      },
+      {
+        "name": "assets/é.png",
+        "text": "b"
+      }
+    ]
+  },
+  {
+    "name": "malformed-zip",
+    "code": "E_PKG_ZIP_MALFORMED",
+    "archive_only": true,
+    "malformed": true
+  },
+  {
+    "name": "image-byte-mismatch",
+    "base": "well-formed",
+    "metadata": {
+      "bytes": 1
+    },
+    "code": "E_PKG_IMAGE_HEADER_MISMATCH",
+    "archive_only": false
+  },
+  {
+    "name": "image-format-mismatch",
+    "base": "well-formed",
+    "metadata": {
+      "format": "rgb8"
+    },
+    "code": "E_PKG_IMAGE_HEADER_MISMATCH",
+    "archive_only": false
+  },
+  {
+    "name": "well-formed",
+    "code": "",
+    "archive_only": false
+  },
+  {
+    "name": "rgb-image",
+    "code": "",
+    "archive_only": false
+  },
+  {
+    "name": "gray-image",
+    "code": "",
+    "archive_only": false
+  },
+  {
+    "name": "image-header-mismatch",
+    "code": "E_PKG_IMAGE_HEADER_MISMATCH",
+    "archive_only": false
+  },
+  {
+    "name": "over-wide-image",
+    "code": "E_PKG_IMAGE_DIMENSIONS",
+    "archive_only": false
+  },
+  {
+    "name": "image-format-unsupported",
+    "code": "E_PKG_IMAGE_FORMAT_UNSUPPORTED",
+    "archive_only": false
+  },
+  {
+    "name": "mobile-texture-budget",
+    "code": "E_PKG_TEXTURE_BUDGET",
+    "archive_only": false,
+    "profile": "mobile"
+  },
+  {
+    "name": "desktop-texture-budget",
+    "code": "E_PKG_TEXTURE_BUDGET",
+    "archive_only": false,
+    "profile": "desktop"
+  },
+  {
+    "name": "zip-bomb",
+    "code": "E_PKG_EXPANDED_SIZE",
+    "archive_only": true,
+    "entries": [
+      {
+        "name": "bomb.bin",
+        "bytes": "expanded_size",
+        "excess": 1
+      }
+    ]
+  },
+  {
+    "name": "path-traversal",
+    "code": "E_PKG_PATH_TRAVERSAL",
+    "archive_only": true,
+    "entries": [
+      {
+        "name": "../../etc/passwd",
+        "text": "synthetic"
+      }
+    ]
+  },
+  {
+    "name": "absolute-path",
+    "code": "E_PKG_PATH_ABSOLUTE",
+    "archive_only": true,
+    "entries": [
+      {
+        "name": "/outside.png",
+        "text": "synthetic"
+      }
+    ]
+  },
+  {
+    "name": "drive-letter",
+    "code": "E_PKG_PATH_DRIVE_LETTER",
+    "archive_only": true,
+    "entries": [
+      {
+        "name": "C:/outside.png",
+        "text": "synthetic"
+      }
+    ]
+  },
+  {
+    "name": "symlink",
+    "code": "E_PKG_PATH_LINK",
+    "archive_only": true,
+    "entries": [
+      {
+        "name": "link",
+        "text": "../../outside",
+        "symlink": true
+      }
+    ]
+  },
+  {
+    "name": "duplicate-normalized",
+    "code": "E_PKG_DUPLICATE_ENTRY",
+    "archive_only": true,
+    "entries": [
+      {
+        "name": "assets/a",
+        "text": "a"
+      },
+      {
+        "name": "assets/./a",
+        "text": "b"
+      }
+    ]
+  },
+  {
+    "name": "case-collision",
+    "code": "E_PKG_CASE_COLLISION",
+    "archive_only": true,
+    "entries": [
+      {
+        "name": "assets/A",
+        "text": "a"
+      },
+      {
+        "name": "assets/a",
+        "text": "b"
+      }
+    ]
+  },
+  {
+    "name": "oversize-asset",
+    "base": "well-formed",
+    "code": "E_PKG_ASSET_SIZE",
+    "archive_only": false,
+    "entries": [
+      {
+        "name": "oversize.bin",
+        "bytes": 20971520
+      }
+    ]
+  },
+  {
+    "name": "entry-count",
+    "base": "well-formed",
+    "code": "E_PKG_ENTRY_COUNT",
+    "archive_only": false,
+    "entries": [
+      {
+        "name": "many/f{i}",
+        "repeat": 5000,
+        "bytes": 0
+      }
+    ]
+  },
+  {
+    "name": "document-traversal",
+    "base": "well-formed",
+    "asset_reference": "../../outside.png",
+    "code": "E_ASSET_REFERENCE_FORBIDDEN",
+    "archive_only": false
+  },
+  {
+    "name": "image-no-manifest",
+    "base": "well-formed",
+    "remove_asset": true,
+    "code": "E_IMAGE_NOT_IN_MANIFEST",
+    "archive_only": false
+  },
+  {
+    "name": "document-too-deep",
+    "base": "well-formed",
+    "document": "generated-too-deep.json",
+    "code": "E_JSON_TOO_DEEP",
+    "archive_only": false
+  },
+  {
+    "name": "document-too-many-nodes",
+    "base": "well-formed",
+    "document": "generated-too-many-nodes.json",
+    "code": "E_JSON_TOO_MANY_NODES",
+    "archive_only": false
+  },
+  {
+    "name": "document-long-string",
+    "base": "well-formed",
+    "document": "generated-long-string.json",
+    "code": "E_JSON_STRING_TOO_LONG",
+    "archive_only": false
+  },
+  {
+    "name": "document-too-large",
+    "base": "well-formed",
+    "document": "generated-large-document.json",
+    "code": "E_DOC_TOO_LARGE",
+    "archive_only": false
+  },
+  {
+    "name": "central-directory-entry-count",
+    "code": "E_PKG_ENTRY_COUNT",
+    "archive_only": true,
+    "declared_entries": 100000
+  },
+  {
+    "name": "zip64-small-legacy",
+    "code": "E_PKG_ENTRY_COUNT",
+    "archive_only": true,
+    "zip64_small_legacy": true
+  },
+  {
+    "name": "zip64-locator-outside-file",
+    "code": "E_PKG_ZIP_MALFORMED",
+    "archive_only": true,
+    "zip64_small_legacy": true,
+    "zip64_outside_file": true
+  },
+  {
+    "name": "central-directory-byte-bound",
+    "code": "E_PKG_EXPANDED_SIZE",
+    "archive_only": true,
+    "declared_directory_size": true
+  },
+  {
+    "name": "supplementary-document",
+    "code": "E_PKG_UNSUPPORTED_DOCUMENT",
+    "archive_only": false,
+    "supplementary": true,
+    "base": "well-formed"
+  },
+  {
+    "name": "normalized-reference-slashes",
+    "code": "",
+    "archive_only": false,
+    "asset_reference": "assets//shared.png",
+    "base": "well-formed"
+  },
+  {
+    "name": "normalized-reference-dot",
+    "code": "",
+    "archive_only": false,
+    "asset_reference": "assets/./shared.png",
+    "base": "well-formed"
+  },
+  {
+    "name": "normalized-manifest-key",
+    "code": "",
+    "archive_only": false,
+    "manifest_key": "assets/./shared.png",
+    "base": "well-formed"
+  },
+  {
+    "name": "manifest-normalized-collision",
+    "code": "E_PKG_DUPLICATE_ENTRY",
+    "archive_only": false,
+    "manifest_aliases": [
+      "assets/./shared.png"
+    ],
+    "base": "well-formed"
+  },
+  {
+    "name": "manifest-case-collision",
+    "code": "E_PKG_CASE_COLLISION",
+    "archive_only": false,
+    "manifest_aliases": [
+      "assets/SHARED.png"
+    ],
+    "base": "well-formed"
+  },
+  {
+    "name": "dos-reparse-entry",
+    "code": "E_PKG_PATH_LINK",
+    "archive_only": true,
+    "central_patch": {
+      "name": "assets/shared.png",
+      "external_attr": 1024
+    },
+    "base": "well-formed"
+  },
+  {
+    "name": "windows-attributes-entry",
+    "code": "",
+    "archive_only": true,
+    "central_patch": {
+      "name": "assets/shared.png",
+      "external_attr": 32
+    },
+    "base": "well-formed",
+    "note": "Archive bit only, no Unix type bits: what Windows tools write for a regular file; must load."
+  },
+  {
+    "name": "json-underdeclared-size",
+    "code": "E_PKG_ZIP_MALFORMED",
+    "archive_only": true,
+    "central_patch": {
+      "name": "dashboard.json",
+      "uncompressed_size": 1
+    },
+    "base": "well-formed"
+  },
+  {
+    "name": "missing-asset-entry",
+    "code": "E_PKG_ASSET_NOT_IN_PACKAGE",
+    "archive_only": false,
+    "missing_file": "assets/shared.png",
+    "base": "well-formed"
+  },
+  {
+    "name": "header-before-budget",
+    "code": "E_PKG_IMAGE_HEADER_MISMATCH",
+    "archive_only": false,
+    "metadata": {
+      "width": 100000,
+      "height": 100000
+    },
+    "base": "well-formed"
+  },
+  {
+    "name": "unix-device-entry",
+    "code": "E_PKG_PATH_LINK",
+    "archive_only": true,
+    "base": "well-formed",
+    "central_patch": {
+      "name": "assets/shared.png",
+      "external_attr": 564396032
+    },
+    "note": "Unix type bits present and not regular or directory: rejected as a link."
+  }
+]
