@@ -35,7 +35,7 @@ export TSAN_OPTIONS="halt_on_error=1:exitcode=66:second_deadlock_stack=1"
 grep -q "WARNING: ThreadSanitizer" tsan.log && { echo "FAIL: data race reported"; exit 1; }
 ```
 
-Then the same assertion-count check against `tsan.log`, so the ThreadSanitizer part of 1.4's gate reports its own non-zero assertion count. `needs: build` is deliberate: a plain build failure should not also spend a sanitizer run.
+Then the assertion-count extraction from section 7 applied to `tsan.log`: only the `line=`, `count=`, `failed=` and the two `[ ... ] ||` checks, reading `tsan.log` in place of `run.log`, with no second run of the binary and no `tee run.log`, so the ThreadSanitizer part of 1.4's gate reports the stress test's own non-zero assertion count from the sanitized run itself. `needs: build` is deliberate: a plain build failure should not also spend a sanitizer run.
 
 The `tsan` configure preset carries chunk 02's `"condition"` restricting it to Linux, so this job is the only place it is ever used.
 
@@ -110,9 +110,10 @@ The `git config` probe is printed as supporting evidence and never decides the s
 
 ### 7. The assertion-count check
 
-doctest's console reporter ends with a line of the form `[doctest] assertions: N | N passed | 0 failed |`. One inline bash block, used in three places, `signal-core-tests` twice and `dashboard-spec-tests` once:
+doctest's console reporter ends with a line of the form `[doctest] assertions: N | N passed | 0 failed |`. One inline bash block, copied into three steps, `signal-core-tests` twice and `dashboard-spec-tests` once. A `run:` step binds no positional parameters, so each copy begins with an explicit binding line, `set -- <build-dir> <binary-name>` with the two values written literally (for example `set -- packages/signal-core/build/default signal-core-tests`), and the local proof runs each copy exactly as inlined:
 
 ```bash
+set -- <build-dir> <binary-name>
 bin=$(find "$1" -maxdepth 1 -type f \( -name "$2" -o -name "$2.exe" \) | head -1)
 [ -n "$bin" ] || { echo "FAIL: no test binary under $1"; exit 1; }
 "$bin" --reporters=console 2>&1 | tee run.log
