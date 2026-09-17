@@ -1,0 +1,19 @@
+C:\Users\Vincent\AppData\Local\Temp\UECommandLine.txt: 1 file pushed, 0 skipped. 1.4 MB/s (257 bytes in 0.000s)
+unicode-case-collision [archive]               ok
+C:\Users\Vincent\AppData\Local\Temp\UECommandLine.txt: 1 file pushed, 0 skipped. 1.6 MB/s (248 bytes in 0.000s)
+malformed-zip [archive]                        ok
+C:\Users\Vincent\AppData\Local\Temp\UECommandLine.txt: 1 file pushed, 0 skipped. 1.5 MB/s (254 bytes in 0.000s)
+image-byte-mismatch [archive]                  ok
+C:\Users\Vincent\AppData\Local\Temp\UECommandLine.txt: 1 file pushed, 0 skipped. 1.6 MB/s (248 bytes in 0.000s)
+image-byte-mismatch [directory]                ok
+C:\Users\Vincent\AppData\Local\Temp\UECommandLine.txt: 1 file pushed, 0 skipped. 1.6 MB/s (256 bytes in 0.000s)
+image-format-mismatch [archive]                ok
+C:\Users\Vincent\AppData\Local\Temp\UECommandLine.txt: 1 file pushed, 0 skipped. 1.3 MB/s (250 bytes in 0.000s)
+image-format-mismatch [directory]              ok
+C:\Users\Vincent\AppData\Local\Temp\UECommandLine.txt: 1 file pushed, 0 skipped. 1.4 MB/s (246 bytes in 0.000s)
+well-formed [archive]                          ok
+C:\Users\Vincent\AppData\Local\Temp\UECommandLine.txt: 1 file pushed, 0 skipped. 1.6 MB/s (240 bytes in 0.000s)
+well-formed [directory]                        ok
+C:\Users\Vincent\AppData\Local\Temp\UECommandLine.txt: 1 file pushed, 0 skipped. 1.2 MB/s (244 bytes in 0.000s)
+rgb-image [archive]                            ok
+C:\Users\Vincent\AppData\Local\Temp\UECommandLine.txt: 1 file pushed, 0 skipped. 1.4 MB/s (238 bytes in 0.000s)
