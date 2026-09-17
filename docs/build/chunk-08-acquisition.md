@@ -1,6 +1,6 @@
 # Build chunk 08: connector interface and acquisition threading
 
-Status: revision 4. Codex stopped on revision 3 with a correct finding: the spec claimed three allocation assertions where the tree has two, and prohibited two assertions that live inside scenarios it also told the builder not to recount. Revision 1 drew 22 review findings, revision 2 drew a further five including one blocker. Both rounds are resolved here. Frozen for a Codex build session. Covers PLAN.md task 4.3. Read PLAN.md (task 4.3, task 2.13, task 2.5, task 2.2, task 4.2's Win64 half, task 4.8's event-log section, the Sequencing block) and docs/ARCHITECTURE.md and docs/CONNECTORS.md before writing anything. PLAN.md is the authority on what; this file adds the exact mechanisms, proof commands and implementation constraints. If the two disagree, PLAN.md wins and the disagreement goes in the report.
+Status: revision 5. Two build attempts stopped on bad prerequisites in this spec, both correctly. Revision 3 claimed three allocation assertions where 2.13 has two, and prohibited two assertions living inside scenarios it also told the builder not to recount. Revision 4 then published a per-scenario table built by grepping source lines, which undercounted three of the five scenarios because doctest counts executed assertions. The table is now taken from the doctest reporter. Revision 1 drew 22 review findings, revision 2 drew a further five including one blocker. Both rounds are resolved here. Frozen for a Codex build session. Covers PLAN.md task 4.3. Read PLAN.md (task 4.3, task 2.13, task 2.5, task 2.2, task 4.2's Win64 half, task 4.8's event-log section, the Sequencing block) and docs/ARCHITECTURE.md and docs/CONNECTORS.md before writing anything. PLAN.md is the authority on what; this file adds the exact mechanisms, proof commands and implementation constraints. If the two disagree, PLAN.md wins and the disagreement goes in the report.
 
 ## Goal
 
@@ -22,17 +22,24 @@ Read out of the tree, not assumed. If one is wrong, stop and report it rather th
 - `ExpirySchedule` is a caller-storage ordered set with `Arm`, `Cancel`, `Earliest()` and `PopDue(now, expiry)`.
 - `Clock` is an injected `{void* context, Time (*now)(void*)}` pair. Nothing in signal-core reads a wall clock, and nothing in this chunk may either.
 - `packages/signal-core/tests/test_threading_stress.cpp` holds six `TEST_CASE`s. Five are 2.13 scenarios; `review 7 heap counter observes scalar array aligned and nothrow allocations` is a self-test of the test harness's own heap counter and is **not** a 2.13 scenario.
-- Counted out of the file, the five scenarios hold these assertions today:
+- The assertion counts below were produced by **running doctest**, not by grepping the source. That distinction matters and an earlier revision of this spec got it wrong: doctest reports assertions *executed*, which counts `REQUIRE` as well as `CHECK` and counts an assertion inside a loop once per iteration. Source-line counting undercounted three of the five scenarios. The gate compares runtime counts, so the spec quotes runtime counts.
 
-  | scenario | assertions | of which |
+  ```
+  packages/signal-core/build/default/signal-core-tests.exe "--source-file=*test_threading_stress.cpp" --reporters=xml
+  ```
+
+  | scenario | assertions today | contains |
   | --- | --- | --- |
   | sustained publication with a continuously swapping reader | 5 | 2 allocation (lines 79, 80), 1 `WriterBlockedCount` (line 81) |
-  | stalled reader holds a snapshot across 1000 publications | 2 | 1 `WriterBlockedCount` (line 131) |
-  | repeated acquires with the writer idle | 1 | |
-  | generation change mid stream rejects in-flight older samples | 3 | |
+  | stalled reader holds a snapshot across 1000 publications | 5 | 1 `WriterBlockedCount` (line 131) |
+  | repeated acquires with the writer idle | 2 | |
+  | generation change mid stream rejects in-flight older samples | 4 | |
   | bounded queue above capacity drops and counts | 4 | |
+  | *(self-test, not a 2.13 scenario, not moved)* | 4 | 3 allocation (lines 97 to 99) |
 
-  So there are **two** allocation assertions in 2.13, not three; the three at lines 97 to 99 belong to the self-test. And the two `WriterBlockedCount` assertions live **inside** 2.13 scenarios, so removing them necessarily changes those scenarios' counts.
+  Whole file today: 6 cases, 24 assertions. The five 2.13 scenarios account for 20.
+
+  So 2.13 holds **two** allocation assertions, not three; the three at lines 97 to 99 belong to the self-test. And the two `WriterBlockedCount` assertions sit **inside** 2.13 scenarios, so removing them necessarily changes those scenarios' counts.
 - `test_heap::Read()` in `tests/support/HeapCounter.h` replaces global `operator new`. Unreal replaces global `operator new` in `ModuleBoilerplate.h`, so that counter cannot link into an engine module.
 - `UnRealDashCore.Build.cs` lists `SignalCore` in `PublicDependencyModuleNames`, so the game module inherits signal-core's include path and link and **can** call signal-core directly. The linker does not enforce the layering rule, and the game module already breaks it.
 
@@ -223,7 +230,7 @@ Parameterized on:
 
 **The allocation probe.** Two assertions compare heap allocation counts across a measured window and cannot run in-engine. Both are in the `sustained publication` scenario, at lines 79 and 80. The other three allocation comparisons in the file belong to the heap-counter self-test, which is not moved and not rerun in-engine. When `Supported()` is false the suite **does not call `ReportCheck` for those assertions and increments a skipped counter instead**, naming each skipped check. It must not report them as passing. A check that cannot fail is a defect class an earlier review of this project already caught, and a fake pass would hide the allocation regression the assertion exists to find. The owner confirmed this approach on 2026-09-17.
 
-**Remove the two `WriterBlockedCount` assertions** while moving the scenarios, at lines 81 and 131. They cannot fail, for the reason in the Facts section. Removing them lowers `sustained publication` from 5 assertions to 4 and `stalled reader` from 2 to 1, and that is the intended change, not a regression.
+**Remove the two `WriterBlockedCount` assertions** while moving the scenarios, at lines 81 and 131. They cannot fail, for the reason in the Facts section. Removing them lowers `sustained publication` from 5 to 4 and `stalled reader` from 5 to 4. That is the intended change, not a regression, and it takes the five scenarios from 20 assertions to 18 and the whole file from 24 to 22 before any new assertion is added.
 
 This makes PLAN 4.3's gate wording "the same assertion count and zero failures" unsatisfiable as literally written. The gate this chunk implements is: **per scenario, in-engine `checks + skipped` equals the CMake run's `checks`; in-engine `failures` is zero; and `skipped` totals exactly the two named allocation checks, both in `sustained publication`.** Record this in the report as a proposed PLAN amendment. Do not edit PLAN.md.
 
@@ -282,7 +289,9 @@ Each is a command that exits non-zero on failure.
 
 1. The CMake `signal-core` build compiles with exceptions and RTTI off on Windows and Linux, its doctest suite passes, and `test_threading_stress.cpp` still reports **six** cases.
 
-   Per-scenario assertion counts change in exactly two intended ways and no others. Removing the two `WriterBlockedCount` assertions takes `sustained publication` from 5 to 4 and `stalled reader` from 2 to 1. Criterion 2's gate scenarios then **add** assertions on top of that. No assertion that exists today is lost for any other reason. Record the before and after count for all five scenarios in the report so this is checkable rather than asserted.
+   Per-scenario assertion counts change in exactly two intended ways and no others. Removing the two `WriterBlockedCount` assertions takes `sustained publication` from 5 to 4 and `stalled reader` from 5 to 4. Criterion 2's gate scenarios then **add** assertions on top of that. No assertion that exists today is lost for any other reason.
+
+   Take every count from the doctest XML reporter using the command in the Facts section, before and after, and put both tables in the report. Do not count assertions by reading the source.
 2. The three PLAN 4.3 gate scenarios exist as doctest cases and pass:
    - **200 Hz into 60 Hz.** `display.Depth()` never exceeds its bound at any observation, `DisplayDrops()` is greater than zero, every transition the acquisition side counted is present in the sink, and the allocation probe reports no growth. Do **not** assert `WriterBlockedCount()`.
    - **Consumer stalled 2 simulated seconds mid-stream.** The queue stays bounded, no rule transition is lost, and the producer's `Pump` iteration count over the stall matches the un-stalled control run within the scripted tolerance recorded in the test. The iteration count is the real evidence that the producer never blocked.
