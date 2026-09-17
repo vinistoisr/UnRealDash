@@ -20,9 +20,10 @@ Thumbs.db
 # Test output
 testResults.xml
 
-# Local CMake build directories
-build/
-build-*/
+# Local CMake build directories. Anchored to the packages that create them: a bare "build/"
+# also matches docs/build/, which is where the build chunk specs live.
+packages/*/build/
+packages/*/build-*/
 
 # Written by the Unreal Android deploy step from engine templates
 runtime/UnRealDash/Build/Android/src/
