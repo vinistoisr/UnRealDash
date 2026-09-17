@@ -1,0 +1,161 @@
+Pester v6.2.0
+
+Running tests from 4 files.
+
+Running tests from 'C:\Users\Vincent\UnRealDash\scripts\tests\AcquisitionLayering.Tests.ps1'
+Describing PLAN 4.3 SignalCore layering
+  [+] names file and line for each forbidden token outside the allowed modules 110ms
+  [+] accepts the engine sample seam and the actual source tree 24ms
+  [+] keeps the layering gate wired into doctor 5ms
+
+Running tests from 'C:\Users\Vincent\UnRealDash\scripts\tests\dashboard-spec-layering.Tests.ps1'
+Describing PLAN 4.4 DashboardSpec layering
+  [+] allows the lower library dependency and registration exception only 32ms
+  [+] accepts the current source tree and is wired into doctor 48ms
+  [+] keeps one authoritative copy and pinned non-UFS schemas 16ms
+
+Running tests from 'C:\Users\Vincent\UnRealDash\scripts\tests\Foundation.Tests.ps1'
+Describing Doctor profiles and seams
+  [-] workstation prints the PLAN 0.7 row set plus the PLAN 4.3 layering gate 846ms
+   Expected strings to be the same, but they were different.
+   Expected length: 106
+   Actual length:   103
+   Strings differ at index 47.
+   Expected: 'C: free space|cmake|Git LFS|MSVC toolset|ninja|SignalCore layering|Unreal Engine|Visual Studio|Windo...'
+   But was:  'C: free space|cmake|Git LFS|MSVC toolset|ninja|Portable library|Unreal Engine|Visual Studio|Windows SDK'
+              -----------------------------------------------^
+   at ($actual -join '|') | Should -Be ($expected -join '|'), C:\Users\Vincent\UnRealDash\scripts\tests\Foundation.Tests.ps1:97
+  [-] android prints the PLAN 0.7 row set plus the PLAN 4.3 layering gate 15.98s
+   Expected strings to be the same, but they were different.
+   Expected length: 184
+   Actual length:   181
+   Strings differ at index 114.
+   Expected: '...dio|C: free space|cmake|Engine Android support|Git LFS|JDK|MSVC toolset|ninja|Project JDK|SignalC...'
+   But was:  '...dio|C: free space|cmake|Engine Android support|Git LFS|JDK|MSVC toolset|ninja|Portable library|Pr...'
+              ----------------------------------------------------------------------------------^
+   at ($actual -join '|') | Should -Be ($expected -join '|'), C:\Users\Vincent\UnRealDash\scripts\tests\Foundation.Tests.ps1:97
+  [-] linux prints the PLAN 0.7 row set plus the PLAN 4.3 layering gate 15.88s
+   Expected strings to be the same, but they were different.
+   Expected length: 170
+   Actual length:   167
+   Strings differ at index 111.
+   Expected: '... support|Git LFS|Linux cross toolchain|LINUX_MULTIARCH_ROOT|MSVC toolset|ninja|SignalCore layerin...'
+   But was:  '... support|Git LFS|Linux cross toolchain|LINUX_MULTIARCH_ROOT|MSVC toolset|ninja|Portable library|U...'
+              ----------------------------------------------------------------------------------^
+   at ($actual -join '|') | Should -Be ($expected -join '|'), C:\Users\Vincent\UnRealDash\scripts\tests\Foundation.Tests.ps1:97
+  [-] device prints the PLAN 0.7 row set plus the PLAN 4.3 layering gate 1.18s
+   Expected strings to be the same, but they were different.
+   Expected length: 143
+   Actual length:   140
+   Strings differ at index 84.
+   Expected: '...eachability|C: free space|cmake|Device free storage|Git LFS|MSVC toolset|ninja|SignalCore layerin...'
+   But was:  '...eachability|C: free space|cmake|Device free storage|Git LFS|MSVC toolset|ninja|Portable library|U...'
+              ----------------------------------------------------------------------------------^
+   at ($actual -join '|') | Should -Be ($expected -join '|'), C:\Users\Vincent\UnRealDash\scripts\tests\Foundation.Tests.ps1:97
+  [-] detects NDK membership added to workstation contrary to PLAN 0.7 789ms
+   Expected strings to be the same, but they were different.
+   Expected length: 118
+   Actual length:   115
+   Strings differ at index 59.
+   Expected: 'Android NDK|C: free space|cmake|Git LFS|MSVC toolset|ninja|SignalCore layering|Unreal Engine|Visual ...'
+   But was:  'Android NDK|C: free space|cmake|Git LFS|MSVC toolset|ninja|Portable library|Unreal Engine|Visual Stu...'
+              -----------------------------------------------------------^
+   at ($actual -join '|') | Should -Be ((($planRows.workstation + 'Android NDK') | Sort-Object) -join '|'), C:\Users\Vincent\UnRealDash\scripts\tests\Foundation.Tests.ps1:108
+  [+] SearchPath without cmake fails workstation and identifies cmake 607ms
+  [-] PreInstall passes on this machine 554ms
+   Expected 0, because Doctor profile: preinstall
+   Component                Expected                                                  Found                                                                          Status
+   ---------                --------                                                  -----                                                                          ------
+   C: free space            >= 150 GB                                                 487.13 GB                                                                      PASS
+   git                      available                                                 git version 2.45.1.windows.1                                                   PASS
+   winget                   present on PATH                                           C:\Users\Vincent\AppData\Local\Microsoft\WindowsApps\winget.exe                PASS
+   PowerShell               >= 7                                                      7.6.6                                                                          PASS
+   Signed-in shell          Windows user identity                                     LENOVO-BOX\CodexSandboxOffline                                                 PASS
+   User PATH writable       user Environment registry key writable                    Exception calling "OpenSubKey" with "2" argument(s): "Requested registry       FAIL
+                                                                                      access is not allowed.", but got 1.
+   at $result.Code | Should -Be 0 -Because $result.Text, C:\Users\Vincent\UnRealDash\scripts\tests\Foundation.Tests.ps1:121
+  [+] PreInstall checks only capacity and installer prerequisites 517ms
+  [+] PinsFile controls membership and expected matching without changing defaults 831ms
+  [+] fails closed for missing, invalid and empty pin files 756ms
+
+Describing Deterministic doctor transitions
+  [+] workstation cmake changes from FAIL to PASS with a cmd wrapper on SearchPath 824ms
+  [+] android NDK changes from FAIL to PASS when the engine manifest version appears 742ms
+  [+] linux root and toolchain change from FAIL to PASS using the internal version marker 818ms
+  [+] rejects clang 20.1.80 against the 20.1.8 pin 429ms
+  [+] device reachability and storage change from FAIL to PASS with the configured fake serial 1.56s
+  [+] workstation capacity changes from PASS to FAIL with a 999999 GB minimum 899ms
+  [+] preinstall capacity changes from PASS to FAIL with a 999999 GB minimum 792ms
+  [+] the project JDK row enforces both ends of the range gradle supports 2.96s
+  [+] JDK prefers JAVA_HOME and enforces the major-version floor 2.3s
+  [+] engine platform support is decided by UnrealBuildTool, not by the file layout 838ms
+  [+] engine platform support is decided by UnrealBuildTool, not by the file layout 822ms
+  [+] Windows SDK kits_root override changes from FAIL to PASS when pinned Include exists 726ms
+  [+] Android SDK requires the platform, build-tools and cmake the engine manifest names 1.47s
+  [+] SDK and NDK use the shared ANDROID_SDK_ROOT root fallback 397ms
+  [+] SDK and NDK use the shared LOCALAPPDATA root fallback 387ms
+
+Describing Skeleton doctor gates
+  [+] build win64 previews Win64 only after a passing workstation doctor 539ms
+  [+] build android previews Android only after a passing android doctor 503ms
+  [+] build linux previews Linux only after a passing linux doctor 486ms
+  [+] package-windows  previews Win64 only after a passing workstation doctor 526ms
+  [+] package-android  previews Android only after a passing android doctor 495ms
+  [+] package-linux  previews Linux only after a passing linux doctor 482ms
+  [+] deploy-deck  previews Android only after a passing device doctor 484ms
+  [+] capture-metrics windows previews Win64 only after a passing workstation doctor 484ms
+  [+] capture-metrics device previews Android only after a passing device doctor 482ms
+  [+] capture-metrics soak previews Win64 only after a passing workstation doctor 511ms
+  [+] build win64 stops without UAT when its doctor fails 508ms
+  [+] build android stops without UAT when its doctor fails 481ms
+  [+] build linux stops without UAT when its doctor fails 482ms
+  [+] package-windows  stops without UAT when its doctor fails 484ms
+  [+] package-android  stops without UAT when its doctor fails 493ms
+  [+] package-linux  stops without UAT when its doctor fails 461ms
+  [+] deploy-deck  stops without UAT when its doctor fails 467ms
+  [+] capture-metrics windows stops without UAT when its doctor fails 472ms
+  [+] capture-metrics device stops without UAT when its doctor fails 474ms
+  [+] capture-metrics soak stops without UAT when its doctor fails 469ms
+  [+] build.ps1 previews the module build it would run, not a packaging command 970ms
+  [+] fails closed when the doctor file is missing 414ms
+
+Describing Repository foundation
+  [+] has each specified directory README and root policy file 32ms
+  [+] tracks every required binary extension with LFS and normalizes text 11ms
+  [+] contains a real 16 by 16 PNG probe 11ms
+  [+] provides provisional licenses and links them 10ms
+  [+] every component name fits the rendered table column 18ms
+  [+] stores each PLAN pin once, with detection and membership data 40ms
+  [+] parses every script and contains no PowerShell 7-only conditional syntax 72ms
+
+Running tests from 'C:\Users\Vincent\UnRealDash\scripts\tests\SmokePackage.Tests.ps1'
+Describing Smoke packaging
+  [+] previews complete Win64 Development packaging 521ms
+  [+] previews complete Win64 Shipping packaging 497ms
+  [+] previews complete Android Development packaging 515ms
+  [+] previews complete Android Shipping packaging 508ms
+  [+] previews RHI overrides differing only in the two booleans and uses separate archives 1.01s
+  [+] requires -Rhi without prompting 212ms
+  [+] stops package-windows on a failed doctor before UAT 528ms
+  [+] stops package-android on a failed doctor before UAT 475ms
+  [+] stops package-android on a failed doctor before UAT 485ms
+
+Describing Real smoke packaging
+Fake doctor PASS: android
+  [+] captures exact Android ini bytes at UAT invocation and cleans up success 283ms
+Fake doctor PASS: android
+  [+] preserves UAT exit 7 and cleans up the Android ini 232ms
+Fake doctor PASS: workstation
+  [+] never creates an ini for Windows packaging 251ms
+Fake doctor PASS: android
+  [+] preserves a pre-existing ini and never invokes UAT 238ms
+Fake doctor PASS: android
+Fake doctor PASS: android
+  [+] reports a cleanup failure and preserves an earlier UAT failure 477ms
+Fake doctor PASS: android
+Fake doctor PASS: android
+  [+] propagates arbitrary UAT exit codes 3 then 0 462ms
+Fake doctor PASS: android
+  [+] refuses an archive containing ampersand without invoking UAT 220ms
+Tests completed in 73.36s
+Tests Passed: 70, Failed: 6, Skipped: 0, Inconclusive: 0, NotRun: 0

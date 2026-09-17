@@ -201,3 +201,24 @@ vendored library, persistent environment setting or CI file was changed.
 The CMake build consumes the signal_core target through add_subdirectory, including
 its source-list drift check and compile options. Standalone signal-core presets
 build tools and tests by default; the nested library build leaves those targets off.
+
+## Engine package loading (PLAN 4.4)
+
+The only C++ source copy is `runtime/UnRealDash/Source/DashboardSpec/`.
+CMake compiles it with no engine include path. Public includes are rooted at
+`DashboardSpec/Public`; private headers are relative includes, not include roots.
+The CLI translation unit is guarded out of UBT, and the registration and miniz
+wrapper translation units are excluded from CMake. UBT compiles the vendored
+miniz implementation through a C wrapper; CMake compiles that same vendor file.
+
+`Read` calls shared validation without an output and retains its validate-only
+cost. `Load` validates identically, then transfers the document and owns archive
+asset bytes. Directory assets read on first `Asset` access into a mutable cache;
+serialize first access. Asset allocation uses `nothrow`; read/allocation errors
+return `E_PKG_ASSET_UNREADABLE` (45). Failure preserves the prior output package.
+Typed document and component views never expose RapidJSON to the engine wrapper.
+
+Schemas remain here for Python and CLI consumers. UBT stages each schema to the
+explicit `$(ProjectDir)/Schema/<name>.schema.json` destination as `NonUFS`.
+The runtime supplies the physical external-app read path for `ProjectDir/Schema`.
+No repository path or build-machine macro is used to find runtime schemas.

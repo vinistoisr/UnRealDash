@@ -59,6 +59,12 @@ jobs:
           echo "PASS: no LFS objects in the checkout"
           echo "supporting evidence, configuration only:"
           git config --get-regexp '^lfs\.' || echo "(no lfs.* configuration present)"
+      - name: DashboardSpec source authority
+        shell: bash
+        run: |
+          test ! -d packages/dashboard-spec/src
+          test ! -d packages/dashboard-spec/include
+          test -f runtime/UnRealDash/Source/DashboardSpec/Public/dashboard_spec/PackageReader.h
       - name: Configure
         working-directory: packages/signal-core
         shell: bash
@@ -80,14 +86,8 @@ jobs:
           set -- packages/signal-core/build/default signal-core-tests
           bin=$(find "$1" -maxdepth 1 -type f \( -name "$2" -o -name "$2.exe" \) | head -1)
           [ -n "$bin" ] || { echo "FAIL: no test binary under $1"; exit 1; }
-          "$bin" --reporters=console 2>&1 | tee run.log
-          line=$(grep -E '^\[doctest\] assertions:' run.log | tail -1)
-          [ -n "$line" ] || { echo "FAIL: no doctest assertion summary"; exit 1; }
-          count=$(echo "$line" | sed -E 's/.*assertions: *([0-9]+).*/\1/')
-          failed=$(echo "$line" | sed -E 's/.*\| *([0-9]+) failed.*/\1/')
-          echo "assertions=$count failed=$failed"
-          [ "$count" -gt 0 ] || { echo "FAIL: zero assertions"; exit 1; }
-          [ "$failed" -eq 0 ] || { echo "FAIL: $failed assertions failed"; exit 1; }
+          "$bin" --reporters=xml --out=doctest.xml
+          python scripts/doctest-summary.py doctest.xml
 
   tsan:
     runs-on: ubuntu-latest
@@ -114,6 +114,12 @@ jobs:
         shell: bash
         run: |
           command -v ninja || { sudo apt-get update && sudo apt-get install -y ninja-build; }
+      - name: DashboardSpec source authority
+        shell: bash
+        run: |
+          test ! -d packages/dashboard-spec/src
+          test ! -d packages/dashboard-spec/include
+          test -f runtime/UnRealDash/Source/DashboardSpec/Public/dashboard_spec/PackageReader.h
       - name: Configure
         working-directory: packages/signal-core
         shell: bash
@@ -129,12 +135,6 @@ jobs:
         run: |
           export TSAN_OPTIONS="halt_on_error=1:exitcode=66:second_deadlock_stack=1"
           ./packages/signal-core/build/tsan/signal-core-tests \
-            --reporters=console 2>&1 | tee tsan.log
+            --reporters=xml --out=doctest-tsan.xml 2>&1 | tee tsan.log
           grep -q "WARNING: ThreadSanitizer" tsan.log && { echo "FAIL: data race reported"; exit 1; }
-          line=$(grep -E '^\[doctest\] assertions:' tsan.log | tail -1)
-          [ -n "$line" ] || { echo "FAIL: no doctest assertion summary"; exit 1; }
-          count=$(echo "$line" | sed -E 's/.*assertions: *([0-9]+).*/\1/')
-          failed=$(echo "$line" | sed -E 's/.*\| *([0-9]+) failed.*/\1/')
-          echo "assertions=$count failed=$failed"
-          [ "$count" -gt 0 ] || { echo "FAIL: zero assertions"; exit 1; }
-          [ "$failed" -eq 0 ] || { echo "FAIL: $failed assertions failed"; exit 1; }
+          python scripts/doctest-summary.py doctest-tsan.xml

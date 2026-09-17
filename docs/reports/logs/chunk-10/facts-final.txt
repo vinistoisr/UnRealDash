@@ -1,0 +1,30 @@
+  PASS  exceptions and RTTI off
+  PASS  links signal_core publicly, miniz privately
+        (PackageReader.h resolved to runtime/UnRealDash/Source/DashboardSpec/Public/dashboard_spec/PackageReader.h)
+  PASS  PackageReader::Read returns Error and nothing else
+  PASS  exactly one reader branches on is_directory
+  PASS  std::filesystem security calls are present
+  PASS  Error carries code, pointer, message, and CodeName exists
+  PASS  43 fixture cases
+  PASS  7 accepted and 36 rejected
+  PASS  17 carry archive_only
+  PASS  cross-tab is 6 accepted of 26 both-form and 1 accepted of 17 archive-only
+  PASS  the accepted archive-only case is windows-attributes-entry
+  PASS  some cases carry a profile key
+  PASS  ReadBounded is defined in BoundedParse.cpp
+  PASS  ReadBounded uses std::ifstream
+  PASS  ReadBounded has exactly the three known callers
+  PASS  five schema files
+  PASS  the CLI uses DASHBOARD_SCHEMA_DIR
+  PASS  DASHBOARD_SCHEMA_DIR retains its known users plus the load tests
+  PASS  Document exposes only Storage&
+  PASS  UBT lists .c as a compiled extension at UEBuildModuleCPP.cs:3078
+  PASS  UBT branches on .c at UEBuildModuleCPP.cs:3129
+  PASS  miniz.c is present
+  PASS  dashboard-spec preset is 'default'
+  PASS  signal-core presets are 'default' and 'tsan'
+  PASS  ARCHITECTURE.md line 22 forbids tools reading the runtime tree
+  PASS  tools/dashboard_spec/schema.py:14 resolves packages/dashboard-spec/schema
+
+  26 passed, 0 failed
+exit=0

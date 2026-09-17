@@ -1,0 +1,50 @@
+warning: unable to access 'C:\Users\Vincent/.config/git/ignore': Permission denied
+warning: unable to access 'C:\Users\Vincent/.config/git/ignore': Permission denied
+ M .github/workflows/signal-core.yml
+ M .github/workflows/spec-tools.yml
+ M docs/build/chunk-10-package-loader.md
+ M packages/dashboard-spec/CMakeLists.txt
+ M packages/dashboard-spec/README.md
+ D packages/dashboard-spec/include/dashboard_spec/DefinitionPackBuilder.h
+ D packages/dashboard-spec/include/dashboard_spec/Document.h
+ D packages/dashboard-spec/include/dashboard_spec/Errors.h
+ D packages/dashboard-spec/include/dashboard_spec/Limits.h
+ D packages/dashboard-spec/include/dashboard_spec/PackageReader.h
+ D packages/dashboard-spec/include/dashboard_spec/RuleTreeBuilder.h
+ D packages/dashboard-spec/include/dashboard_spec/SemanticPass.h
+ D packages/dashboard-spec/include/dashboard_spec/Validator.h
+ D packages/dashboard-spec/src/BoundedParse.cpp
+ D packages/dashboard-spec/src/DefinitionPackBuilder.cpp
+ D packages/dashboard-spec/src/Errors.cpp
+ D packages/dashboard-spec/src/ImageHeader.cpp
+ D packages/dashboard-spec/src/Internal.h
+ D packages/dashboard-spec/src/PackageInternal.h
+ D packages/dashboard-spec/src/PackageReader.cpp
+ D packages/dashboard-spec/src/PathResolver.cpp
+ D packages/dashboard-spec/src/RuleTreeBuilder.cpp
+ D packages/dashboard-spec/src/SchemaValidation.cpp
+ D packages/dashboard-spec/src/SemanticPass.cpp
+ D packages/dashboard-spec/src/validate_main.cpp
+ M packages/dashboard-spec/tests/TestSupport.h
+ M packages/dashboard-spec/tests/test_package_reader.cpp
+ M packages/dashboard-spec/tests/test_schema.cpp
+ M runtime/UnRealDash/Config/DefaultEngine.ini
+ M runtime/UnRealDash/Source/UnRealDash/UnRealDash.Build.cs
+ M runtime/UnRealDash/Source/UnRealDashCore/UnRealDashCore.Build.cs
+ M runtime/UnRealDash/UnRealDash.uproject
+ M scripts/README.md
+ M scripts/SignalCoreLayering.ps1
+ M scripts/doctor.ps1
+ M tools/dashboard_spec/errors.py
+ M tools/tests/test_semantic.py
+?? .tmp/
+?? docs/reports/logs/chunk-10/
+?? packages/dashboard-spec/tests/test_loaded_package.cpp
+?? runtime/UnRealDash/Source/DashboardSpec/
+?? runtime/UnRealDash/Source/UnRealDash/Private/Package/
+?? runtime/UnRealDash/Source/UnRealDashCore/Private/Package/
+?? runtime/UnRealDash/Source/UnRealDashCore/Public/UnRealDashCore/ComponentRegistry.h
+?? runtime/UnRealDash/Source/UnRealDashCore/Public/UnRealDashCore/DashPackageLoader.h
+?? scripts/doctest-summary.py
+?? scripts/tests/dashboard-spec-layering.Tests.ps1
+?? scripts/verify-chunk10-facts.py

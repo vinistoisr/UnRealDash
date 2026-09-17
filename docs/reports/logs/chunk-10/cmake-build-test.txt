@@ -1,0 +1,49 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="RelWithDebInfo"
+
+-- Compiler: MSVC 19.44.35223.0
+-- signal_core: C++20, exceptions OFF, RTTI OFF, warnings as errors
+-- dashboard_spec: C++20, exceptions OFF, RTTI OFF, warnings as errors
+-- Configuring done (0.0s)
+-- Generating done (0.1s)
+-- Build files have been written to: C:/Users/Vincent/UnRealDash/packages/dashboard-spec/build/default
+[0/2] Re-checking globbed directories...
+[1/16] Building CXX object CMakeFiles\dashboard_spec.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\Errors.cpp.obj
+[2/16] Linking CXX static library dashboard_spec.lib
+[3/16] Linking CXX executable dashboard-spec-validate.exe
+[4/16] Linking CXX executable telemetry-decode-jsonl.exe
+[5/16] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_definition_pack_builder.cpp.obj
+[6/16] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_bounded_parse.cpp.obj
+[7/16] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_malformed_harness.cpp.obj
+[8/16] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_rule_tree_builder.cpp.obj
+[9/16] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_corpus.cpp.obj
+[10/16] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\main.cpp.obj
+[11/16] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_package_reader.cpp.obj
+[12/16] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_semantic.cpp.obj
+[13/16] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_loaded_package.cpp.obj
+[14/16] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_schema.cpp.obj
+[15/16] Linking CXX executable dashboard-spec-tests.exe
+Test project C:/Users/Vincent/UnRealDash/packages/dashboard-spec/build/default
+    Start 1: test_bounded_parse.cpp
+1/9 Test #1: test_bounded_parse.cpp .............   Passed    0.06 sec
+    Start 2: test_corpus.cpp
+2/9 Test #2: test_corpus.cpp ....................   Passed    0.63 sec
+    Start 3: test_definition_pack_builder.cpp
+3/9 Test #3: test_definition_pack_builder.cpp ...   Passed    0.05 sec
+    Start 4: test_loaded_package.cpp
+4/9 Test #4: test_loaded_package.cpp ............   Passed    0.49 sec
+    Start 5: test_malformed_harness.cpp
+5/9 Test #5: test_malformed_harness.cpp .........   Passed    7.48 sec
+    Start 6: test_package_reader.cpp
+6/9 Test #6: test_package_reader.cpp ............   Passed    0.53 sec
+    Start 7: test_rule_tree_builder.cpp
+7/9 Test #7: test_rule_tree_builder.cpp .........   Passed    0.01 sec
+    Start 8: test_schema.cpp
+8/9 Test #8: test_schema.cpp ....................   Passed    0.02 sec
+    Start 9: test_semantic.cpp
+9/9 Test #9: test_semantic.cpp ..................   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Total Test time (real) =   9.33 sec

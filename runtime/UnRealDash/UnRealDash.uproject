@@ -4,6 +4,7 @@
     "Category": "",
     "Description": "UnRealDash signal player foundation.",
     "Modules": [
+        { "Name": "DashboardSpec", "Type": "Runtime", "LoadingPhase": "PreDefault" },
         {
             "Name": "UnRealDashSmokeEditor",
             "Type": "Editor",

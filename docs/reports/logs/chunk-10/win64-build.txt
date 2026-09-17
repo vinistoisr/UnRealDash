@@ -1,0 +1,2 @@
+Using bundled DotNet SDK version: 10.0 win-x64
+Running UnrealBuildTool: dotnet "..\..\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.dll" UnRealDash Win64 Development -project=C:/Users/Vincent/UnRealDash/runtime/UnRealDash/UnRealDash.uproject -log=C:/Users/Vincent/UnRealDash/docs/reports/logs/chunk-10/ubt-win64.txt

@@ -21,3 +21,21 @@ command for their target; they do not yet contain device or metrics operations.
 
 Run `pwsh -NoProfile -Command "Invoke-Pester -Path scripts/tests -CI"`.
 The installed Pester 6.2 module supports the Pester 5 APIs used by these tests.
+
+Package-loader fixture gate (PLAN 4.4), after building the editor:
+
+```powershell
+& '<Engine>/Engine/Binaries/Win64/UnrealEditor-Cmd.exe' `
+    runtime/UnRealDash/UnRealDash.uproject -run=DashPackageTest `
+    "-PackageFixtures=$((Resolve-Path tests/fixtures/packages).Path)" -unattended -nullrhi
+```
+
+The gate derives expected acceptance, rejection, profile and archive-only counts
+from `cases.json`. It calls the public engine loader for every archive and every
+meaningful directory, compares verdict/code/pointer, and constructs each accepted
+placeholder tree. It also checks rejection text fields and unknown registrations.
+It does not prove on-screen readability. Launch each archive with `-udash=<path>`
+for that gate, plus `well-formed/` for the directory rendering gate. The package
+HUD is now the default; the smoke spike remains selectable with
+`/Game/Smoke/L_Smoke?game=/Script/UnRealDash.SmokeGameMode` as an explicit map URL. No new flag surface or
+`player.json` behavior was added by this task.

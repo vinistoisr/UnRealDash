@@ -132,6 +132,12 @@ jobs:
       - name: Set up MSVC
         if: matrix.os == 'windows-latest'
         uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+      - name: DashboardSpec source authority
+        shell: bash
+        run: |
+          test ! -d packages/dashboard-spec/src
+          test ! -d packages/dashboard-spec/include
+          test -f runtime/UnRealDash/Source/DashboardSpec/Public/dashboard_spec/PackageReader.h
       - name: Configure
         working-directory: packages/dashboard-spec
         shell: bash
@@ -153,14 +159,8 @@ jobs:
           set -- packages/dashboard-spec/build/default dashboard-spec-tests
           bin=$(find "$1" -maxdepth 1 -type f \( -name "$2" -o -name "$2.exe" \) | head -1)
           [ -n "$bin" ] || { echo "FAIL: no test binary under $1"; exit 1; }
-          "$bin" --reporters=console 2>&1 | tee run.log
-          line=$(grep -E '^\[doctest\] assertions:' run.log | tail -1)
-          [ -n "$line" ] || { echo "FAIL: no doctest assertion summary"; exit 1; }
-          count=$(echo "$line" | sed -E 's/.*assertions: *([0-9]+).*/\1/')
-          failed=$(echo "$line" | sed -E 's/.*\| *([0-9]+) failed.*/\1/')
-          echo "assertions=$count failed=$failed"
-          [ "$count" -gt 0 ] || { echo "FAIL: zero assertions"; exit 1; }
-          [ "$failed" -eq 0 ] || { echo "FAIL: $failed assertions failed"; exit 1; }
+          "$bin" --reporters=xml --out=doctest.xml
+          python scripts/doctest-summary.py doctest.xml
 
   parity:
     runs-on: ubuntu-latest
@@ -206,6 +206,12 @@ jobs:
         shell: bash
         run: |
           python tools/gen-package-fixtures.py
+      - name: DashboardSpec source authority
+        shell: bash
+        run: |
+          test ! -d packages/dashboard-spec/src
+          test ! -d packages/dashboard-spec/include
+          test -f runtime/UnRealDash/Source/DashboardSpec/Public/dashboard_spec/PackageReader.h
       - name: Configure
         working-directory: packages/dashboard-spec
         shell: bash

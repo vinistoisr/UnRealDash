@@ -44,6 +44,7 @@ CODES = MappingProxyType({
     "E_PKG_UNSUPPORTED_DOCUMENT": 42,
     "E_UNRESOLVED_COMPONENT": 43,
     "E_PKG_ASSET_NOT_IN_PACKAGE": 44,
+    "E_PKG_ASSET_UNREADABLE": 45,
 })
 
 LIMITS = MappingProxyType({'expanded_size': 67108864, 'entry_count': 4096, 'asset_size': 16777216, 'document_size': 4194304, 'json_depth': 64, 'json_nodes': 200000, 'string_length': 65536, 'expression_depth': 32, 'expression_nodes': 20000, 'rule_nodes': 512, 'components': 2000, 'history_samples': 4096, 'image_dimension': 4096, 'mobile_texture': 201326592, 'desktop_texture': 536870912})

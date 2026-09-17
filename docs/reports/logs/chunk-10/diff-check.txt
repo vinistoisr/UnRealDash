@@ -1,0 +1,15 @@
+warning: in the working copy of '.github/workflows/signal-core.yml', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of '.github/workflows/spec-tools.yml', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'packages/dashboard-spec/CMakeLists.txt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'packages/dashboard-spec/README.md', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'packages/dashboard-spec/tests/TestSupport.h', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'packages/dashboard-spec/tests/test_package_reader.cpp', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'packages/dashboard-spec/tests/test_schema.cpp', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'runtime/UnRealDash/Config/DefaultEngine.ini', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'runtime/UnRealDash/Source/UnRealDash/UnRealDash.Build.cs', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'runtime/UnRealDash/Source/UnRealDashCore/UnRealDashCore.Build.cs', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'runtime/UnRealDash/UnRealDash.uproject', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'scripts/README.md', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'tools/dashboard_spec/errors.py', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'tools/tests/test_semantic.py', CRLF will be replaced by LF the next time Git touches it
+exit=0

@@ -1,0 +1,152 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "api": {
+      "const": 1
+    },
+    "input": {
+      "type": "string",
+      "enum": [
+        "binary-telemetry-v1",
+        "can.classic"
+      ]
+    },
+    "frames": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 536870911
+          },
+          "id_format": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "extended"
+            ]
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "telemetry",
+              "status"
+            ]
+          },
+          "signals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "byte_offset": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "uint8",
+                    "uint16",
+                    "uint32"
+                  ]
+                },
+                "byte_order": {
+                  "type": "string",
+                  "enum": [
+                    "little",
+                    "big"
+                  ]
+                },
+                "signed": {
+                  "type": "boolean"
+                },
+                "scale": {
+                  "type": "number"
+                },
+                "offset": {
+                  "type": "number"
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "dimensionless",
+                    "K",
+                    "degC",
+                    "degF",
+                    "Pa",
+                    "kPa",
+                    "bar",
+                    "psi",
+                    "m/s",
+                    "km/h",
+                    "mph",
+                    "rad/s",
+                    "rpm"
+                  ]
+                },
+                "acquisition": {
+                  "type": "string",
+                  "enum": [
+                    "live",
+                    "held"
+                  ]
+                },
+                "sentinels": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "byte_offset",
+                "type",
+                "byte_order",
+                "signed",
+                "scale",
+                "offset",
+                "unit",
+                "acquisition"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "id_format",
+          "length",
+          "role",
+          "signals"
+        ]
+      }
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "api",
+    "input",
+    "frames"
+  ]
+}

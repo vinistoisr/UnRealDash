@@ -2,7 +2,7 @@
 #include <regex>
 TEST_CASE("error vocabulary and stable values agree with Python") {
     const auto python = Read(Repo() / "tools/dashboard_spec/errors.py");
-    const auto header = Read(Repo() / "packages/dashboard-spec/include/dashboard_spec/Errors.h");
+    const auto header = Read(Repo() / "runtime/UnRealDash/Source/DashboardSpec/Public/dashboard_spec/Errors.h");
     std::regex expression("E_[A-Z_]+");
     std::vector<std::string> left, right;
     for (auto it = std::sregex_iterator(python.begin(), python.end(), expression); it != std::sregex_iterator(); ++it)

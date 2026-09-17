@@ -1,0 +1,2 @@
+Using bundled DotNet SDK version: 10.0 win-x64
+Running UnrealBuildTool: dotnet "..\..\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.dll" UnRealDash Android Development -project=C:/Users/Vincent/UnRealDash/runtime/UnRealDash/UnRealDash.uproject -architecture=arm64 -waitmutex

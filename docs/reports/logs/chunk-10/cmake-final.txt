@@ -1,0 +1,60 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="RelWithDebInfo"
+
+-- Compiler: MSVC 19.44.35223.0
+-- signal_core: C++20, exceptions OFF, RTTI OFF, warnings as errors
+-- dashboard_spec: C++20, exceptions OFF, RTTI OFF, warnings as errors
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/Users/Vincent/UnRealDash/packages/dashboard-spec/build/default
+[0/2] Re-checking globbed directories...
+[1/26] Building CXX object CMakeFiles\dashboard_spec.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\Errors.cpp.obj
+[2/26] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_definition_pack_builder.cpp.obj
+[3/26] Building CXX object CMakeFiles\dashboard_spec.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\DocumentView.cpp.obj
+[4/26] Building CXX object CMakeFiles\dashboard_spec.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\ImageHeader.cpp.obj
+[5/26] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_bounded_parse.cpp.obj
+[6/26] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_malformed_harness.cpp.obj
+[7/26] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_corpus.cpp.obj
+[8/26] Building CXX object CMakeFiles\telemetry-decode-jsonl.dir\tools\telemetry-decode-jsonl.cpp.obj
+[9/26] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_package_reader.cpp.obj
+[10/26] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_rule_tree_builder.cpp.obj
+[11/26] Building CXX object CMakeFiles\dashboard_spec.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\PathResolver.cpp.obj
+[12/26] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_semantic.cpp.obj
+[13/26] Building CXX object CMakeFiles\dashboard-spec-validate.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\validate_main.cpp.obj
+[14/26] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_schema.cpp.obj
+[15/26] Building CXX object CMakeFiles\dashboard_spec.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\BoundedParse.cpp.obj
+[16/26] Building CXX object CMakeFiles\dashboard_spec.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\DefinitionPackBuilder.cpp.obj
+[17/26] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_loaded_package.cpp.obj
+[18/26] Building CXX object CMakeFiles\dashboard_spec.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\RuleTreeBuilder.cpp.obj
+[19/26] Building CXX object CMakeFiles\dashboard_spec.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\PackageReader.cpp.obj
+[20/26] Building CXX object CMakeFiles\dashboard_spec.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\SemanticPass.cpp.obj
+[21/26] Building CXX object CMakeFiles\dashboard_spec.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\SchemaValidation.cpp.obj
+[22/26] Linking CXX static library dashboard_spec.lib
+[23/26] Linking CXX executable dashboard-spec-validate.exe
+[24/26] Linking CXX executable telemetry-decode-jsonl.exe
+[25/26] Linking CXX executable dashboard-spec-tests.exe
+Test project C:/Users/Vincent/UnRealDash/packages/dashboard-spec/build/default
+    Start 1: test_bounded_parse.cpp
+1/9 Test #1: test_bounded_parse.cpp .............   Passed    0.04 sec
+    Start 2: test_corpus.cpp
+2/9 Test #2: test_corpus.cpp ....................   Passed    0.63 sec
+    Start 3: test_definition_pack_builder.cpp
+3/9 Test #3: test_definition_pack_builder.cpp ...   Passed    0.05 sec
+    Start 4: test_loaded_package.cpp
+4/9 Test #4: test_loaded_package.cpp ............   Passed    0.54 sec
+    Start 5: test_malformed_harness.cpp
+5/9 Test #5: test_malformed_harness.cpp .........   Passed    7.63 sec
+    Start 6: test_package_reader.cpp
+6/9 Test #6: test_package_reader.cpp ............   Passed    0.48 sec
+    Start 7: test_rule_tree_builder.cpp
+7/9 Test #7: test_rule_tree_builder.cpp .........   Passed    0.01 sec
+    Start 8: test_schema.cpp
+8/9 Test #8: test_schema.cpp ....................   Passed    0.03 sec
+    Start 9: test_semantic.cpp
+9/9 Test #9: test_semantic.cpp ..................   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Total Test time (real) =   9.48 sec
+exit=0

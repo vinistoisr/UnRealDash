@@ -1,0 +1,121 @@
+Pester v6.2.0
+
+Running tests from 4 files.
+
+Running tests from 'C:\Users\Vincent\UnRealDash\scripts\tests\AcquisitionLayering.Tests.ps1'
+Describing PLAN 4.3 SignalCore layering
+  [+] names file and line for each forbidden token outside the allowed modules 99ms
+  [+] accepts the engine sample seam and the actual source tree 19ms
+  [+] keeps the layering gate wired into doctor 6ms
+
+Running tests from 'C:\Users\Vincent\UnRealDash\scripts\tests\dashboard-spec-layering.Tests.ps1'
+Describing PLAN 4.4 DashboardSpec layering
+  [+] allows the lower library dependency and registration exception only 23ms
+  [+] accepts the current source tree and is wired into doctor 56ms
+  [+] keeps one authoritative copy and pinned non-UFS schemas 18ms
+
+Running tests from 'C:\Users\Vincent\UnRealDash\scripts\tests\Foundation.Tests.ps1'
+Describing Doctor profiles and seams
+  [+] workstation prints the PLAN 0.7 row set plus the PLAN 4.3 layering gate 1.49s
+  [+] android prints the PLAN 0.7 row set plus the PLAN 4.3 layering gate 16.5s
+  [+] linux prints the PLAN 0.7 row set plus the PLAN 4.3 layering gate 15.88s
+  [+] device prints the PLAN 0.7 row set plus the PLAN 4.3 layering gate 1.13s
+  [+] detects NDK membership added to workstation contrary to PLAN 0.7 812ms
+  [+] SearchPath without cmake fails workstation and identifies cmake 572ms
+  [-] PreInstall passes on this machine 517ms
+   Expected 0, because Doctor profile: preinstall
+   Component                Expected                                                  Found                                                                          Status
+   ---------                --------                                                  -----                                                                          ------
+   C: free space            >= 150 GB                                                 487.13 GB                                                                      PASS
+   git                      available                                                 git version 2.45.1.windows.1                                                   PASS
+   winget                   present on PATH                                           C:\Users\Vincent\AppData\Local\Microsoft\WindowsApps\winget.exe                PASS
+   PowerShell               >= 7                                                      7.6.6                                                                          PASS
+   Signed-in shell          Windows user identity                                     LENOVO-BOX\CodexSandboxOffline                                                 PASS
+   User PATH writable       user Environment registry key writable                    Exception calling "OpenSubKey" with "2" argument(s): "Requested registry       FAIL
+                                                                                      access is not allowed.", but got 1.
+   at $result.Code | Should -Be 0 -Because $result.Text, C:\Users\Vincent\UnRealDash\scripts\tests\Foundation.Tests.ps1:121
+  [+] PreInstall checks only capacity and installer prerequisites 508ms
+  [+] PinsFile controls membership and expected matching without changing defaults 825ms
+  [+] fails closed for missing, invalid and empty pin files 754ms
+
+Describing Deterministic doctor transitions
+  [+] workstation cmake changes from FAIL to PASS with a cmd wrapper on SearchPath 790ms
+  [+] android NDK changes from FAIL to PASS when the engine manifest version appears 756ms
+  [+] linux root and toolchain change from FAIL to PASS using the internal version marker 803ms
+  [+] rejects clang 20.1.80 against the 20.1.8 pin 435ms
+  [+] device reachability and storage change from FAIL to PASS with the configured fake serial 1.62s
+  [+] workstation capacity changes from PASS to FAIL with a 999999 GB minimum 887ms
+  [+] preinstall capacity changes from PASS to FAIL with a 999999 GB minimum 765ms
+  [+] the project JDK row enforces both ends of the range gradle supports 2.89s
+  [+] JDK prefers JAVA_HOME and enforces the major-version floor 2.37s
+  [+] engine platform support is decided by UnrealBuildTool, not by the file layout 826ms
+  [+] engine platform support is decided by UnrealBuildTool, not by the file layout 838ms
+  [+] Windows SDK kits_root override changes from FAIL to PASS when pinned Include exists 725ms
+  [+] Android SDK requires the platform, build-tools and cmake the engine manifest names 1.54s
+  [+] SDK and NDK use the shared ANDROID_SDK_ROOT root fallback 385ms
+  [+] SDK and NDK use the shared LOCALAPPDATA root fallback 393ms
+
+Describing Skeleton doctor gates
+  [+] build win64 previews Win64 only after a passing workstation doctor 513ms
+  [+] build android previews Android only after a passing android doctor 491ms
+  [+] build linux previews Linux only after a passing linux doctor 493ms
+  [+] package-windows  previews Win64 only after a passing workstation doctor 502ms
+  [+] package-android  previews Android only after a passing android doctor 507ms
+  [+] package-linux  previews Linux only after a passing linux doctor 479ms
+  [+] deploy-deck  previews Android only after a passing device doctor 490ms
+  [+] capture-metrics windows previews Win64 only after a passing workstation doctor 483ms
+  [+] capture-metrics device previews Android only after a passing device doctor 482ms
+  [+] capture-metrics soak previews Win64 only after a passing workstation doctor 478ms
+  [+] build win64 stops without UAT when its doctor fails 514ms
+  [+] build android stops without UAT when its doctor fails 487ms
+  [+] build linux stops without UAT when its doctor fails 489ms
+  [+] package-windows  stops without UAT when its doctor fails 480ms
+  [+] package-android  stops without UAT when its doctor fails 484ms
+  [+] package-linux  stops without UAT when its doctor fails 469ms
+  [+] deploy-deck  stops without UAT when its doctor fails 480ms
+  [+] capture-metrics windows stops without UAT when its doctor fails 468ms
+  [+] capture-metrics device stops without UAT when its doctor fails 474ms
+  [+] capture-metrics soak stops without UAT when its doctor fails 474ms
+  [+] build.ps1 previews the module build it would run, not a packaging command 974ms
+  [+] fails closed when the doctor file is missing 406ms
+
+Describing Repository foundation
+  [+] has each specified directory README and root policy file 12ms
+  [+] tracks every required binary extension with LFS and normalizes text 5ms
+  [+] contains a real 16 by 16 PNG probe 5ms
+  [+] provides provisional licenses and links them 3ms
+  [+] every component name fits the rendered table column 6ms
+  [+] stores each PLAN pin once, with detection and membership data 25ms
+  [+] parses every script and contains no PowerShell 7-only conditional syntax 68ms
+
+Running tests from 'C:\Users\Vincent\UnRealDash\scripts\tests\SmokePackage.Tests.ps1'
+Describing Smoke packaging
+  [+] previews complete Win64 Development packaging 509ms
+  [+] previews complete Win64 Shipping packaging 500ms
+  [+] previews complete Android Development packaging 500ms
+  [+] previews complete Android Shipping packaging 502ms
+  [+] previews RHI overrides differing only in the two booleans and uses separate archives 1s
+  [+] requires -Rhi without prompting 210ms
+  [+] stops package-windows on a failed doctor before UAT 473ms
+  [+] stops package-android on a failed doctor before UAT 476ms
+  [+] stops package-android on a failed doctor before UAT 483ms
+
+Describing Real smoke packaging
+Fake doctor PASS: android
+  [+] captures exact Android ini bytes at UAT invocation and cleans up success 268ms
+Fake doctor PASS: android
+  [+] preserves UAT exit 7 and cleans up the Android ini 229ms
+Fake doctor PASS: workstation
+  [+] never creates an ini for Windows packaging 245ms
+Fake doctor PASS: android
+  [+] preserves a pre-existing ini and never invokes UAT 219ms
+Fake doctor PASS: android
+Fake doctor PASS: android
+  [+] reports a cleanup failure and preserves an earlier UAT failure 476ms
+Fake doctor PASS: android
+Fake doctor PASS: android
+  [+] propagates arbitrary UAT exit codes 3 then 0 460ms
+Fake doctor PASS: android
+  [+] refuses an archive containing ampersand without invoking UAT 230ms
+Tests completed in 74.26s
+Tests Passed: 75, Failed: 1, Skipped: 0, Inconclusive: 0, NotRun: 0

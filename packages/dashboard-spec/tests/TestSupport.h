@@ -1,5 +1,5 @@
 #pragma once
-#include "Internal.h"
+#include "../../../runtime/UnRealDash/Source/DashboardSpec/Private/Internal.h"
 #include "dashboard_spec/Validator.h"
 #include <doctest.h>
 namespace ds = dashboard_spec;

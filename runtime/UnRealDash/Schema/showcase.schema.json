@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "material_scalars": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z0-9][a-z0-9_.-]{0,63}$": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "transition_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000
+    },
+    "page": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 15
+    },
+    "colours": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z0-9][a-z0-9_.-]{0,63}$": {
+          "type": "string",
+          "pattern": "^#[0-9a-f]{6}([0-9a-f]{2})?(?![\\s\\S])"
+        }
+      }
+    }
+  },
+  "required": [
+    "material_scalars",
+    "transition_ms",
+    "page",
+    "colours"
+  ]
+}

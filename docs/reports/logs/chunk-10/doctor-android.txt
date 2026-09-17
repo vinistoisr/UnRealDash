@@ -1,0 +1,56 @@
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\DefinitionPackBuilder.cpp:6: signal_core::DefinitionPack pack{};
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\DefinitionPackBuilder.cpp:10: std::vector<signal_core::FieldDefinition> fields;
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\DefinitionPackBuilder.cpp:11: std::vector<signal_core::FrameDefinition> frames;
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\DefinitionPackBuilder.cpp:15: const signal_core::DefinitionPack &DefinitionPackBuilder::Pack() const { return storage_->pack; }
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\DefinitionPackBuilder.cpp:26: if (value && value->IsString() && !signal_core::ParseUnit(Text(*value)).Ok())
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\DefinitionPackBuilder.cpp:59: signal_core::FieldDefinition field;
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\DefinitionPackBuilder.cpp:70: const auto unit = signal_core::ParseUnit(Text(value["unit"]));
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\DefinitionPackBuilder.cpp:75: Text(value["acquisition"]) == "held" ? signal_core::Acquisition::held : signal_core::Acquisition::live;
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\DefinitionPackBuilder.cpp:91: Text(frame["role"]) == "status" ? signal_core::FrameRole::status : signal_core::FrameRole::telemetry,
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\DefinitionPackBuilder.cpp:93: std::span<const signal_core::FieldDefinition>(s.fields).subspan(start)});
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\DefinitionPackBuilder.cpp:95: signal_core::DefinitionPack pack{s.id.c_str(), s.version.c_str(), root["api"].GetUint(), s.frames};
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\DefinitionPackBuilder.cpp:96: const auto status = signal_core::ValidatePack(pack);
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\RuleTreeBuilder.cpp:6: std::vector<signal_core::ExpressionNode> nodes;
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\RuleTreeBuilder.cpp:8: signal_core::RuleDefinition rule;
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\RuleTreeBuilder.cpp:12: const signal_core::RuleDefinition &RuleTreeBuilder::Rule() const { return storage_->rule; }
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\RuleTreeBuilder.cpp:53: signal_core::ExpressionNode node;
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\RuleTreeBuilder.cpp:59: node.operation = static_cast<signal_core::Operation>(found - std::begin(operations));
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\RuleTreeBuilder.cpp:64: auto unit = signal_core::ParseUnit(Text(value["unit"]));
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\RuleTreeBuilder.cpp:113: auto unit = signal_core::ParseUnit(Text(hysteresis["unit"]));
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\RuleTreeBuilder.cpp:126: result.missing_input_policy = policy == "hold_last"    ? signal_core::MissingInputPolicy::hold_last
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\RuleTreeBuilder.cpp:127: : policy == "force_warn" ? signal_core::MissingInputPolicy::force_warn
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\RuleTreeBuilder.cpp:128: : signal_core::MissingInputPolicy::treat_unavailable;
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Public\dashboard_spec\DefinitionPackBuilder.h:2: #include "SignalCore/DefinitionPack.h"
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Public\dashboard_spec\DefinitionPackBuilder.h:13: const signal_core::DefinitionPack &Pack() const;
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Public\dashboard_spec\RuleTreeBuilder.h:2: #include "SignalCore/RuleEngine.h"
+C:\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Public\dashboard_spec\RuleTreeBuilder.h:19: const signal_core::RuleDefinition &Rule() const;
+Doctor profile: android
+
+Component                Expected                                                  Found                                                                          Status
+---------                --------                                                  -----                                                                          ------
+C: free space            >= 30 GB                                                  487.20 GB                                                                      PASS
+Git LFS                  available                                                 git-lfs/3.5.1 (GitHub; windows amd64; go 1.21.7; git e237bb3a)                 PASS
+cmake                    available                                                 Exception calling "ResolveLinkTarget" with "1" argument(s): "Access to the     FAIL
+                                                                                   path 'C:\Users\Vincent\AppData\Local\Microsoft\WinGet\Links\cmake.exe' is
+                                                                                   denied."
+ninja                    available                                                 Exception calling "ResolveLinkTarget" with "1" argument(s): "Access to the     FAIL
+                                                                                   path 'C:\Users\Vincent\AppData\Local\Microsoft\WinGet\Links\ninja.exe' is
+                                                                                   denied."
+Visual Studio            2022 Community 17.14+; both C++ workloads                 17.14.37710.0                                                                  PASS
+MSVC toolset             14.44 (UE minimum 14.38; recommendation 14.50)            14.44.35207, 14.44.35207                                                       PASS
+Windows SDK              10.0.26100                                                C:\Program Files (x86)\Windows Kits\10\; Include versions: 10.0.26100.0        PASS
+Unreal Engine            5.8.2, Launcher binary install                            5.8.2                                                                          PASS
+Engine Android support   UnrealBuildTool reports Android VALID                     tool timed out after 15 seconds                                                FAIL
+Android Studio           installed, with a bundled JDK (jbr)                       C:\Program Files\Android\Android Studio; version                               PASS
+                                                                                   AI-261.26222.65.2614.16204760; bundled JDK 25.0.3
+Android NDK              the version in the engine's Android_SDK.json              r27c (27.2.12479018)                                                           PASS
+JDK                      a JDK on JAVA_HOME or the search PATH, major version 17   JAVA_HOME                                                                      PASS
+                         or newer                                                  (C:\Users\Vincent\AppData\Local\Programs\Microsoft\jdk-17.0.10.7-hotspot);
+                                                                                   openjdk version "17.0.10" 2024-01-16 LTS
+Project JDK              UNREALDASH_JAVA_HOME naming a JDK in the supported        C:\Users\Vincent\AppData\Local\Programs\Microsoft\jdk-17.0.10.7-hotspot        PASS
+                         major-version range                                       (process); openjdk version "17.0.10" 2024-01-16 LTS
+Android SDK              the platform, build-tools and cmake in the engine's       C:\Users\Vincent\AppData\Local\Android\Sdk; android-36: True; build-tools      PASS
+                         Android_SDK.json                                          36.0.0: True; cmake 3.22.1: True
+SignalCore layering      Only UnRealDashCore calls SignalCore                      26 token violations                                                            FAIL
+
+

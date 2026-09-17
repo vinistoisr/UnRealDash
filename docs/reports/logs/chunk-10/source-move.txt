@@ -1,0 +1,21 @@
+packages/dashboard-spec/include/dashboard_spec/DefinitionPackBuilder.h -> runtime/UnRealDash/Source/DashboardSpec/Public/dashboard_spec/DefinitionPackBuilder.h
+packages/dashboard-spec/include/dashboard_spec/Document.h -> runtime/UnRealDash/Source/DashboardSpec/Public/dashboard_spec/Document.h
+packages/dashboard-spec/include/dashboard_spec/Errors.h -> runtime/UnRealDash/Source/DashboardSpec/Public/dashboard_spec/Errors.h
+packages/dashboard-spec/include/dashboard_spec/Limits.h -> runtime/UnRealDash/Source/DashboardSpec/Public/dashboard_spec/Limits.h
+packages/dashboard-spec/include/dashboard_spec/PackageReader.h -> runtime/UnRealDash/Source/DashboardSpec/Public/dashboard_spec/PackageReader.h
+packages/dashboard-spec/include/dashboard_spec/RuleTreeBuilder.h -> runtime/UnRealDash/Source/DashboardSpec/Public/dashboard_spec/RuleTreeBuilder.h
+packages/dashboard-spec/include/dashboard_spec/SemanticPass.h -> runtime/UnRealDash/Source/DashboardSpec/Public/dashboard_spec/SemanticPass.h
+packages/dashboard-spec/include/dashboard_spec/Validator.h -> runtime/UnRealDash/Source/DashboardSpec/Public/dashboard_spec/Validator.h
+packages/dashboard-spec/src/BoundedParse.cpp -> runtime/UnRealDash/Source/DashboardSpec/Private/BoundedParse.cpp
+packages/dashboard-spec/src/DefinitionPackBuilder.cpp -> runtime/UnRealDash/Source/DashboardSpec/Private/DefinitionPackBuilder.cpp
+packages/dashboard-spec/src/Errors.cpp -> runtime/UnRealDash/Source/DashboardSpec/Private/Errors.cpp
+packages/dashboard-spec/src/ImageHeader.cpp -> runtime/UnRealDash/Source/DashboardSpec/Private/ImageHeader.cpp
+packages/dashboard-spec/src/Internal.h -> runtime/UnRealDash/Source/DashboardSpec/Private/Internal.h
+packages/dashboard-spec/src/PackageInternal.h -> runtime/UnRealDash/Source/DashboardSpec/Private/PackageInternal.h
+packages/dashboard-spec/src/PackageReader.cpp -> runtime/UnRealDash/Source/DashboardSpec/Private/PackageReader.cpp
+packages/dashboard-spec/src/PathResolver.cpp -> runtime/UnRealDash/Source/DashboardSpec/Private/PathResolver.cpp
+packages/dashboard-spec/src/RuleTreeBuilder.cpp -> runtime/UnRealDash/Source/DashboardSpec/Private/RuleTreeBuilder.cpp
+packages/dashboard-spec/src/SchemaValidation.cpp -> runtime/UnRealDash/Source/DashboardSpec/Private/SchemaValidation.cpp
+packages/dashboard-spec/src/SemanticPass.cpp -> runtime/UnRealDash/Source/DashboardSpec/Private/SemanticPass.cpp
+packages/dashboard-spec/src/validate_main.cpp -> runtime/UnRealDash/Source/DashboardSpec/Private/validate_main.cpp
+PASS: 20 source files moved; old include/src directories absent; no forwarding headers.

@@ -1,4 +1,4 @@
-#include "PackageInternal.h"
+#include "../../../runtime/UnRealDash/Source/DashboardSpec/Private/PackageInternal.h"
 #include "TestSupport.h"
 #include "dashboard_spec/PackageReader.h"
 TEST_CASE("package cases agree in archive and directory forms") {

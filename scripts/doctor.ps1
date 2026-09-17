@@ -323,10 +323,11 @@ try {
     if (-not $PreInstall) {
         . (Join-Path $PSScriptRoot 'SignalCoreLayering.ps1')
         $violations = @(Get-SignalCoreLayeringViolation (Join-Path $PSScriptRoot '../runtime/UnRealDash/Source'))
+        $violations += @(Get-DashboardSpecLayeringViolation (Join-Path $PSScriptRoot '../runtime/UnRealDash/Source'))
         foreach ($violation in $violations) { Write-Output $violation }
         $layeringStatus = 'PASS'
         if ($violations.Count) { $layeringStatus = 'FAIL' }
-        $results += [pscustomobject]@{ Component = 'SignalCore layering'; Expected = 'Only UnRealDashCore calls SignalCore'; Found = "$($violations.Count) token violations"; Status = $layeringStatus }
+        $results += [pscustomobject]@{ Component = 'SignalCore layering'; Expected = 'SignalCore + DashboardSpec layering'; Found = "$($violations.Count) token violations"; Status = $layeringStatus }
     }
     Write-Output "Doctor profile: $mode"
     $columns = @(

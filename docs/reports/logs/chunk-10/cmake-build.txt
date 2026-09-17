@@ -1,0 +1,35 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="RelWithDebInfo"
+
+-- Compiler: MSVC 19.44.35223.0
+-- signal_core: C++20, exceptions OFF, RTTI OFF, warnings as errors
+-- dashboard_spec: C++20, exceptions OFF, RTTI OFF, warnings as errors
+-- Configuring done (0.0s)
+-- Generating done (0.1s)
+-- Build files have been written to: C:/Users/Vincent/UnRealDash/packages/dashboard-spec/build/default
+[0/2] Re-checking globbed directories...
+[1/25] Building CXX object CMakeFiles\dashboard_spec.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\Errors.cpp.obj
+[2/25] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_definition_pack_builder.cpp.obj
+[3/25] Building CXX object CMakeFiles\dashboard_spec.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\ImageHeader.cpp.obj
+[4/25] Building CXX object CMakeFiles\dashboard_spec.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\DocumentView.cpp.obj
+[5/25] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_bounded_parse.cpp.obj
+[6/25] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_malformed_harness.cpp.obj
+[7/25] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_corpus.cpp.obj
+[8/25] Building CXX object CMakeFiles\telemetry-decode-jsonl.dir\tools\telemetry-decode-jsonl.cpp.obj
+[9/25] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_rule_tree_builder.cpp.obj
+[10/25] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_package_reader.cpp.obj
+[11/25] Building CXX object CMakeFiles\dashboard_spec.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\PathResolver.cpp.obj
+[12/25] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_semantic.cpp.obj
+[13/25] Building CXX object CMakeFiles\dashboard-spec-validate.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\validate_main.cpp.obj
+[14/25] Building CXX object CMakeFiles\dashboard_spec.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\BoundedParse.cpp.obj
+[15/25] Building CXX object CMakeFiles\dashboard_spec.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\RuleTreeBuilder.cpp.obj
+[16/25] Building CXX object CMakeFiles\dashboard_spec.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\DefinitionPackBuilder.cpp.obj
+[17/25] Building CXX object CMakeFiles\dashboard-spec-tests.dir\tests\test_schema.cpp.obj
+[18/25] Building CXX object CMakeFiles\dashboard_spec.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\SemanticPass.cpp.obj
+[19/25] Building CXX object CMakeFiles\dashboard_spec.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\PackageReader.cpp.obj
+[20/25] Building CXX object CMakeFiles\dashboard_spec.dir\C_\Users\Vincent\UnRealDash\runtime\UnRealDash\Source\DashboardSpec\Private\SchemaValidation.cpp.obj
+[21/25] Linking CXX static library dashboard_spec.lib
+[22/25] Linking CXX executable dashboard-spec-validate.exe
+[23/25] Linking CXX executable telemetry-decode-jsonl.exe
+[24/25] Linking CXX executable dashboard-spec-tests.exe

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctest binary="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\build\default\dashboard-spec-tests" version="2.4.12">
+  <Options order_by="file" rand_seed="0" first="0" last="4294967295" abort_after="0" subcase_filter_levels="2147483647" case_sensitive="false" no_throw="false" no_skip="false"/>
+  <TestSuite>
+    <TestCase name="bounded SAX parse rejects duplicates with escaped pointers" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_bounded_parse.cpp" line="2">
+      <OverallResultsAsserts successes="9" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="long escaped error pointers are not truncated" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_bounded_parse.cpp" line="18">
+      <OverallResultsAsserts successes="2" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="error values preserve embedded zero bytes" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_bounded_parse.cpp" line="26">
+      <OverallResultsAsserts successes="2" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="every document agrees with its expected code and pointer" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_corpus.cpp" line="2">
+      <OverallResultsAsserts successes="251" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="3.1 fixture pack validates against the definition pack schema" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_definition_pack_builder.cpp" line="17">
+      <OverallResultsAsserts successes="1" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="3.1 builder output equals the literal test pack" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_definition_pack_builder.cpp" line="21">
+      <OverallResultsAsserts successes="1014" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="3.1 builder rejects a field with no acquisition" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_definition_pack_builder.cpp" line="57">
+      <OverallResultsAsserts successes="4" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="3.1 builder rejects a field running past the payload length" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_definition_pack_builder.cpp" line="67">
+      <OverallResultsAsserts successes="3" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="3.1 builder maps type to width and applies the per-value signedness override" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_definition_pack_builder.cpp" line="76">
+      <OverallResultsAsserts successes="4" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="builder rejects missing role and unknown unit and clears previous output" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_definition_pack_builder.cpp" line="84">
+      <OverallResultsAsserts successes="10" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="Load preserves Read verdicts and archive-directory pointer parity" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_loaded_package.cpp" line="19">
+      <OverallResultsAsserts successes="241" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="loaded content owns its lifetime and move preserves spans" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_loaded_package.cpp" line="67">
+      <OverallResultsAsserts successes="40" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="directory assets are lazy bounded cached and reject changed links" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_loaded_package.cpp" line="124">
+      <OverallResultsAsserts successes="14" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="Read does not decompress unreferenced archive assets" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_loaded_package.cpp" line="168">
+      <OverallResultsAsserts successes="14" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="asset allocation failure is an error value and can be retried" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_loaded_package.cpp" line="208">
+      <OverallResultsAsserts successes="5" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="malformed document harness is bounded" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_malformed_harness.cpp" line="5">
+      <OverallResultsAsserts successes="1000007" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="package cases agree in archive and directory forms" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_package_reader.cpp" line="4">
+      <OverallResultsAsserts successes="71" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="unpacked hard links cannot reach the asset reader" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_package_reader.cpp" line="23">
+      <OverallResultsAsserts successes="5" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="Unicode case aliases share the same resolver key" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_package_reader.cpp" line="49">
+      <OverallResultsAsserts successes="2" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="central directory limits reject tiny declarations before miniz" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_package_reader.cpp" line="56">
+      <OverallResultsAsserts successes="2" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="ZIP64 locators are checked without legacy sentinels" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_package_reader.cpp" line="63">
+      <OverallResultsAsserts successes="4" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="builder preserves node pointers and contiguous immediate children" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_rule_tree_builder.cpp" line="3">
+      <OverallResultsAsserts successes="14" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="all whitelist operations and maximum tree convert" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_rule_tree_builder.cpp" line="22">
+      <OverallResultsAsserts successes="281" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="error vocabulary and stable values agree with Python" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_schema.cpp" line="3">
+      <OverallResultsAsserts successes="46" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="schema rejects extra fields and unknown operations" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_schema.cpp" line="26">
+      <OverallResultsAsserts successes="6" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="hierarchy and inherited policies are checked" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_semantic.cpp" line="6">
+      <OverallResultsAsserts successes="12" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="semantic public entry enforces the validation pipeline" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_semantic.cpp" line="17">
+      <OverallResultsAsserts successes="7" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="semantic field guards survive a mistakenly widened schema" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_semantic.cpp" line="29">
+      <OverallResultsAsserts successes="12" failures="0" test_case_success="true"/>
+    </TestCase>
+  </TestSuite>
+  <OverallResultsAsserts successes="1002083" failures="0"/>
+  <OverallResultsTestCases successes="28" failures="0" skipped="0"/>
+</doctest>

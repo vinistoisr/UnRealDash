@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctest binary="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\build\default\dashboard-spec-tests" version="2.4.12">
+  <Options order_by="file" rand_seed="0" first="0" last="4294967295" abort_after="0" subcase_filter_levels="2147483647" case_sensitive="false" no_throw="false" no_skip="false"/>
+  <TestSuite>
+    <TestCase name="bounded SAX parse rejects duplicates with escaped pointers" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_bounded_parse.cpp" line="2">
+      <OverallResultsAsserts successes="9" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="long escaped error pointers are not truncated" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_bounded_parse.cpp" line="18">
+      <OverallResultsAsserts successes="2" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="error values preserve embedded zero bytes" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_bounded_parse.cpp" line="26">
+      <OverallResultsAsserts successes="2" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="every document agrees with its expected code and pointer" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_corpus.cpp" line="2">
+      <OverallResultsAsserts successes="251" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="malformed document harness is bounded" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_malformed_harness.cpp" line="5">
+      <OverallResultsAsserts successes="1000007" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="package cases agree in archive and directory forms" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_package_reader.cpp" line="4">
+      <Expression success="false" type="CHECK" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_package_reader.cpp" line="15">
+        <Original>
+          ds::Text(c["code"]) == ds::CodeName(packed.code)
+        </Original>
+        <Expanded>
+           == 00007FF70DDC8760
+        </Expanded>
+        <Info>
+          windows-attributes-entry
+        </Info>
+        <Info>
+          /entries/assets~1shared.png assets/shared.png
+        </Info>
+      </Expression>
+      <OverallResultsAsserts successes="70" failures="1" test_case_success="false"/>
+    </TestCase>
+    <TestCase name="unpacked hard links cannot reach the asset reader" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_package_reader.cpp" line="23">
+      <OverallResultsAsserts successes="5" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="Unicode case aliases share the same resolver key" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_package_reader.cpp" line="49">
+      <OverallResultsAsserts successes="2" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="central directory limits reject tiny declarations before miniz" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_package_reader.cpp" line="56">
+      <OverallResultsAsserts successes="2" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="ZIP64 locators are checked without legacy sentinels" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_package_reader.cpp" line="63">
+      <OverallResultsAsserts successes="4" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="builder preserves node pointers and contiguous immediate children" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_rule_tree_builder.cpp" line="3">
+      <OverallResultsAsserts successes="14" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="all whitelist operations and maximum tree convert" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_rule_tree_builder.cpp" line="22">
+      <OverallResultsAsserts successes="281" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="error vocabulary and stable values agree with Python" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_schema.cpp" line="3">
+      <OverallResultsAsserts successes="45" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="schema rejects extra fields and unknown operations" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_schema.cpp" line="26">
+      <OverallResultsAsserts successes="6" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="hierarchy and inherited policies are checked" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_semantic.cpp" line="6">
+      <OverallResultsAsserts successes="12" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="semantic public entry enforces the validation pipeline" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_semantic.cpp" line="17">
+      <OverallResultsAsserts successes="7" failures="0" test_case_success="true"/>
+    </TestCase>
+    <TestCase name="semantic field guards survive a mistakenly widened schema" filename="C:\Users\Vincent\UnRealDash\packages\dashboard-spec\tests\test_semantic.cpp" line="29">
+      <OverallResultsAsserts successes="12" failures="0" test_case_success="true"/>
+    </TestCase>
+  </TestSuite>
+  <OverallResultsAsserts successes="1000731" failures="1"/>
+  <OverallResultsTestCases successes="16" failures="1" skipped="0"/>
+</doctest>

@@ -8,9 +8,9 @@ from dashboard_spec.errors import CODES, Failure, LIMITS
 
 
 def test_vocabulary_and_limits_identical():
-    header = (ROOT / 'packages/dashboard-spec/include/dashboard_spec/Errors.h').read_text()
+    header = (ROOT / 'runtime/UnRealDash/Source/DashboardSpec/Public/dashboard_spec/Errors.h').read_text()
     assert {name: int(value) for name, value in re.findall(r'\b(E_[A-Z_]+)\s*=\s*(\d+)', header)} == CODES
-    limits = (ROOT / 'packages/dashboard-spec/include/dashboard_spec/Limits.h').read_text()
+    limits = (ROOT / 'runtime/UnRealDash/Source/DashboardSpec/Public/dashboard_spec/Limits.h').read_text()
     assert dict((name, int(number)) for name, number in re.findall(r'size_t (\w+) = (\d+)', limits)) == LIMITS
 
 
