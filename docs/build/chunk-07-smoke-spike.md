@@ -87,7 +87,7 @@ Codex runs these and pastes the output verbatim:
 
 ```
 pwsh -NoProfile -File scripts/doctor.ps1 -Profile workstation; echo "exit=$LASTEXITCODE"
-pwsh -NoProfile -Command "Invoke-Pester -Path scripts/tests -Output Detailed"
+pwsh -NoProfile -Command "Invoke-Pester -Path scripts/tests -CI -Output Detailed"
 pwsh -NoProfile -File scripts/package-android.ps1 -Rhi vulkan -WhatIf -DoctorScript scripts/tests/fakes/doctor-pass.ps1
 pwsh -NoProfile -File scripts/package-android.ps1 -Rhi gles -WhatIf -DoctorScript scripts/tests/fakes/doctor-pass.ps1
 pwsh -NoProfile -File scripts/package-android.ps1 -WhatIf -DoctorScript scripts/tests/fakes/doctor-pass.ps1; echo "exit=$LASTEXITCODE"

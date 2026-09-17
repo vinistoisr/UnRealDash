@@ -147,7 +147,7 @@ Keep the nine existing preview cases passing unchanged.
 
 ## Pass/fail criteria
 
-1. `pwsh -NoProfile -Command "Invoke-Pester -Path scripts/tests -Output Detailed"` passes with the nine original cases plus the seven new ones, zero failures.
+1. `pwsh -NoProfile -Command "Invoke-Pester -Path scripts/tests -CI -Output Detailed"` passes with the nine original cases plus the seven new ones, zero failures.
 2. `powershell.exe -NoProfile -File scripts/package-windows.ps1 -WhatIf -DoctorScript scripts/tests/fakes/doctor-pass.ps1` runs the doctor and prints the preview under **Windows PowerShell 5.1**, exit 0.
 3. Same for `scripts/package-android.ps1 -Rhi vulkan`, exit 0, and without `-Rhi`, exit 1.
 4. `pwsh -NoProfile -File scripts/doctor.ps1 -Profile workstation` still exits 0.
@@ -158,7 +158,7 @@ Keep the nine existing preview cases passing unchanged.
 Run these and paste the output verbatim:
 
 ```
-pwsh -NoProfile -Command "Invoke-Pester -Path scripts/tests -Output Detailed"
+pwsh -NoProfile -Command "Invoke-Pester -Path scripts/tests -CI -Output Detailed"
 powershell.exe -NoProfile -File scripts/package-windows.ps1 -WhatIf -DoctorScript scripts/tests/fakes/doctor-pass.ps1; echo "exit=$LASTEXITCODE"
 powershell.exe -NoProfile -File scripts/package-android.ps1 -Rhi vulkan -WhatIf -DoctorScript scripts/tests/fakes/doctor-pass.ps1; echo "exit=$LASTEXITCODE"
 powershell.exe -NoProfile -File scripts/package-android.ps1 -WhatIf -DoctorScript scripts/tests/fakes/doctor-pass.ps1; echo "exit=$LASTEXITCODE"

@@ -137,7 +137,7 @@ Codex runs these and pastes the output verbatim. Codex has no engine, no Android
 cd packages/dashboard-spec && cmake --preset default && cmake --build --preset default
 cd packages/dashboard-spec && ctest --preset default --output-on-failure
 pwsh -NoProfile -File scripts/doctor.ps1 -Profile workstation; echo "exit=$LASTEXITCODE"
-pwsh -NoProfile -Command "Invoke-Pester -Path scripts/tests -Output Detailed"
+pwsh -NoProfile -Command "Invoke-Pester -Path scripts/tests -CI -Output Detailed"
 git status --short
 ```
 

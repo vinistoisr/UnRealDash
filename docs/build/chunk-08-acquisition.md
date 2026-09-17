@@ -321,7 +321,7 @@ cd packages/signal-core && cmake --preset default && cmake --build --preset defa
 cd packages/signal-core && ctest --preset default --output-on-failure
 packages/signal-core/build/default/signal-core-tests.exe "--source-file=*test_threading_stress.cpp" --reporters=xml
 pwsh -NoProfile -File scripts/doctor.ps1 -Profile workstation; echo "exit=$LASTEXITCODE"
-pwsh -NoProfile -Command "Invoke-Pester -Path scripts/tests -Output Detailed"
+pwsh -NoProfile -Command "Invoke-Pester -Path scripts/tests -CI -Output Detailed"
 git status --short
 ```
 
