@@ -1,0 +1,6 @@
+User ANDROID_HOME=
+User ANDROID_SDK_ROOT=
+User JAVA_HOME=
+User NDKROOT=
+User NDK_ROOT=
+Machine LINUX_MULTIARCH_ROOT=C:\UnrealToolchains\v26_clang-20.1.8-rockylinux8\

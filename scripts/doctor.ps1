@@ -194,16 +194,20 @@ function Test-Row($Row, $Pins) {
                 $version = Get-Content (Join-Path $engine 'Build/Build.version') -Raw | ConvertFrom-Json
                 $found = "$($version.MajorVersion).$($version.MinorVersion).$($version.PatchVersion)"
                 $ok = $found -eq $Row.version -and (Test-Path (Join-Path $engine 'Build/InstalledBuild.txt'))
-                # A target platform is installed under Platforms/<name> (restricted platforms) or
-                # Binaries/Win64/<name> (the rest, Linux among them). pins.json lists the candidates.
-                foreach ($platform in $Row.platforms) {
-                    $markers = @($Row.platform_markers.$platform)
-                    if ($markers.Count -eq 0) { $markers = @("Platforms/$platform") }
-                    $present = $false
-                    foreach ($marker in $markers) {
-                        if (Test-Path (Join-Path $engine $marker)) { $present = $true; break }
-                    }
-                    if (-not $present) { $ok = $false; $found += "; $platform missing" }
+            }
+            'engine-platform' {
+                # Ask UnrealBuildTool whether it can build this target. A launcher install ships the
+                # editor's target-platform modules for platforms whose build support was never
+                # downloaded, so the file layout cannot answer this and the build fails much later.
+                $batch = Join-Path $Pins.engine.root 'Engine/Build/BatchFiles/Build.bat'
+                if (-not (Test-Path -LiteralPath $batch)) { throw "engine Build.bat not found at $batch" }
+                $output = Invoke-Tool $batch @('-Mode=ValidatePlatforms', "-Platforms=$($Row.platform)")
+                $match = [regex]::Match($output, "##PlatformValidate:\s+$($Row.platform)\s+(\w+)")
+                $state = $match.Groups[1].Value
+                $found = if ($state) { "UnrealBuildTool reports $($Row.platform) $state" } else { $output }
+                $ok = $state -eq 'VALID'
+                if (-not $ok -and $state -eq 'INVALID') {
+                    $found += "; add $($Row.platform) as a target platform in the Epic Games Launcher"
                 }
             }
             'android-sdk' {
@@ -275,7 +279,10 @@ try {
     $results = @($selected | ForEach-Object { Test-Row $_ $pins })
     Write-Output "Doctor profile: $mode"
     $columns = @(
-        @{ Expression = 'Component'; Width = 22 }
+        # Wide enough for the longest component name plus a separating space. A name that overflows
+        # this width silently merges the first two columns in the rendered table, so a test asserts
+        # every configured name fits.
+        @{ Expression = 'Component'; Width = 24 }
         @{ Expression = 'Expected'; Width = 57 }
         @{ Expression = 'Found'; Width = 78 }
         @{ Expression = 'Status'; Width = 6 }

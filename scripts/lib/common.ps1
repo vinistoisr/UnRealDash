@@ -1,5 +1,8 @@
 function Invoke-FoundationScript {
-    param([string]$Profile, [string]$Platform, [string]$DoctorScript, [bool]$Preview)
+    # $CommandLine, when supplied, is the command this script would actually run, so -WhatIf previews
+    # that rather than a packaging line the script never invokes. The packaging scripts pass nothing
+    # and keep the RunUAT preview they were written with.
+    param([string]$Profile, [string]$Platform, [string]$DoctorScript, [bool]$Preview, [string]$CommandLine)
     # This guard is duplicated on purpose so each entry point fails clearly under Windows PowerShell 5.1.
     if ($PSVersionTable.PSVersion.Major -lt 7) {
         Write-Host 'PowerShell 7 or later is required. Run this script with pwsh.'
@@ -17,6 +20,7 @@ function Invoke-FoundationScript {
         $uat = Join-Path $pins.engine.root 'Engine/Build/BatchFiles/RunUAT.bat'
         $project = Join-Path $root 'runtime/UnRealDash/UnRealDash.uproject'
         $command = '& "{0}" BuildCookRun -project="{1}" -noP4 -platform={2} -clientconfig=Development -build -cook -stage -pak -archive' -f $uat, $project, $Platform
+        if ($CommandLine) { $command = $CommandLine }
         if ($Preview) { Write-Host $command; return 0 }
         Write-Host 'Foundation skeleton only. Use -WhatIf to preview the package command. Execution is not implemented.'
         return 1

@@ -120,7 +120,7 @@
     {
       "id": "engine",
       "component": "Unreal Engine",
-      "expected": "5.8.2; Launcher binary; Android and Linux platforms",
+      "expected": "5.8.2, Launcher binary install",
       "detect": "engine",
       "profiles": [
         "workstation",
@@ -129,20 +129,27 @@
         "device"
       ],
       "version": "5.8.2",
-      "platforms": [
-        "Android",
-        "Linux"
+      "note": "Target platform support is a separate optional download and is checked per profile by the engine-android and engine-linux rows, which ask UnrealBuildTool rather than guessing from file layout. The editor ships target-platform modules for platforms it cannot build."
+    },
+    {
+      "id": "engine-android",
+      "component": "Engine Android support",
+      "detect": "engine-platform",
+      "expected": "UnrealBuildTool reports Android VALID",
+      "profiles": [
+        "android"
       ],
-      "platform_markers": {
-        "Android": [
-          "Platforms/Android",
-          "Binaries/Win64/Android"
-        ],
-        "Linux": [
-          "Binaries/Win64/Linux",
-          "Platforms/Linux"
-        ]
-      }
+      "platform": "Android"
+    },
+    {
+      "id": "engine-linux",
+      "component": "Engine Linux support",
+      "detect": "engine-platform",
+      "expected": "UnrealBuildTool reports Linux VALID",
+      "profiles": [
+        "linux"
+      ],
+      "platform": "Linux"
     },
     {
       "id": "studio",

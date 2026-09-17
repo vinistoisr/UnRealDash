@@ -1,0 +1,136 @@
+Using bundled DotNet SDK version: 10.0 win-x64
+Running UnrealBuildTool: dotnet "..\..\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.dll" -Mode=ValidatePlatforms -OutputSDKs  -AllPlatforms  -project="C:/Users/Vincent/UnRealDash/runtime/UnRealDash/UnRealDash.uproject" -log="C:/Users/Vincent/UnRealDash/runtime/UnRealDash/Saved/Logs/AutoSDKInfo.txt" -verbose -timestamps
+[2026.09.17-05.04.25:137][  0]LogInit: Display: Running engine for game: UnRealDash
+[2026.09.17-05.04.25:137][  0]LogCore: Display: Requested channels: 'cpu,gpu,frame,log,bookmark,screenshot,region'
+[2026.09.17-05.04.25:137][  0]LogTrace: Display: Control listening on port 1985
+[2026.09.17-05.04.25:137][  0]LogCsvProfiler: Display: Metadata set : platform="Windows"
+[2026.09.17-05.04.25:137][  0]LogCsvProfiler: Display: Metadata set : config="Development"
+[2026.09.17-05.04.25:137][  0]LogCsvProfiler: Display: Metadata set : buildversion="++UE5+Release-5.8-CL-56702186"
+[2026.09.17-05.04.25:137][  0]LogCsvProfiler: Display: Metadata set : engineversion="5.8.2-56702186+++UE5+Release-5.8"
+[2026.09.17-05.04.25:137][  0]LogCsvProfiler: Display: Metadata set : enginereleaseversion="5.8.2"
+[2026.09.17-05.04.25:137][  0]LogCsvProfiler: Display: Metadata set : os="Windows 11 (25H2) [10.0.26220.9472] "
+[2026.09.17-05.04.25:137][  0]LogCsvProfiler: Display: Metadata set : cpu="GenuineIntel|13th Gen Intel(R) Core(TM) i7-13700"
+[2026.09.17-05.04.25:137][  0]LogCsvProfiler: Display: Metadata set : pgoenabled="0"
+[2026.09.17-05.04.25:137][  0]LogCsvProfiler: Display: Metadata set : pgoprofilingenabled="0"
+[2026.09.17-05.04.25:137][  0]LogCsvProfiler: Display: Metadata set : ltoenabled="0"
+[2026.09.17-05.04.25:137][  0]LogCsvProfiler: Display: Metadata set : asan="0"
+[2026.09.17-05.04.25:137][  0]LogCsvProfiler: Display: Metadata set : mergedmodules="0"
+[2026.09.17-05.04.25:137][  0]LogCsvProfiler: Display: Metadata set : compacttset="0"
+[2026.09.17-05.04.25:137][  0]LogCsvProfiler: Display: Metadata set : commandline="" C:\Users\Vincent\UnRealDash/runtime/UnRealDash/UnRealDash.uproject -run=SignalCoreSmoke -unattended -nopause -nosplash""
+[2026.09.17-05.04.25:137][  0]LogCsvProfiler: Display: Metadata set : loginid="f0ba5f724863a69fcee6fc87e717ef17"
+[2026.09.17-05.04.25:137][  0]LogCsvProfiler: Display: Metadata set : llm="0"
+[2026.09.17-05.04.25:137][  0]LogCsvProfiler: Display: Metadata set : zenstreaming="0"
+[2026.09.17-05.04.25:137][  0]LogCsvProfiler: Display: Metadata set : systemresolution.resx="1280"
+[2026.09.17-05.04.25:137][  0]LogCsvProfiler: Display: Metadata set : systemresolution.resy="720"
+[2026.09.17-05.04.25:137][  0]LogAudio: Display: Audio Device Manager not initializing due to all audio being disabled. If this is not intentional, please check command line arguments for "-nosound".
+[2026.09.17-05.04.25:137][  0]LogConfig: Display: Loading Android ini files took 0.05 seconds
+[2026.09.17-05.04.25:137][  0]LogConfig: Display: Loading IOS ini files took 0.05 seconds
+[2026.09.17-05.04.25:137][  0]LogConfig: Display: Loading VulkanPC ini files took 0.05 seconds
+[2026.09.17-05.04.25:137][  0]LogConfig: Display: Loading Mac ini files took 0.06 seconds
+[2026.09.17-05.04.25:137][  0]LogConfig: Display: Loading VisionOS ini files took 0.06 seconds
+[2026.09.17-05.04.25:137][  0]LogConfig: Display: Loading TVOS ini files took 0.07 seconds
+[2026.09.17-05.04.25:137][  0]LogConfig: Display: Loading Unix ini files took 0.07 seconds
+[2026.09.17-05.04.25:137][  0]LogConfig: Display: Loading Windows ini files took 0.07 seconds
+[2026.09.17-05.04.25:137][  0]LogConfig: Display: Loading Linux ini files took 0.07 seconds
+[2026.09.17-05.04.25:137][  0]LogAsyncCompilation: Display: MemorySharingInfo: UsedMemory=335MiB, MaxMemoryAvailable=74828MiB
+[2026.09.17-05.04.25:137][  0]RenderDocPlugin: Display: RenderDoc plugin will not be loaded. Use '-AttachRenderDoc' on the cmd line or enable 'renderdoc.AutoAttach' in the plugin settings.
+[2026.09.17-05.04.25:137][  0]LogAnalytics: Display: Provider StudioTelemetry.Provider.Log is disabled for this application
+[2026.09.17-05.04.25:137][  0]LogAnalytics: Display: Provider StudioTelemetry.Provider.CSV is disabled for this application
+[2026.09.17-05.04.25:137][  0]LogAnalytics: Display: Provider StudioTelemetry.Provider.Horde is disabled for this application
+[2026.09.17-05.04.25:137][  0]LogAnalytics: Display: Provider StudioTelemetry.Provider.Log is disabled for this application
+[2026.09.17-05.04.25:137][  0]LogAnalytics: Display: Provider StudioTelemetry.Provider.CSV is disabled for this application
+[2026.09.17-05.04.25:137][  0]LogAnalytics: Display: Provider StudioTelemetry.Provider.Horde is disabled for this application
+[2026.09.17-05.04.25:137][  0]LogSsl: Warning: Unable to open ROOT certificate store. Platform provided certificates will not be used
+[2026.09.17-05.04.25:137][  0]LogStreaming: Display: AsyncLoading2 - Created: Async Loading Thread: false, Async Post Load: false, Multithreaded: false
+[2026.09.17-05.04.25:137][  0]LogHAL: Display: Platform has ~ 64 GB [68263014400 / 68719476736 / 64], which maps to Largest [LargestMinGB=32, LargerMinGB=12, DefaultMinGB=8, SmallerMinGB=6, SmallestMinGB=0)
+[2026.09.17-05.04.25:137][  0]LogCsvProfiler: Display: Metadata set : extradevelopmentmemorymb="0"
+[2026.09.17-05.04.25:137][  0]LogObj: Display: Attempting to load config data for Default__DownlinkBandwidthManagerConfig before the Class has been constructed/registered/linked (likely during module loading or early startup). This will result in the load silently failing and should be fixed.
+[2026.09.17-05.04.25:412][  0]LogObj: Display: Attempting to load config data for Default__SlateThemeManager before the Class has been constructed/registered/linked (likely during module loading or early startup). This will result in the load silently failing and should be fixed.
+[2026.09.17-05.04.25:533][  0]LogCsvProfiler: Display: Metadata set : verbatimrhiname="Null"
+[2026.09.17-05.04.25:533][  0]LogCsvProfiler: Display: Metadata set : rhiname="Null"
+[2026.09.17-05.04.25:533][  0]LogCsvProfiler: Display: Metadata set : rhifeaturelevel="SM6"
+[2026.09.17-05.04.25:533][  0]LogCsvProfiler: Display: Metadata set : shaderplatform="PCD3D_SM6"
+[2026.09.17-05.04.25:533][  0]LogCsvProfiler: Display: Metadata set : gpu=""
+[2026.09.17-05.04.25:533][  0]LogCsvProfiler: Display: Metadata set : gpudriver=""
+[2026.09.17-05.04.25:538][  0]LogTextureFormatASTC: Display: ASTCEnc version 5.0.1 library loaded
+[2026.09.17-05.04.25:538][  0]LogTextureFormatManager: Display: Loaded Base TextureFormat: TextureFormatASTC
+[2026.09.17-05.04.25:538][  0]LogTextureFormatManager: Display: Loaded Base TextureFormat: TextureFormatDXT
+[2026.09.17-05.04.25:538][  0]LogTextureFormatManager: Display: Loaded Base TextureFormat: TextureFormatETC2
+[2026.09.17-05.04.25:538][  0]LogTextureFormatManager: Display: Loaded Base TextureFormat: TextureFormatIntelISPCTexComp
+[2026.09.17-05.04.25:538][  0]LogTextureFormatOodle: Display: Oodle Texture TFO init; latest sdk version = 2.9.16
+[2026.09.17-05.04.25:538][  0]LogTextureFormatOodle: Display: Oodle Texture loading DLL: oo2tex_win64_2.9.16.dll
+[2026.09.17-05.04.25:539][  0]LogTextureFormatManager: Display: Loaded Base TextureFormat: TextureFormatOodle
+[2026.09.17-05.04.25:539][  0]LogTextureFormatManager: Display: Loaded Base TextureFormat: TextureFormatUncompressed
+[2026.09.17-05.04.25:575][  0]LogTargetPlatformManager: Display: Failed to SetupSDK for platform 'Android'
+[2026.09.17-05.04.25:600][  0]LogTargetPlatformManager: Display: Failed to SetupSDK for platform 'IOS'
+[2026.09.17-05.04.25:624][  0]LogTargetPlatformManager: Display: Failed to SetupSDK for platform 'Linux'
+[2026.09.17-05.04.25:649][  0]LogTargetPlatformManager: Display: Failed to SetupSDK for platform 'Mac'
+[2026.09.17-05.04.25:650][  0]LogTargetPlatformManager: Display: Failed to SetupSDK for platform 'TVOS'
+[2026.09.17-05.04.25:675][  0]LogTargetPlatformManager: Display: Loaded TargetPlatform 'Windows'
+[2026.09.17-05.04.25:675][  0]LogTargetPlatformManager: Display: Loaded TargetPlatform 'WindowsEditor'
+[2026.09.17-05.04.25:675][  0]LogTargetPlatformManager: Display: Loaded TargetPlatform 'WindowsServer'
+[2026.09.17-05.04.25:675][  0]LogTargetPlatformManager: Display: Loaded TargetPlatform 'WindowsClient'
+[2026.09.17-05.04.25:675][  0]LogTargetPlatformManager: Display: Building Assets For WindowsEditor
+[2026.09.17-05.04.25:678][  0]LogAudioDebug: Display: Lib vorbis DLL was dynamically loaded.
+[2026.09.17-05.04.25:916][  0]LogDerivedDataCache: Display: ../../../Engine/DerivedDataCache/Compressed.ddp: Opened pak cache for reading. (1679 MiB)
+[2026.09.17-05.04.25:916][  0]LogZenServiceInstance: Warning: Skipping Zen config default=C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Data due to an invalid path
+[2026.09.17-05.04.25:916][  0]LogZenServiceInstance: Warning: Unable to determine a valid Zen data path
+[2026.09.17-05.04.25:916][  0]LogZenServiceInstance: Warning: Unreal Zen Storage Server is unable to determine a valid data path
+[2026.09.17-05.04.25:917][  0]LogZenServiceInstance: Display: Launching zen utility 'C:/Program Files/Epic Games/UE_5.8/Engine/Binaries/Win64/zen.exe service status'.
+[2026.09.17-05.04.26:022][  0]LogZenServiceInstance: Display: Removing installed plugin 'AndroidPortForwarder2' as it is no longer referenced by any workspace
+[2026.09.17-05.04.26:022][  0]LogZenServiceInstance: Display: Writing plugin version info to 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install/zen_plugin_versions.json'
+[2026.09.17-05.04.26:023][  0]LogZenServiceInstance: Display: Read zen version cache file from 'C:/Users/Vincent/AppData/Local/UnrealEngine/5.8/Saved/Zen/zen.version', version: '5.8.13-202605190912-windows-x64-release-094f62c2'
+[2026.09.17-05.04.26:023][  0]LogZenServiceInstance: Display: Read zen version cache file from 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install/zen.version', version: '5.8.13-202605190912-windows-x64-release-094f62c2'
+[2026.09.17-05.04.26:023][  0]LogZenServiceInstance: Display: Installed service at 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe' is up to date
+[2026.09.17-05.04.26:034][  0]LogZenServiceInstance: Display: Writing plugin configuration to 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install/zen_plugins_v1.json'
+[2026.09.17-05.04.26:034][  0]LogZenServiceInstance: Display: Lock file '.lock' is not active, nothing to do
+[2026.09.17-05.04.26:034][  0]LogZenServiceInstance: Display: Requesting shut down of zenserver process 42104 runnning on effective port 8558
+[2026.09.17-05.04.26:280][  0]LogZenServiceInstance: Display: Successfully shut down zenserver process with pid 42104
+[2026.09.17-05.04.26:280][  0]LogZenServiceInstance: Display: Launching executable 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe', working dir 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install', data dir '', args '--port 8558 --data-dir  --no-sentry --http-forceloopback  --child-id Zen_8116_Startup'
+[2026.09.17-05.04.31:283][  0]LogZenServiceInstance: Warning: Failed launch service using executable 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe' on port 8558
+[2026.09.17-05.04.31:784][  0]LogZenServiceInstance: Display: Lock file '.lock' is not active, nothing to do
+[2026.09.17-05.04.31:784][  0]LogZenServiceInstance: Display: Launching executable 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe', working dir 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install', data dir '', args '--port 8558 --data-dir  --no-sentry --http-forceloopback  --child-id Zen_8116_Startup'
+[2026.09.17-05.04.36:801][  0]LogZenServiceInstance: Warning: Failed launch service using executable 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe' on port 8558
+[2026.09.17-05.04.37:302][  0]LogZenServiceInstance: Display: Lock file '.lock' is not active, nothing to do
+[2026.09.17-05.04.37:302][  0]LogZenServiceInstance: Display: Launching executable 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe', working dir 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install', data dir '', args '--port 8558 --data-dir  --no-sentry --http-forceloopback  --child-id Zen_8116_Startup'
+[2026.09.17-05.04.42:305][  0]LogZenServiceInstance: Warning: Failed launch service using executable 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe' on port 8558
+[2026.09.17-05.04.42:806][  0]LogZenServiceInstance: Display: Lock file '.lock' is not active, nothing to do
+[2026.09.17-05.04.42:806][  0]LogZenServiceInstance: Display: Launching executable 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe', working dir 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install', data dir '', args '--port 8558 --data-dir  --no-sentry --http-forceloopback  --child-id Zen_8116_Startup'
+[2026.09.17-05.04.47:808][  0]LogZenServiceInstance: Warning: Failed launch service using executable 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe' on port 8558
+[2026.09.17-05.04.48:309][  0]LogZenServiceInstance: Display: Lock file '.lock' is not active, nothing to do
+[2026.09.17-05.04.48:309][  0]LogZenServiceInstance: Display: Launching executable 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe', working dir 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install', data dir '', args '--port 8558 --data-dir  --no-sentry --http-forceloopback  --child-id Zen_8116_Startup'
+[2026.09.17-05.04.53:311][  0]LogZenServiceInstance: Warning: Failed launch service using executable 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe' on port 8558
+[2026.09.17-05.04.53:812][  0]LogZenServiceInstance: Display: Lock file '.lock' is not active, nothing to do
+[2026.09.17-05.04.53:812][  0]LogZenServiceInstance: Display: Launching executable 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe', working dir 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install', data dir '', args '--port 8558 --data-dir  --no-sentry --http-forceloopback  --child-id Zen_8116_Startup'
+[2026.09.17-05.04.58:815][  0]LogZenServiceInstance: Warning: Failed launch service using executable 'C:/Users/Vincent/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe' on port 8558
+[2026.09.17-05.04.58:815][  0]LogZenServiceInstance: Warning: Local ZenServer AutoLaunch initialization timed out waiting for service to become healthy, waited 32.781 seconds
+[2026.09.17-05.05.01:050][  0]LogDerivedDataCache: Display: ZenLocal: Unable to reach ZenServer HTTP service at localhost with namespace ue.ddc. ErrorCode: Connect, Error: , Status: 0, Response: .
+[2026.09.17-05.05.01:050][  0]LogDerivedDataCache: Display: ZenLocal: Readiness check failed. It will be deactivated until responsiveness improves. If this is consistent, consider disabling this cache store through the use of the '-ddc=NoZenLocalFallback' or '-ddc=InstalledNoZenLocalFallback' commandline arguments.
+[2026.09.17-05.05.01:052][  0]LogDerivedDataCache: Warning: C:/Users/Vincent/AppData/Local/UnrealEngine/Common/DerivedDataCache: Failed to write to C:/Users/Vincent/AppData/Local/UnrealEngine/Common/DerivedDataCache/TestData/1DD74003448EF0465E760EBC58D6BE74/TestData/0/TestData_4kb.dat. WriteError: 3 (The system cannot find the path specified.)
+[2026.09.17-05.05.01:053][  0]LogDerivedDataCache: Display: C:/Users/Vincent/AppData/Local/UnrealEngine/Common/DerivedDataCache: Performance: Latency=0.04ms. RandomReadSpeed=1404.57MBs, RandomWriteSpeed=0.00MBs. Assigned SpeedClass 'Local'
+[2026.09.17-05.05.01:053][  0]LogWindows: Error: appError called: Fatal error: [File:D:\build\++UE5\Sync\Engine\Source\Developer\DerivedDataCache\Private\DerivedDataBackends.cpp] [Line: 813] 
+Unable to use cache graph 'Installed' because it has no writable nodes available. Add -DDC-ForceMemoryCache to the command line to bypass this if you need access to the editor settings to fix the cache configuration.
+
+
+
+
+
+[2026.09.17-05.05.01:431][  0]LogWindows: Error: === Critical error: ===
+[2026.09.17-05.05.01:431][  0]LogWindows: Error: 
+[2026.09.17-05.05.01:431][  0]LogWindows: Error: Fatal error: [File:D:\build\++UE5\Sync\Engine\Source\Developer\DerivedDataCache\Private\DerivedDataBackends.cpp] [Line: 813] 
+[2026.09.17-05.05.01:431][  0]LogWindows: Error: Unable to use cache graph 'Installed' because it has no writable nodes available. Add -DDC-ForceMemoryCache to the command line to bypass this if you need access to the editor settings to fix the cache configuration.
+[2026.09.17-05.05.01:431][  0]LogWindows: Error: 
+[2026.09.17-05.05.01:431][  0]LogWindows: Error: 
+[2026.09.17-05.05.01:431][  0]LogWindows: Error: [Callstack] 0x00007ffa2a4d604a UnrealEditor-DerivedDataCache.dll!UnknownFunction []
+[2026.09.17-05.05.01:431][  0]LogWindows: Error: [Callstack] 0x00007ffa2a19378c UnrealEditor-DerivedDataCache.dll!UnknownFunction []
+[2026.09.17-05.05.01:431][  0]LogWindows: Error: [Callstack] 0x00007ffa2a1bbf8c UnrealEditor-DerivedDataCache.dll!UnknownFunction []
+[2026.09.17-05.05.01:431][  0]LogWindows: Error: [Callstack] 0x00007ffa2a1cc378 UnrealEditor-DerivedDataCache.dll!UnknownFunction []
+[2026.09.17-05.05.01:431][  0]LogWindows: Error: [Callstack] 0x00007ff668ced062 UnrealEditor-Cmd.exe!UnknownFunction []
+[2026.09.17-05.05.01:431][  0]LogWindows: Error: [Callstack] 0x00007ff668cdc263 UnrealEditor-Cmd.exe!UnknownFunction []
+[2026.09.17-05.05.01:431][  0]LogWindows: Error: [Callstack] 0x00007ff668cdc5ba UnrealEditor-Cmd.exe!UnknownFunction []
+[2026.09.17-05.05.01:431][  0]LogWindows: Error: [Callstack] 0x00007ff668ce1256 UnrealEditor-Cmd.exe!UnknownFunction []
+[2026.09.17-05.05.01:431][  0]LogWindows: Error: [Callstack] 0x00007ff668cf5c74 UnrealEditor-Cmd.exe!UnknownFunction []
+[2026.09.17-05.05.01:431][  0]LogWindows: Error: [Callstack] 0x00007ff668cf838a UnrealEditor-Cmd.exe!UnknownFunction []
+[2026.09.17-05.05.01:431][  0]LogWindows: Error: [Callstack] 0x00007ffb215acdf7 KERNEL32.DLL!UnknownFunction []
+[2026.09.17-05.05.01:431][  0]LogWindows: Error: 
+exit=3

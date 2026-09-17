@@ -1,0 +1,35 @@
+Internal ctest changing into directory: C:/Users/Vincent/UnRealDash/packages/signal-core/build/default
+Test project C:/Users/Vincent/UnRealDash/packages/signal-core/build/default
+      Start  1: smoke-subset
+ 1/14 Test  #1: smoke-subset .....................   Passed    0.01 sec
+      Start  2: test_binary_telemetry_v1.cpp
+ 2/14 Test  #2: test_binary_telemetry_v1.cpp .....   Passed    0.30 sec
+      Start  3: test_definition_pack.cpp
+ 3/14 Test  #3: test_definition_pack.cpp .........   Passed    0.01 sec
+      Start  4: test_heartbeat_and_held.cpp
+ 4/14 Test  #4: test_heartbeat_and_held.cpp ......   Passed    0.01 sec
+      Start  5: test_interpolator.cpp
+ 5/14 Test  #5: test_interpolator.cpp ............   Passed    0.01 sec
+      Start  6: test_recording.cpp
+ 6/14 Test  #6: test_recording.cpp ...............   Passed    0.05 sec
+      Start  7: test_registry.cpp
+ 7/14 Test  #7: test_registry.cpp ................   Passed    0.01 sec
+      Start  8: test_rule_engine.cpp
+ 8/14 Test  #8: test_rule_engine.cpp .............   Passed    0.01 sec
+      Start  9: test_rule_state.cpp
+ 9/14 Test  #9: test_rule_state.cpp ..............   Passed    0.01 sec
+      Start 10: test_sample.cpp
+10/14 Test #10: test_sample.cpp ..................   Passed    0.01 sec
+      Start 11: test_scenarios.cpp
+11/14 Test #11: test_scenarios.cpp ...............   Passed    0.12 sec
+      Start 12: test_snapshot_exchange.cpp
+12/14 Test #12: test_snapshot_exchange.cpp .......   Passed    0.02 sec
+      Start 13: test_threading_stress.cpp
+13/14 Test #13: test_threading_stress.cpp ........   Passed    0.16 sec
+      Start 14: test_units.cpp
+14/14 Test #14: test_units.cpp ...................   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 14
+
+Total Test time (real) =   0.75 sec
+exit=0

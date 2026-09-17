@@ -1,0 +1,67 @@
+
+Running tests from 1 files.
+[-] C:\Users\Vincent\UnRealDash\scripts\tests\Foundation.Tests.ps1 failed with:
+System.Management.Automation.RuntimeException: Framework failed:
+Result 1 - Error 1:Exception: System.Exception: Was not able to create a Pester Registry key for TestRegistry at
+'Microsoft.PowerShell.Core\Registry::HKEY_CURRENT_USER\Software\Pester' System.Security.SecurityException: Requested
+registry access is not allowed.    at Microsoft.Win32.RegistryKey.OpenSubKey(String name, Boolean writable)    at
+Microsoft.PowerShell.Commands.RegistryWrapper.OpenSubKey(String name, Boolean writable)    at
+Microsoft.PowerShell.Commands.RegistryProvider.GetRegkeyForPath(String path, Boolean writeAccess)    at
+Microsoft.PowerShell.Commands.RegistryProvider.GetRegkeyForPathWriteIfError(String path, Boolean writeAccess)
+
+at Get-TempRegistry, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 16396
+at New-RandomTempRegistry, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 23780
+at New-TestRegistry, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 23686
+at <ScriptBlock>, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 23855
+at <ScriptBlock>, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 2097
+at <ScriptBlock>, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 2071
+at Invoke-ScriptBlock, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 2260
+at Invoke-Block, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 843
+at <ScriptBlock>, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 1710
+at <ScriptBlock>, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.ScriptScope.ps1: line 9
+at <ScriptBlock>, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 3459
+at Invoke-InNewScriptScope, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 3466
+at Invoke-ContainerRun, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 1713
+at Invoke-Test, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 2778
+at Invoke-Pester<End>, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 5632
+at <ScriptBlock>, <No file>: line 1
+
+Result 2 - Error 1:Exception: System.Exception: Was not able to create a Pester Registry key for TestRegistry at
+'Microsoft.PowerShell.Core\Registry::HKEY_CURRENT_USER\Software\Pester' System.Security.SecurityException: Requested
+registry access is not allowed.    at Microsoft.Win32.RegistryKey.OpenSubKey(String name, Boolean writable)    at
+Microsoft.PowerShell.Commands.RegistryWrapper.OpenSubKey(String name, Boolean writable)    at
+Microsoft.PowerShell.Commands.RegistryProvider.GetRegkeyForPath(String path, Boolean writeAccess)    at
+Microsoft.PowerShell.Commands.RegistryProvider.GetRegkeyForPathWriteIfError(String path, Boolean writeAccess)
+
+at Get-TempRegistry, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 16396
+at New-RandomTempRegistry, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 23780
+at New-TestRegistry, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 23686
+at <ScriptBlock>, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 23877
+at <ScriptBlock>, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 2130
+at <ScriptBlock>, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 2071
+at Invoke-ScriptBlock, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 2260
+at Invoke-Block, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 967
+at <ScriptBlock>, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 1710
+at <ScriptBlock>, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.ScriptScope.ps1: line 9
+at <ScriptBlock>, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 3459
+at Invoke-InNewScriptScope, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 3466
+at Invoke-ContainerRun, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 1713
+at Invoke-Test, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 2778
+at Invoke-Pester<End>, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 5632
+at <ScriptBlock>, <No file>: line 1
+
+at Assert-Success, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 1935
+at Invoke-Block, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 980
+at <ScriptBlock>, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 1710
+at <ScriptBlock>, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.ScriptScope.ps1: line 9
+at <ScriptBlock>, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 3459
+at Invoke-InNewScriptScope, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 3466
+at Invoke-ContainerRun, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 1713
+at Invoke-Test, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 2778
+at Invoke-Pester<End>, C:\Users\Vincent\Documents\PowerShell\Modules\Pester\6.2.0\Pester.psm1: line 5632
+at <ScriptBlock>, <No file>: line 1
+Tests completed in 497ms
+Tests Passed: 0, Failed: 51, Skipped: 0, Inconclusive: 0, NotRun: 0
+Container failed: 1
+  - C:\Users\Vincent\UnRealDash\scripts\tests\Foundation.Tests.ps1
+exit=52

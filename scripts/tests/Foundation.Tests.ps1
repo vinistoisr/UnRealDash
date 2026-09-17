@@ -22,8 +22,10 @@ BeforeAll {
     $workstationRows = @('C: free space', 'Git LFS', 'cmake', 'ninja', 'Visual Studio', 'MSVC toolset', 'Windows SDK', 'Unreal Engine')
     $planRows = @{
         workstation = $workstationRows
-        android = $workstationRows + @('Android Studio', 'Android NDK', 'JDK', 'Android SDK')
-        linux = $workstationRows + @('Linux cross toolchain', 'LINUX_MULTIARCH_ROOT')
+        # Engine target-platform support is a separate optional download, so each target profile
+        # carries its own row for it rather than the workstation profile demanding both.
+        android = $workstationRows + @('Engine Android support', 'Android Studio', 'Android NDK', 'JDK', 'Android SDK')
+        linux = $workstationRows + @('Engine Linux support', 'Linux cross toolchain', 'LINUX_MULTIARCH_ROOT')
         device = $workstationRows + @('ADB reachability', 'Device free storage')
     }
     function Invoke-Child([string]$Script, [string[]]$Arguments, [hashtable]$Environment = @{}) {
@@ -267,28 +269,27 @@ exit 9
         $fallback.Text | Should -Match 'search PATH'
     }
 
-    It 'engine platform detection accepts either marker location' {
-        # Linux ships under Binaries/Win64/Linux, Android under Platforms/Android. Both must count.
-        $root = New-Item (Join-Path $TestDrive 'engine-root') -ItemType Directory -Force
-        $engine = New-Item (Join-Path $root.FullName 'Engine') -ItemType Directory -Force
-        New-Item (Join-Path $engine.FullName 'Build') -ItemType Directory -Force | Out-Null
-        Set-Content (Join-Path $engine.FullName 'Build/Build.version') '{"MajorVersion":5,"MinorVersion":8,"PatchVersion":2}'
-        Set-Content (Join-Path $engine.FullName 'Build/InstalledBuild.txt') ''
-        New-Item (Join-Path $engine.FullName 'Platforms/Android') -ItemType Directory -Force | Out-Null
-        New-Item (Join-Path $engine.FullName 'Binaries/Win64/Linux') -ItemType Directory -Force | Out-Null
-        $pins = Get-Content (Join-Path $PSScriptRoot '../pins.json') -Raw | ConvertFrom-Json
-        $pins.engine.root = $root.FullName
-        $file = Join-Path $TestDrive 'engine-pins.json'
-        $pins | ConvertTo-Json -Depth 20 | Set-Content $file
-        $result = Invoke-Child 'doctor.ps1' @('-Profile', 'workstation', '-PinsFile', $file)
-        $result.Text | Should -Match '(?m)^Unreal Engine\s+.*PASS'
-        $result.Text | Should -Not -Match 'Linux missing'
-
-        Remove-Item (Join-Path $engine.FullName 'Binaries/Win64/Linux') -Recurse -Force
-        $missing = Invoke-Child 'doctor.ps1' @('-Profile', 'workstation', '-PinsFile', $file)
-        $missing.Text | Should -Match 'Linux missing'
-        $missing.Code | Should -Be 1
+    It 'engine platform support is decided by UnrealBuildTool, not by the file layout' -ForEach @(
+        @{ Platform = 'Android'; Profile = 'android'; Row = 'Engine Android support' }
+        @{ Platform = 'Linux'; Profile = 'linux'; Row = 'Engine Linux support' }
+    ) {
+        # A launcher install ships editor-side target-platform modules for platforms it cannot build,
+        # so the probe asks UnrealBuildTool and the test drives its answer through a fake Build.bat.
+        $data = New-FixturePins @("engine-$($Platform.ToLower())")
+        $root = Join-Path $TestDrive "engine-$Platform"
+        $batchDirectory = Join-Path $root 'Engine/Build/BatchFiles'
+        [void](New-Item $batchDirectory -ItemType Directory -Force)
+        $data.engine.root = $root
+        $file = Save-FixturePins $data
+        Write-Wrapper $batchDirectory 'Build.cmd' "@echo off`r`necho ##PlatformValidate: $Platform INVALID"
+        Copy-Item (Join-Path $batchDirectory 'Build.cmd') (Join-Path $batchDirectory 'Build.bat')
+        $invalid = Invoke-Child 'doctor.ps1' @('-Profile', $Profile, '-PinsFile', $file)
+        Assert-Row $invalid $Row 'FAIL' 1
+        $invalid.Text | Should -Match 'Epic Games Launcher'
+        Set-Content (Join-Path $batchDirectory 'Build.bat') "@echo off`r`necho ##PlatformValidate: $Platform VALID"
+        Assert-Row (Invoke-Child 'doctor.ps1' @('-Profile', $Profile, '-PinsFile', $file)) $Row 'PASS' 0
     }
+
 
     It 'Windows SDK kits_root override changes from FAIL to PASS when pinned Include exists' {
         $data = New-FixturePins @('windows-sdk')
@@ -355,11 +356,20 @@ Describe 'Skeleton doctor gates' {
         $result.Code | Should -Be 0
         $result.Text | Should -Match "Doctor profile: $Profile"
         $result.Text | Should -Match "Fake doctor PASS: $Profile"
-        $uat = Join-Path $pins.engine.root 'Engine/Build/BatchFiles/RunUAT.bat'
         $project = Join-Path $root 'runtime/UnRealDash/UnRealDash.uproject'
-        $line = '& "{0}" BuildCookRun -project="{1}" -noP4 -platform={2} -clientconfig=Development -build -cook -stage -pak -archive' -f $uat, $project, $Platform
+        if ($Script -eq 'build') {
+            # build.ps1 runs a module build, so its preview is the Build.bat line it executes.
+            $batch = Join-Path $pins.engine.root 'Engine/Build/BatchFiles/Build.bat'
+            $line = '& "{0}" UnRealDash {1} Development -project="{2}" -waitmutex' -f $batch, $Platform, $project
+            $marker = 'Build.bat'
+        }
+        else {
+            $uat = Join-Path $pins.engine.root 'Engine/Build/BatchFiles/RunUAT.bat'
+            $line = '& "{0}" BuildCookRun -project="{1}" -noP4 -platform={2} -clientconfig=Development -build -cook -stage -pak -archive' -f $uat, $project, $Platform
+            $marker = 'RunUAT'
+        }
         $result.Text | Should -Match ([regex]::Escape($line))
-        $result.Text.IndexOf('Fake doctor PASS') | Should -BeLessThan $result.Text.IndexOf('RunUAT')
+        $result.Text.IndexOf('Fake doctor PASS') | Should -BeLessThan $result.Text.IndexOf($marker)
     }
 
     It '<Script> <Target> stops without UAT when its doctor fails' -ForEach $cases {
@@ -369,13 +379,20 @@ Describe 'Skeleton doctor gates' {
         $result.Code | Should -Be 1
         $result.Text | Should -Match "Fake doctor FAIL: $Profile"
         $result.Text | Should -Not -Match 'RunUAT'
+        $result.Text | Should -Not -Match 'Build\.bat'
     }
 
-    It 'does not build without WhatIf even with a passing doctor' {
-        $result = Invoke-Child 'build.ps1' @('-DoctorScript', (Join-Path $PSScriptRoot 'fakes/doctor-pass.ps1'))
-        $result.Code | Should -Be 1
-        $result.Text | Should -Match 'Execution is not implemented'
+    It 'build.ps1 previews the module build it would run, not a packaging command' {
+        # Chunk 06 gave build.ps1 a real execution path. The preview must show that command,
+        # so what -WhatIf prints is what a run without -WhatIf executes.
+        $result = Invoke-Child 'build.ps1' @('-WhatIf', '-DoctorScript', (Join-Path $PSScriptRoot 'fakes/doctor-pass.ps1'))
+        $result.Code | Should -Be 0
+        $result.Text | Should -Match 'Build\.bat'
+        $result.Text | Should -Match 'UnRealDash Win64 Development'
         $result.Text | Should -Not -Match 'RunUAT'
+        $result.Text | Should -Not -Match 'BuildCookRun'
+        $editor = Invoke-Child 'build.ps1' @('-Target', 'editor', '-WhatIf', '-DoctorScript', (Join-Path $PSScriptRoot 'fakes/doctor-pass.ps1'))
+        $editor.Text | Should -Match 'UnRealDashEditor Win64 Development'
     }
 
     It 'fails closed when the doctor file is missing' {
@@ -421,6 +438,14 @@ Describe 'Repository foundation' {
         $readme = Get-Content (Join-Path $root 'README.md') -Raw
         $readme | Should -Match '\]\(LICENSE\)'
         $readme | Should -Match '\]\(LICENSES-ASSETS.md\)'
+    }
+
+    It 'every component name fits the rendered table column' {
+        # A name wider than the column merges the first two columns and makes the table unparseable,
+        # which is how a row name longer than the column width first showed up.
+        foreach ($row in $pins.rows) {
+            $row.component.Length | Should -BeLessOrEqual 22 -Because "row '$($row.component)' must fit the 24 character column"
+        }
     }
 
     It 'stores each PLAN pin once, with detection and membership data' {

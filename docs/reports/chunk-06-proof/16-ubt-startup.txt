@@ -1,0 +1,6 @@
+Unhandled exception. System.UnauthorizedAccessException: Access to the path is denied.
+   at System.IO.FileSystem.MoveFile(String sourceFullPath, String destFullPath, Boolean overwrite)
+   at EpicGames.Core.FileReference.Move(FileReference sourceLocation, FileReference targetLocation)
+   at EpicGames.Core.Log.BackupLogFile(FileReference outputFile)
+   at UnrealBuildTool.UnrealBuildTool.Main(String[] ArgumentsArray)
+exit=-532462766
