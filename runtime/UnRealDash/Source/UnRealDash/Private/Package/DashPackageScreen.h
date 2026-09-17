@@ -28,6 +28,8 @@ UCLASS()
 class ADashPackageHUD : public AHUD
 {
     GENERATED_BODY()
+    // Gate-only; see the note on the definition. Not part of PLAN 4.7's runtime flag surface.
+    void RunBatch(const FString& Directory);
 public:
     virtual void BeginPlay() override;
 private:

@@ -39,3 +39,34 @@ for that gate, plus `well-formed/` for the directory rendering gate. The package
 HUD is now the default; the smoke spike remains selectable with
 `/Game/Smoke/L_Smoke?game=/Script/UnRealDash.SmokeGameMode` as an explicit map URL. No new flag surface or
 `player.json` behavior was added by this task.
+
+## Device half of the PLAN 4.4 package gate
+
+The desktop half is a commandlet and needs the editor, so it cannot run on Android. On device the
+packaged player is driven instead, and `ADashPackageHUD` emits one machine-readable line per
+package:
+
+```
+DashVerdict accepted=<true|false> code=<CodeName> pointer=<json pointer> path=<path>
+```
+
+Batch mode is the one to use. `-udash-batch=<dir>` loads every fixture in a single run and
+`-udash-profile=<mobile|desktop>` selects the texture budget, so the whole gate is two launches
+rather than one cold start per fixture, which on the Pixel costs about 85 seconds each:
+
+```powershell
+pwsh -NoProfile -File scripts/run-device-package-gate.ps1 -Batch
+```
+
+The player reports a verdict for every fixture it finds, including directory forms of the
+archive-only cases. The runner decides what was expected, reading `cases.json` at runtime, and
+ignores the extra verdicts rather than counting them as coverage. The game module carries no test
+expectations.
+
+Both switches are gate switches, like the smoke commandlet's `-stress`, and are deliberately not
+part of the runtime command-line surface PLAN 4.7 owns.
+
+Note that the schema files do not currently reach the device; see
+`docs/reports/2026-09-17-device-package-gate.md`. Until that is fixed the five files in
+`packages/dashboard-spec/schema/` have to be pushed by hand, and any results collected that way
+are evidence about the loader rather than about packaging.

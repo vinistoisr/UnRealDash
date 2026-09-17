@@ -7,6 +7,8 @@
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "UnRealDashLog.h"
+#include "HAL/FileManager.h"
+#include "HAL/PlatformMisc.h"
 
 void UDashPackageScreen::Open(const FString& Path, UnRealDashCore::EDashProfile InProfile)
 {
@@ -65,6 +67,12 @@ void ADashPackageHUD::BeginPlay()
         UE_LOG(LogUnRealDash, Display, TEXT("No -udash= package supplied"));
     Screen = CreateWidget<UDashPackageScreen>(GetOwningPlayerController());
     if (!Screen) { UE_LOG(LogUnRealDash, Error, TEXT("Cannot create package screen")); return; }
+    FString BatchDirectory;
+    if (FParse::Value(FCommandLine::Get(), TEXT("udash-batch="), BatchDirectory))
+    {
+        RunBatch(BatchDirectory);
+        return;
+    }
     Screen->Open(Path, UnRealDashCore::DefaultDashProfile());
     Screen->AddToViewport();
     // One machine-readable verdict per run. The device half of the PLAN 4.4 gate is driven by
@@ -73,6 +81,49 @@ void ADashPackageHUD::BeginPlay()
     UE_LOG(LogUnRealDash, Display, TEXT("DashVerdict accepted=%s code=%s pointer=%s path=%s"),
         Screen->WasAccepted() ? TEXT("true") : TEXT("false"),
         *Screen->LastError().CodeName, *Screen->LastError().Pointer, *Path);
+}
+// Gate-only batch mode. Launching the packaged player once per fixture costs about 85 seconds of
+// cold start on the device, so the 69 runs of the PLAN 4.4 device gate take an hour and a half and
+// will not fit in any window the owner is likely to have the phone plugged in. This loads every
+// fixture in one run and emits the same DashVerdict line per case, so the runner parses identical
+// output either way.
+//
+// Like the smoke commandlet's -stress switch, this is a gate switch and is deliberately not part
+// of the runtime command-line surface that PLAN 4.7 owns.
+void ADashPackageHUD::RunBatch(const FString& Directory)
+{
+    // The profile is a launch argument, not something read per fixture, because cases.json is test
+    // data and the player must not carry test expectations. The runner launches once per profile
+    // and picks the verdict matching each case's profile, which is two launches rather than 87.
+    UnRealDashCore::EDashProfile BatchProfile = UnRealDashCore::DefaultDashProfile();
+    FString ProfileName;
+    if (FParse::Value(FCommandLine::Get(), TEXT("udash-profile="), ProfileName))
+    {
+        if (ProfileName.Equals(TEXT("mobile"), ESearchCase::IgnoreCase)) { BatchProfile = UnRealDashCore::EDashProfile::Mobile; }
+        else if (ProfileName.Equals(TEXT("desktop"), ESearchCase::IgnoreCase)) { BatchProfile = UnRealDashCore::EDashProfile::Desktop; }
+        else { UE_LOG(LogUnRealDash, Error, TEXT("Unknown -udash-profile=%s"), *ProfileName); FPlatformMisc::RequestExit(false); return; }
+    }
+    UE_LOG(LogUnRealDash, Display, TEXT("DashBatch profile=%s"),
+        BatchProfile == UnRealDashCore::EDashProfile::Mobile ? TEXT("mobile") : TEXT("desktop"));
+    TArray<FString> Entries;
+    IFileManager::Get().FindFiles(Entries, *(Directory / TEXT("*.udash")), true, false);
+    TArray<FString> Directories;
+    IFileManager::Get().FindFiles(Directories, *(Directory / TEXT("*")), false, true);
+    int32 Accepted = 0, Rejected = 0;
+    auto RunOne = [&](const FString& Target)
+    {
+        UnRealDashCore::FDashPackage Package;
+        UnRealDashCore::FDashLoadError Error;
+        const bool bOk = UnRealDashCore::LoadPackage(Target, BatchProfile, Package, Error);
+        bOk ? ++Accepted : ++Rejected;
+        UE_LOG(LogUnRealDash, Display, TEXT("DashVerdict accepted=%s code=%s pointer=%s path=%s"),
+            bOk ? TEXT("true") : TEXT("false"), *Error.CodeName, *Error.Pointer, *Target);
+    };
+    for (const FString& Entry : Entries) { RunOne(Directory / Entry); }
+    for (const FString& Entry : Directories) { RunOne(Directory / Entry); }
+    UE_LOG(LogUnRealDash, Display, TEXT("DashBatch total=%d accepted=%d rejected=%d"),
+        Accepted + Rejected, Accepted, Rejected);
+    FPlatformMisc::RequestExit(false);
 }
 ADashPackageGameMode::ADashPackageGameMode()
 {

@@ -14,7 +14,11 @@ param(
     [string]$Package = 'com.unrealdash.player',
     [int]$LaunchSeconds = 7,
     [switch]$ArchiveOnly,
-    [int]$Limit = 0
+    [int]$Limit = 0,
+    # One launch instead of one per fixture. The player loads every fixture and reports a verdict
+    # for each; this script still decides what was expected, so the game module carries no test
+    # expectations. Roughly 2 minutes of device time instead of 98.
+    [switch]$Batch
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
@@ -42,6 +46,56 @@ function Invoke-Case([string]$DevicePath, [string]$Label) {
     @{ Label = $Label; Ran = $true; Accepted = ($m.Groups[1].Value -eq 'true'); Code = $m.Groups[2].Value; Pointer = $m.Groups[3].Value }
 }
 
+if ($Batch) {
+    # One launch per profile. The player reports a verdict for every fixture it finds, including
+    # directory forms of the archive-only cases; this script decides what was expected, so the game
+    # module carries no test expectations. Two launches, about two minutes, instead of 98.
+    $tables = @{}
+    foreach ($prof in 'mobile', 'desktop') {
+        $cmd = "-project=../../../UnRealDash/UnRealDash.uproject /Game/Smoke/L_Smoke?game=/Script/UnRealDash.DashPackageGameMode -udash-batch=$fixtures -udash-profile=$prof"
+        $tmp = Join-Path $env:TEMP 'UECommandLine.txt'
+        [IO.File]::WriteAllText($tmp, $cmd)
+        & $Adb push $tmp "$base/UECommandLine.txt" | Out-Null
+        & $Adb shell am force-stop $Package | Out-Null
+        & $Adb logcat -c | Out-Null
+        & $Adb shell monkey -p $Package -c android.intent.category.LAUNCHER 1 2>&1 | Out-Null
+        $log = ''
+        for ($i = 0; $i -lt 48; $i++) {
+            Start-Sleep -Seconds 5
+            $log = (& $Adb logcat -d -s UE:*) -join "`n"
+            if ($log -match 'DashBatch total=') { break }
+        }
+        & $Adb shell am force-stop $Package | Out-Null
+        $t = @{}
+        foreach ($m in [regex]::Matches($log, 'DashVerdict accepted=(\S+) code=(\S*) pointer=(\S*) path=(\S+)')) {
+            $leaf = ($m.Groups[4].Value.TrimEnd('/') -split '/')[-1]
+            $t[$leaf] = @{ Accepted = ($m.Groups[1].Value -eq 'true'); Code = $m.Groups[2].Value; Pointer = $m.Groups[3].Value }
+        }
+        $tables[$prof] = $t
+        Write-Output ("batch profile={0} verdicts={1}" -f $prof, $t.Count)
+    }
+
+    $results = @()
+    foreach ($c in $cases) {
+        $expectAccept = [string]::IsNullOrEmpty($c.code)
+        # A case names its profile when the outcome depends on the texture budget; otherwise the
+        # device default, which is mobile on Android, is the meaningful one.
+        $prof = if ($c.profile) { $c.profile } else { 'mobile' }
+        $table = $tables[$prof]
+        $forms = @(@{ Kind = 'archive'; Leaf = "$($c.name).udash" })
+        if (-not $c.archive_only) { $forms += @{ Kind = 'directory'; Leaf = $c.name } }
+        foreach ($f in $forms) {
+            $v = $table[$f.Leaf]
+            $r = if ($v) { @{ Label = "$($c.name) [$($f.Kind)]"; Ran = $true; Accepted = $v.Accepted; Code = $v.Code; Pointer = $v.Pointer } }
+                 else     { @{ Label = "$($c.name) [$($f.Kind)]"; Ran = $false } }
+            $r.Ok = $r.Ran -and ($r.Accepted -eq $expectAccept) -and ($expectAccept -or $r.Code -eq $c.code)
+            $results += [pscustomobject]$r
+            if (-not $r.Ok) { Write-Output ("{0,-46} MISMATCH profile={1} expected accept={2} code={3}; got accept={4} code={5} ran={6}" -f $r.Label, $prof, $expectAccept, $c.code, $r.Accepted, $r.Code, $r.Ran) }
+        }
+    }
+    Write-Output ("evaluated {0} expected forms of {1} cases" -f $results.Count, $cases.Count)
+} else {
+
 $results = @()
 $n = 0
 foreach ($c in $cases) {
@@ -58,6 +112,8 @@ foreach ($c in $cases) {
         $results += [pscustomobject]$r
         Write-Output ("{0,-46} {1}" -f $r.Label, $(if ($r.Ok) { 'ok' } else { "MISMATCH expected accept=$expectAccept code=$($c.code); got accept=$($r.Accepted) code=$($r.Code) ran=$($r.Ran)" }))
     }
+}
+
 }
 
 # Archive and directory forms of the same case must agree, which is the parity half of the gate.
