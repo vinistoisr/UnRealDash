@@ -1,0 +1,226 @@
+# No caching: task 1.7 requires a branch with no cached dependencies.
+# A vendored header-only test framework, a few translation units and two Python
+# wheels do not justify a restore path that could serve stale artifacts.
+# A clean clone must build without the silent fallbacks forbidden by docs/ARCHITECTURE.md.
+name: spec-tools
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python-tools:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          # This default documents intent rather than preventing an otherwise automatic download.
+          lfs: false
+      - name: No LFS objects in the checkout
+        shell: bash
+        run: |
+          probe="tests/fixtures/images/lfs-probe.png"
+          head -c 45 "$probe" | grep -q "git-lfs.github.com/spec/v1" \
+            || { echo "FAIL: $probe is not an LFS pointer, so LFS content was fetched"; exit 1; }
+          if [ -d .git/lfs/objects ] && [ -n "$(find .git/lfs/objects -type f -print -quit)" ]; then
+            echo "FAIL: .git/lfs/objects holds fetched objects"; exit 1
+          fi
+          echo "PASS: no LFS objects in the checkout"
+          echo "supporting evidence, configuration only:"
+          git config --get-regexp '^lfs\.' || echo "(no lfs.* configuration present)"
+      - name: Set up Python
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: '3.12'
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r tools/requirements.txt
+      - name: Python dependency versions
+        shell: bash
+        run: |
+          python -m pip freeze | grep -Ei '^(jsonschema|pytest)'
+      - name: Generate image fixtures
+        shell: bash
+        run: |
+          python tools/gen-image-fixtures.py
+      - name: Generate document fixtures
+        shell: bash
+        run: |
+          python tools/gen-document-fixtures.py
+      - name: Generate package fixtures
+        shell: bash
+        run: |
+          python tools/gen-package-fixtures.py
+      - name: Python tests
+        shell: bash
+        run: |
+          python -m pytest tools/tests -q
+      - name: Validate document corpus
+        shell: bash
+        run: |
+          python tools/validate-dashboard.py tests/fixtures/documents | tee validate.log
+          valid=$(grep -Eo '(^|[[:space:]])valid=[0-9]+' validate.log | grep -Eo '[0-9]+')
+          invalid=$(grep -Eo '(^|[[:space:]])invalid=[0-9]+' validate.log | grep -Eo '[0-9]+')
+          [ -n "$valid" ] && [ "$valid" -gt 0 ] || { echo "FAIL: missing or zero valid count"; exit 1; }
+          [ -n "$invalid" ] && [ "$invalid" -gt 0 ] || { echo "FAIL: missing or zero invalid count"; exit 1; }
+
+  cpp-validator:
+    # PLAN.md 3.4 requires both hosted platforms.
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          # This default documents intent rather than preventing an otherwise automatic download.
+          lfs: false
+      - name: No LFS objects in the checkout
+        shell: bash
+        run: |
+          probe="tests/fixtures/images/lfs-probe.png"
+          head -c 45 "$probe" | grep -q "git-lfs.github.com/spec/v1" \
+            || { echo "FAIL: $probe is not an LFS pointer, so LFS content was fetched"; exit 1; }
+          if [ -d .git/lfs/objects ] && [ -n "$(find .git/lfs/objects -type f -print -quit)" ]; then
+            echo "FAIL: .git/lfs/objects holds fetched objects"; exit 1
+          fi
+          echo "PASS: no LFS objects in the checkout"
+          echo "supporting evidence, configuration only:"
+          git config --get-regexp '^lfs\.' || echo "(no lfs.* configuration present)"
+      - name: Ensure Ninja
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          command -v ninja || { sudo apt-get update && sudo apt-get install -y ninja-build; }
+      - name: Set up Python
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.12"
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python -m pip install -r tools/requirements.txt
+      # The C++ tests read the generated archives and documents, which are never committed.
+      - name: Generate image fixtures
+        shell: bash
+        run: |
+          python tools/gen-image-fixtures.py
+      - name: Generate document fixtures
+        shell: bash
+        run: |
+          python tools/gen-document-fixtures.py
+      - name: Generate package fixtures
+        shell: bash
+        run: |
+          python tools/gen-package-fixtures.py
+      # If this action becomes unavailable, use the single-step form:
+      # cmd /c "call <vcvars64 path> && cmake --preset default && cmake --build --preset default && ctest --preset default"
+      # Discover the path with vswhere -products * -latest -property installationPath in that same step.
+      - name: Set up MSVC
+        if: matrix.os == 'windows-latest'
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+      - name: Configure
+        working-directory: packages/dashboard-spec
+        shell: bash
+        run: |
+          cmake --preset default
+      - name: Build
+        working-directory: packages/dashboard-spec
+        shell: bash
+        run: |
+          cmake --build --preset default
+      - name: Test
+        working-directory: packages/dashboard-spec
+        shell: bash
+        run: |
+          ctest --preset default --output-on-failure
+      - name: Assertion count
+        shell: bash
+        run: |
+          set -- packages/dashboard-spec/build/default dashboard-spec-tests
+          bin=$(find "$1" -maxdepth 1 -type f \( -name "$2" -o -name "$2.exe" \) | head -1)
+          [ -n "$bin" ] || { echo "FAIL: no test binary under $1"; exit 1; }
+          "$bin" --reporters=console 2>&1 | tee run.log
+          line=$(grep -E '^\[doctest\] assertions:' run.log | tail -1)
+          [ -n "$line" ] || { echo "FAIL: no doctest assertion summary"; exit 1; }
+          count=$(echo "$line" | sed -E 's/.*assertions: *([0-9]+).*/\1/')
+          failed=$(echo "$line" | sed -E 's/.*\| *([0-9]+) failed.*/\1/')
+          echo "assertions=$count failed=$failed"
+          [ "$count" -gt 0 ] || { echo "FAIL: zero assertions"; exit 1; }
+          [ "$failed" -eq 0 ] || { echo "FAIL: $failed assertions failed"; exit 1; }
+
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          # This default documents intent rather than preventing an otherwise automatic download.
+          lfs: false
+      - name: No LFS objects in the checkout
+        shell: bash
+        run: |
+          probe="tests/fixtures/images/lfs-probe.png"
+          head -c 45 "$probe" | grep -q "git-lfs.github.com/spec/v1" \
+            || { echo "FAIL: $probe is not an LFS pointer, so LFS content was fetched"; exit 1; }
+          if [ -d .git/lfs/objects ] && [ -n "$(find .git/lfs/objects -type f -print -quit)" ]; then
+            echo "FAIL: .git/lfs/objects holds fetched objects"; exit 1
+          fi
+          echo "PASS: no LFS objects in the checkout"
+          echo "supporting evidence, configuration only:"
+          git config --get-regexp '^lfs\.' || echo "(no lfs.* configuration present)"
+      - name: Set up Python
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: '3.12'
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python -m pip install -r tools/requirements.txt
+      - name: Ensure Ninja
+        shell: bash
+        run: |
+          command -v ninja || { sudo apt-get update && sudo apt-get install -y ninja-build; }
+      - name: Generate image fixtures
+        shell: bash
+        run: |
+          python tools/gen-image-fixtures.py
+      - name: Generate document fixtures
+        shell: bash
+        run: |
+          python tools/gen-document-fixtures.py
+      - name: Generate package fixtures
+        shell: bash
+        run: |
+          python tools/gen-package-fixtures.py
+      - name: Configure
+        working-directory: packages/dashboard-spec
+        shell: bash
+        run: |
+          cmake --preset default
+      - name: Build
+        working-directory: packages/dashboard-spec
+        shell: bash
+        run: |
+          cmake --build --preset default
+      - name: Validator parity
+        shell: pwsh
+        run: |
+          ./scripts/validate-parity.ps1 `
+            -PythonExe python `
+            -ValidatorExe packages/dashboard-spec/build/default/dashboard-spec-validate `
+            -CorpusPath tests/fixtures/documents
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
