@@ -63,6 +63,19 @@ BeforeAll {
         $Data | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath $path
         return $path
     }
+    # The Android rows read the installed engine's own Android_SDK.json, so a fixture engine
+    # is what lets a test choose the versions it then creates or withholds.
+    function New-FixtureEngine($Data, [string]$Name, [hashtable]$Manifest) {
+        $root = Join-Path $TestDrive $Name
+        $config = Join-Path $root 'Engine/Config/Android'
+        [void](New-Item $config -ItemType Directory -Force)
+        [void](New-Item (Join-Path $root 'Engine/Build') -ItemType Directory -Force)
+        Set-Content (Join-Path $root 'Engine/Build/Build.version') '{"MajorVersion":5,"MinorVersion":8,"PatchVersion":2}'
+        Set-Content (Join-Path $root 'Engine/Build/InstalledBuild.txt') ''
+        $Manifest | ConvertTo-Json | Set-Content (Join-Path $config 'Android_SDK.json')
+        $Data.engine.root = $root
+        return $root
+    }
     function Write-Wrapper([string]$Directory, [string]$Name, [string]$Body) {
         [void](New-Item -ItemType Directory -Path $Directory -Force)
         Set-Content -LiteralPath (Join-Path $Directory $Name) -Value $Body
@@ -150,16 +163,17 @@ Describe 'Deterministic doctor transitions' {
         Assert-Row (Invoke-Child 'doctor.ps1' $arguments) 'cmake' 'PASS' 0
     }
 
-    It 'android NDK changes from FAIL to PASS when its pinned source.properties appears' {
+    It 'android NDK changes from FAIL to PASS when the engine manifest version appears' {
         $data = New-FixturePins @('ndk')
+        [void](New-FixtureEngine $data 'ndk-engine' @{ MainVersion = 'r27c'; ndk = '27.2.12479018'; platforms = 'android-36'; 'build-tools' = '36.0.0'; cmake = '3.22.1' })
         $sdk = Join-Path $TestDrive 'android-sdk'
         $file = Save-FixturePins $data
         $environment = @{ ANDROID_HOME = $sdk; ANDROID_SDK_ROOT = (Join-Path $TestDrive 'unused-sdk'); NDKROOT = $null }
         $arguments = @('-Profile', 'android', '-PinsFile', $file, '-SearchPath', $TestDrive)
         Assert-Row (Invoke-Child 'doctor.ps1' $arguments $environment) 'Android NDK' 'FAIL' 1
-        $ndk = Join-Path $sdk "ndk/$($data.rows[0].version)"
+        $ndk = Join-Path $sdk 'ndk/27.2.12479018'
         [void](New-Item $ndk -ItemType Directory -Force)
-        Set-Content (Join-Path $ndk 'source.properties') "Pkg.Revision = $($data.rows[0].version)"
+        Set-Content (Join-Path $ndk 'source.properties') 'Pkg.Revision = 27.2.12479018'
         Assert-Row (Invoke-Child 'doctor.ps1' $arguments $environment) 'Android NDK' 'PASS' 0
     }
 
@@ -230,23 +244,24 @@ exit 9
         Assert-Row (Invoke-Child 'doctor.ps1' $invokeArguments) 'C: free space' 'FAIL' 1
     }
 
-    It 'JDK prefers JAVA_HOME and rejects its mismatch despite a matching SearchPath wrapper' {
+    It 'JDK prefers JAVA_HOME and enforces the major-version floor' {
         $data = New-FixturePins @('jdk')
         $file = Save-FixturePins $data
-        $version = ($data.rows[0].expected -split ' ')[1]
+        $floor = $data.rows[0].minimum_major
         $jdkHome = Join-Path $TestDrive 'jdk-home'
         $directory = Join-Path $TestDrive 'java-path'
-        Write-Wrapper $directory 'java.cmd' "@echo off`r`necho openjdk version `"$version`""
-        Write-Wrapper (Join-Path $jdkHome 'bin') 'java.ps1' "Write-Output 'openjdk version `"$version`"'"
+        Write-Wrapper $directory 'java.cmd' "@echo off`r`necho openjdk version `"$floor.0.1`""
+        Write-Wrapper (Join-Path $jdkHome 'bin') 'java.ps1' "Write-Output 'openjdk version `"21.0.3`"'"
         $arguments = @('-Profile', 'android', '-PinsFile', $file, '-SearchPath', $directory)
         $matching = Invoke-Child 'doctor.ps1' $arguments @{ JAVA_HOME = $jdkHome }
         Assert-Row $matching 'JDK' 'PASS' 0
         $matching.Text | Should -Match 'JAVA_HOME'
-        Write-Wrapper (Join-Path $jdkHome 'bin') 'java.ps1' 'Write-Output ''openjdk version "99.0.0"'''
+        # A JDK below the floor fails even when the search PATH holds an acceptable one.
+        Write-Wrapper (Join-Path $jdkHome 'bin') 'java.ps1' 'Write-Output ''openjdk version "11.0.2"'''
         $mismatch = Invoke-Child 'doctor.ps1' $arguments @{ JAVA_HOME = $jdkHome }
         Assert-Row $mismatch 'JDK' 'FAIL' 1
         $mismatch.Text | Should -Match 'JAVA_HOME'
-        $mismatch.Text | Should -Match '99\.0\.0'
+        $mismatch.Text | Should -Match '11\.0\.2'
         $fallback = Invoke-Child 'doctor.ps1' $arguments @{ JAVA_HOME = $null }
         Assert-Row $fallback 'JDK' 'PASS' 0
         $fallback.Text | Should -Match 'search PATH'
@@ -288,33 +303,41 @@ exit 9
         $result.Text | Should -Match 'custom-kits'
     }
 
-    It 'Android SDK requires build-tools as well as the target platform' {
+    It 'Android SDK requires the platform, build-tools and cmake the engine manifest names' {
         $data = New-FixturePins @('android-sdk')
+        [void](New-FixtureEngine $data 'sdk-engine' @{ MainVersion = 'r27c'; ndk = '27.2.12479018'; platforms = 'android-36'; 'build-tools' = '36.0.0'; cmake = '3.22.1' })
         $sdk = Join-Path $TestDrive 'sdk-artifacts'
-        $platform = Join-Path $sdk "platforms/android-$($data.rows[0].target)"
-        [void](New-Item $platform -ItemType Directory -Force)
-        Set-Content (Join-Path $platform 'android.jar') 'fixture'
         $arguments = @('-Profile', 'android', '-PinsFile', (Save-FixturePins $data))
         $environment = @{ ANDROID_HOME = $sdk; ANDROID_SDK_ROOT = (Join-Path $TestDrive 'absent-sdk') }
+        $platform = Join-Path $sdk 'platforms/android-36'
+        [void](New-Item $platform -ItemType Directory -Force)
+        Set-Content (Join-Path $platform 'android.jar') 'fixture'
         Assert-Row (Invoke-Child 'doctor.ps1' $arguments $environment) 'Android SDK' 'FAIL' 1
-        [void](New-Item (Join-Path $sdk 'build-tools/35.0.0') -ItemType Directory -Force)
+        [void](New-Item (Join-Path $sdk 'build-tools/36.0.0') -ItemType Directory -Force)
+        Assert-Row (Invoke-Child 'doctor.ps1' $arguments $environment) 'Android SDK' 'FAIL' 1
+        [void](New-Item (Join-Path $sdk 'cmake/3.22.1') -ItemType Directory -Force)
         Assert-Row (Invoke-Child 'doctor.ps1' $arguments $environment) 'Android SDK' 'PASS' 0
+        # A platform the manifest does not name must not satisfy the row.
+        $other = Join-Path $sdk 'platforms/android-35'
+        [void](New-Item $other -ItemType Directory -Force)
+        Set-Content (Join-Path $other 'android.jar') 'fixture'
+        Remove-Item $platform -Recurse -Force
+        Assert-Row (Invoke-Child 'doctor.ps1' $arguments $environment) 'Android SDK' 'FAIL' 1
     }
 
     It 'SDK and NDK use the shared <Source> root fallback' -ForEach @(
         @{ Source = 'ANDROID_SDK_ROOT' }, @{ Source = 'LOCALAPPDATA' }
     ) {
         $data = New-FixturePins @('android-sdk', 'ndk')
+        [void](New-FixtureEngine $data "fallback-engine-$Source" @{ MainVersion = 'r27c'; ndk = '27.2.12479018'; platforms = 'android-36'; 'build-tools' = '36.0.0'; cmake = '3.22.1' })
         $sdk = Join-Path $TestDrive 'fallback/Android/Sdk'
-        $ndkVersion = ($data.rows | Where-Object { $_.id -eq 'ndk' }).version
-        $target = ($data.rows | Where-Object { $_.id -eq 'android-sdk' }).target
-        $platform = Join-Path $sdk "platforms/android-$target"
-        $ndk = Join-Path $sdk "ndk/$ndkVersion"
-        foreach ($directory in @($platform, $ndk, (Join-Path $sdk 'build-tools/35.0.0'))) {
+        $platform = Join-Path $sdk 'platforms/android-36'
+        $ndk = Join-Path $sdk 'ndk/27.2.12479018'
+        foreach ($directory in @($platform, $ndk, (Join-Path $sdk 'build-tools/36.0.0'), (Join-Path $sdk 'cmake/3.22.1'))) {
             [void](New-Item $directory -ItemType Directory -Force)
         }
         Set-Content (Join-Path $platform 'android.jar') 'fixture'
-        Set-Content (Join-Path $ndk 'source.properties') "Pkg.Revision = $ndkVersion"
+        Set-Content (Join-Path $ndk 'source.properties') 'Pkg.Revision = 27.2.12479018'
         $environment = @{ ANDROID_HOME = $null; ANDROID_SDK_ROOT = $null; NDKROOT = $null }
         if ($Source -eq 'ANDROID_SDK_ROOT') { $environment.ANDROID_SDK_ROOT = $sdk }
         else { $environment.LOCALAPPDATA = Join-Path $TestDrive 'fallback' }

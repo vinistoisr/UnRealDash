@@ -73,6 +73,14 @@ function Get-VisualStudio([string[]]$Requirements) {
     return @( (Invoke-Tool $path $arguments) | ConvertFrom-Json )
 }
 
+# The installed engine states which Android SDK platform, build-tools, cmake and NDK it needs.
+# Reading it here means the doctor cannot drift from the engine the way a duplicated pin can.
+function Get-EngineAndroidManifest($Pins) {
+    $path = Join-Path $Pins.engine.root 'Engine/Config/Android/Android_SDK.json'
+    if (-not (Test-Path -LiteralPath $path)) { throw "engine Android manifest not found at $path" }
+    return Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
+}
+
 function Get-AndroidSdkRoot {
     if ($env:ANDROID_HOME) { return $env:ANDROID_HOME }
     if ($env:ANDROID_SDK_ROOT) { return $env:ANDROID_SDK_ROOT }
@@ -95,14 +103,18 @@ function Test-Row($Row, $Pins) {
             }
             'jdk' {
                 $source = 'search PATH'
-                if ($env:JAVA_HOME) { $source = "JAVA_HOME ($env:JAVA_HOME)" }
-                try {
-                    if ($env:JAVA_HOME) { $java = Find-Tool $Row.command (Join-Path $env:JAVA_HOME 'bin') }
-                    else { $java = Find-Tool $Row.command }
-                    $version = Invoke-Tool $java $Row.arguments
-                    $found = "${source}: $version"
-                    $ok = $version -match $Row.pattern
-                } catch { $found = "${source}: $($_.Exception.Message)"; $ok = $false }
+                $java = $null
+                if ($env:JAVA_HOME) {
+                    try {
+                        $java = Find-Tool $Row.command (Join-Path $env:JAVA_HOME 'bin')
+                        $source = "JAVA_HOME ($env:JAVA_HOME)"
+                    } catch { $java = $null }
+                }
+                if (-not $java) { $java = Find-Tool $Row.command }
+                $output = Invoke-Tool $java $Row.arguments
+                $major = [regex]::Match($output, '(?m)version "(\d+)').Groups[1].Value
+                $found = "$source; $(($output -split '\r?\n')[0])"
+                $ok = $major -and ([int]$major -ge [int]$Row.minimum_major)
             }
             'presence' { $found = Find-Tool $Row.command; $ok = $true }
             'powershell' { $found = $PSVersionTable.PSVersion.ToString(); $ok = $PSVersionTable.PSVersion.Major -ge $Row.minimum }
@@ -160,27 +172,34 @@ function Test-Row($Row, $Pins) {
             }
             'android-sdk' {
                 $sdk = Get-AndroidSdkRoot
-                $platform = Test-Path -LiteralPath (Join-Path $sdk "platforms/android-$($Row.target)/android.jar") -PathType Leaf
-                $buildTools = @(Get-ChildItem (Join-Path $sdk 'build-tools') -Directory -ErrorAction SilentlyContinue)
-                $found = "${sdk}; android-$($Row.target): $platform; build-tools: $($buildTools.Name -join ', ')"
-                $ok = $platform -and $buildTools.Count -gt 0
+                $manifest = Get-EngineAndroidManifest $Pins
+                $platform = Test-Path -LiteralPath (Join-Path $sdk "platforms/$($manifest.platforms)/android.jar") -PathType Leaf
+                $buildTools = Test-Path -LiteralPath (Join-Path $sdk "build-tools/$($manifest.'build-tools')") -PathType Container
+                $cmake = Test-Path -LiteralPath (Join-Path $sdk "cmake/$($manifest.cmake)") -PathType Container
+                $found = "${sdk}; $($manifest.platforms): $platform; build-tools $($manifest.'build-tools'): $buildTools; cmake $($manifest.cmake): $cmake"
+                $ok = $platform -and $buildTools -and $cmake
             }
             'ndk' {
-                $ndk = $env:NDKROOT
-                if (-not $ndk) {
-                    $ndk = Join-Path (Get-AndroidSdkRoot) "ndk/$($Row.version)"
-                }
-                $properties = Get-Content (Join-Path $ndk 'source.properties') -Raw
-                $found = ([regex]::Match($properties, 'Pkg.Revision\s*=\s*([^\r\n]+)')).Groups[1].Value.Trim()
-                $ok = $found -eq $Row.version
+                $sdk = Get-AndroidSdkRoot
+                $manifest = Get-EngineAndroidManifest $Pins
+                $properties = Join-Path $sdk "ndk/$($manifest.ndk)/source.properties"
+                $found = "$($manifest.MainVersion) ($($manifest.ndk))"
+                $ok = Test-Path -LiteralPath $properties -PathType Leaf
+                if (-not $ok) { $found += "; not installed under $sdk" }
             }
             'studio' {
                 $studio = $env:ANDROID_STUDIO_HOME
                 if (-not $studio) { $studio = Join-Path $env:ProgramFiles 'Android/Android Studio' }
-                $product = Get-Content (Join-Path $studio 'product-info.json') -Raw | ConvertFrom-Json
-                $found = $product.version
-                if ($product.versionSuffix) { $found += " $($product.versionSuffix)" }
-                $ok = $found -eq "$($Row.version) Patch $($Row.patch)"
+                $product = Join-Path $studio 'product-info.json'
+                $runtime = Join-Path $studio 'jbr/bin/java.exe'
+                $version = 'unknown'
+                if (Test-Path -LiteralPath $product) {
+                    $info = Get-Content -LiteralPath $product -Raw | ConvertFrom-Json
+                    $version = $info.version
+                    if ($info.versionSuffix) { $version += " $($info.versionSuffix)" }
+                }
+                $found = "$studio; version $version; bundled runtime: $(Test-Path -LiteralPath $runtime)"
+                $ok = (Test-Path -LiteralPath $product) -and (Test-Path -LiteralPath $runtime)
             }
             'environment' { $found = [Environment]::GetEnvironmentVariable($Row.variable); $ok = $found -and (Test-Path -LiteralPath $found -PathType Container) }
             'linux-toolchain' {

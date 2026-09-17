@@ -147,28 +147,27 @@
     {
       "id": "studio",
       "component": "Android Studio",
-      "expected": "Koala 2024.1.2 Patch 1; via Turnkey",
+      "expected": "installed, with a bundled JDK (jbr)",
       "detect": "studio",
       "profiles": [
         "android"
       ],
-      "version": "2024.1.2",
-      "patch": "1"
+      "note": "The engine pins the SDK platform, build-tools, cmake and NDK in Engine/Config/Android/Android_SDK.json; it does not pin an Android Studio version. Studio is required because Epic's SetupAndroid script uses its sdkmanager and its bundled JDK, so this row checks for the install and the runtime, not a version."
     },
     {
       "id": "ndk",
       "component": "Android NDK",
-      "expected": "r27c",
+      "expected": "the version in the engine's Android_SDK.json",
       "detect": "ndk",
       "profiles": [
         "android"
       ],
-      "version": "27.2.12479018"
+      "source": "engine-manifest"
     },
     {
       "id": "jdk",
       "component": "JDK",
-      "expected": "OpenJDK 21.0.3",
+      "expected": "a JDK on JAVA_HOME or the search PATH, major version 17 or newer",
       "detect": "jdk",
       "profiles": [
         "android"
@@ -177,20 +176,18 @@
       "arguments": [
         "-version"
       ],
-      "pattern": "openjdk version \"21\\.0\\.3(?:[+\"-])"
+      "minimum_major": 17
     },
     {
       "id": "android-sdk",
       "component": "Android SDK",
-      "expected": "platform android-35 and build-tools present",
+      "expected": "the platform, build-tools and cmake in the engine's Android_SDK.json",
       "detect": "android-sdk",
       "profiles": [
         "android"
       ],
-      "target": 35,
-      "compile_minimum": 34,
-      "installable_minimum": 26,
-      "project_settings": "Installable minimum API 26 and compile minimum 34 are project build settings verified at task 4.1, not SDK artifacts."
+      "project_settings": "The APK's targetSdkVersion and minSdkVersion are project build settings verified at task 4.1 and gated at 6.2; they are not SDK artifacts.",
+      "source": "engine-manifest"
     },
     {
       "id": "linux-toolchain",
