@@ -150,6 +150,14 @@ struct DecoderCounters {
   std::uint64_t sentinel_rejections{};
 };
 
+struct TelemetryHealth {
+  Time last_bytes{};                 // last time the framer was fed any bytes
+  Time last_telemetry_record{};      // last decoded telemetry-role record
+  Time last_status_record{};         // last decoded status-role record
+  bool TransportConnected(Time now, Time transport_deadline) const;      // now - last_bytes <= deadline
+  bool AcquisitionReceiving(Time now, Time acquisition_deadline) const;  // now - last_telemetry_record <= deadline
+};
+
 using SampleSink = void (*)(void* context, const Sample&);
 
 class BinaryTelemetryV1Decoder {
@@ -169,7 +177,7 @@ Framer and decoder are separate objects on purpose: docs/ARCHITECTURE.md keeps t
 
 **Allocation contract.** The framer holds a fixed `std::array<std::byte, 64>` carry buffer and allocates nothing, ever. It never needs to retain more than 20 bytes of undecided input: a candidate, its 16-byte frame and the 4 lookahead bytes. It scans the caller's span in place and copies only the carry-over. The decoder allocates nothing. 2.11's no-unbounded-allocation gate is therefore an assertion that the counting allocator recorded zero allocations, not that growth stayed bounded.
 
-New `ErrorCode` enumerators are **appended** to chunk 02's `Errors.h`, never renumbered and never reordered: `pack_duplicate_frame_id`, `pack_frames_unsorted`, `pack_field_past_payload_length`, `pack_zero_field_width`, `pack_status_identifier_not_enumerated`, `pack_empty_frame_list`, `pack_invalid_scale`. That file and `packages/signal-core/CMakeLists.txt` are the only chunk 02 files this chunk may edit.
+New `ErrorCode` enumerators are **appended** to chunk 02's `Errors.h`, never renumbered and never reordered: `pack_duplicate_frame_id`, `pack_frames_unsorted`, `pack_field_past_payload_length`, `pack_zero_field_width`, `pack_empty_frame_list` (the pack's `frames` span is empty; a frame whose `fields` span is empty is accepted), `pack_invalid_scale` (a field's `scale` is zero or not finite, or its `offset` is not finite). A pack may contain zero or more status-role frames; nothing checks a status identifier against an external set. That file and `packages/signal-core/CMakeLists.txt` are the only chunk 02 files this chunk may edit.
 
 ### 3. Numbers used, and where they come from
 
@@ -192,6 +200,8 @@ New `ErrorCode` enumerators are **appended** to chunk 02's `Errors.h`, never ren
 | Heartbeat period in tests | 1000 ms | chosen test value, matches the relay's observed period |
 | Status-role frame in the converted pack | 0xC82, `role: status`, every field `acquisition: held` | derived in **Heartbeats** below |
 | Differential tolerance | `abs(a-b) <= max(1e-9, 1e-9 * max(abs(a), abs(b)))` | chosen default for this spec |
+| Definition-pack `api` emitted by the converter | 1 | docs/PLUGIN-EXPERIENCE.md example (`api: 1`); fixed, no flag |
+| Transport and acquisition deadlines in tests | 2000 ms each | chosen test values |
 
 PLAN.md 2.12 says "within the declared scaling precision" and gives no number. The tolerance above is chosen because both sides perform one double multiply and one add on the same integer, so agreement should be exact; a tolerance this tight makes any real disagreement visible instead of absorbed.
 
@@ -240,13 +250,13 @@ Definitions come from the loaded pack, never a hardcoded table. Field byte offse
 - `2.9 live field in the same frame publishes age evidence measured`
 - `2.9 all twenty one enumerated identifiers decode from the fixture pack`
 
-`test_definition_pack.cpp` covers `ValidatePack` against hand-built structs: `2.9 field past the payload length is rejected`, `2.9 duplicate frame id is rejected`, `2.9 unsorted frame list is rejected`, `2.9 zero field width is rejected`, `2.9 status identifier absent from the frame list is rejected`, and `2.9 a frame with an empty field list is accepted` (the converter can legitimately emit one, see **The converter**).
+`test_definition_pack.cpp` covers `ValidatePack` against hand-built structs: `2.9 field past the payload length is rejected`, `2.9 duplicate frame id is rejected`, `2.9 unsorted frame list is rejected`, `2.9 zero field width is rejected`, `2.9 empty frame list is rejected`, `2.9 zero or non-finite scale is rejected`, `2.9 non-finite offset is rejected`, and `2.9 a frame with an empty field list is accepted` (the converter can legitimately emit one, see **The converter**).
 
 ### 6. Heartbeats and held traffic (task 2.10)
 
 The relay emits a synthetic status record on client accept and once per second while the board is silent, because its downstream client treats a gap of roughly two seconds as a disconnect. That record is a well-formed 16-byte record with the board's own status identifier (0xC82: barometric pressure, fault codes, reconnects, sample rate) and it repeats the last real barometric word, so **content cannot distinguish a heartbeat from a real status record**. Classification is therefore by the frame's declared role, which is explicit and lives in the pack, as PLAN.md 2.10 asks.
 
-How it is expressed: the definition-pack schema (chunk 03) carries a required per-frame `role`, `telemetry` or `status`, and `DefinitionPackBuilder` maps it to `FrameDefinition::role`. A `status` record updates transport health, increments `status_records`, and publishes its fields exactly as their declared `acquisition` says; the converter marks every field of a status-role frame `held`, so those samples publish with the receive timestamp updated normally and `age_evidence = unknown`, and the renderer shows them with the age-unknown marker. A status record never counts toward acquisition health. Acquisition health is "a telemetry-role record was decoded within the acquisition deadline" (the connector's setting; 2000 ms chosen test value here). Heartbeat-only traffic therefore keeps the transport connected, keeps the status frame's held fields valid with age unknown, and lets every telemetry-role signal go stale at its own deadline. There is no hidden struct member outside the pack: everything the parser needs to classify a frame is in the JSON the owner can read and edit. The differential check compares the status frame's fields as ordinary decoded values, because they are published.
+How it is expressed: the definition-pack schema (chunk 03) carries a required per-frame `role`, `telemetry` or `status`, and `DefinitionPackBuilder` maps it to `FrameDefinition::role`. A `status` record updates transport health, increments `status_records`, and publishes its fields exactly as their declared `acquisition` says; the converter marks every field of a status-role frame `held`, so those samples publish with the receive timestamp updated normally and `age_evidence = unknown`, and the renderer shows them with the age-unknown marker. A status record never counts toward acquisition health. Acquisition health is "a telemetry-role record was decoded within the acquisition deadline". Both states are computed by the `TelemetryHealth` struct in `BinaryTelemetryV1.h` (see the interface block) from the decoder's record timestamps and the injected clock, with caller-supplied deadlines; the 4.9 connector reuses it rather than inventing its own. Test values, chosen: transport is disconnected after 2000 ms with no bytes, acquisition is not receiving after 2000 ms with no telemetry-role record. Heartbeat-only traffic therefore keeps the transport connected, keeps the status frame's held fields valid with age unknown, and lets every telemetry-role signal go stale at its own deadline. There is no hidden struct member outside the pack: everything the parser needs to classify a frame is in the JSON the owner can read and edit. The differential check compares the status frame's fields as ordinary decoded values, because they are published.
 
 Tests in `test_heartbeat_and_held.cpp`:
 
@@ -325,7 +335,7 @@ python tools/differential-check.py --xml <XML_PATH> \
 
 The reference decoder is imported by absolute path and nothing from the owner's repository is copied into this one, per PLAN.md 2.12 and A7.
 
-**The synthetic set** covers every one of the 21 enumerated identifiers and, within each frame, every field's boundary values: minimum, maximum, zero, and one least-significant bit either side of any sign boundary, meaning `0x7FFF`/`0x8000` for a 16-bit field and `0x7F`/`0x80` for an 8-bit field. Each record is 16 bytes: tag, little-endian u32 identifier, 8-byte payload. An identifier or field absent from the set fails the gate rather than passing silently, so the builder derives the set from the pack and cross-checks it against the identifiers the XML defines.
+**The synthetic set** covers every identifier present in the converted pack (19 of the 21 identifiers in 0xC80 to 0xC94: the write-direction frame and the display-only frame lie inside that span, are not emitted by the converter, and appear in the report's no-comparable-output section; the hand-written fixture pack separately covers all 21 for the parser tests) and, within each frame, every field's boundary values: minimum, maximum, zero, and one least-significant bit either side of any sign boundary, meaning `0x7FFF`/`0x8000` for a 16-bit field and `0x7F`/`0x80` for an 8-bit field. Each record is 16 bytes: tag, little-endian u32 identifier, 8-byte payload. An identifier or field absent from the set fails the gate rather than passing silently, so the builder derives the set from the pack and cross-checks it against the identifiers the XML defines.
 
 **The C++ side** is `telemetry-decode-jsonl`, reading JSON Lines of `{"frame_id": <int>, "bytes": "<32 hex chars>"}`, running them through the framer and decoder with the converted pack's roles, and writing JSON Lines of `{"frame_id", "field", "raw", "physical", "unit", "quality", "age_evidence", "stream_offset"}`. `physical` is `raw * scale + offset` in the pack's declared unit, and that is what is compared, not an SI-normalized value: the reference decoder performs no SI normalization, so comparing a converted number against an unconverted one would test signal-core's unit table rather than the parser. The unit string sits beside each row so a unit disagreement is still visible.
 
