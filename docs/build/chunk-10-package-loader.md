@@ -19,7 +19,11 @@ Read out of the tree, not assumed. If one is wrong, stop and report it rather th
 - One `PackageReader::Read` already handles both forms: it branches on `std::filesystem::is_directory` at `src/PackageReader.cpp:127`. docs/ARCHITECTURE.md requires exactly one interface, one bound set and one path resolver for both. Do not add a second reader.
 - `std::filesystem` is load-bearing for security, not convenience. `src/PackageReader.cpp` uses `symlink_status`, `is_symlink`, `hard_link_count` and `canonical` to implement the traversal, symlink, hard-link and case-collision rejections. **Do not replace it with an injected file-system interface.** Unreal's `IPlatformFile` does not expose hard-link counts or symlink status, so the substitution would silently weaken checks that 43 fixtures currently prove. This is the one place where docs/ARCHITECTURE.md's "inject the file system" rule loses to a stronger requirement, and the report must say so.
 - `Error` carries `code`, `pointer` and `message`, and `CodeName(ErrorCode)` returns a stable string. The on-screen error in PLAN 4.4's gate is built from these three; no new error type is needed.
-- `tests/fixtures/packages/` holds 43 cases, each as both `<name>/` and `<name>.udash`, with `cases.json` mapping each to its expected code. `well-formed` is the valid one.
+- `tests/fixtures/packages/` holds 43 cases in `cases.json`, each with a `name` and an expected `code`. `well-formed` is the valid one.
+- **17 of the 43 carry `"archive_only": true` and have no meaningful directory form.** They are the ones a filesystem cannot represent: malformed zip bytes, zip64 structures, ZIP central-directory bounds, DOS attribute and reparse flags, and path forms no filesystem will create (`absolute-path`, `drive-letter`, `path-traversal`, `symlink`, `duplicate-normalized`, `case-collision`, `unicode-case-collision`, `unix-device-entry`). A `<name>/` directory exists on disk for some of them, but it does not reproduce the defect and must not be treated as a second form.
+
+  The archive-versus-directory parity in PLAN 4.4's gate therefore applies to the **26 cases without the flag**. Read the flag from `cases.json`; do not hardcode the list, and do not count directories on disk.
+- `cases.json` entries may also carry a `profile` key, which selects `mobile` or `desktop` and therefore which texture budget applies. Honour it rather than running every case under one profile.
 - `Document` is opaque: it exposes only `Storage&`. Whatever the widget builder needs must come through an accessor added in deliverable 2, not by reaching into `Storage`.
 - Unreal's UBT compiles `.c` files in a module, so `miniz.c` can be built in-module. Confirm this rather than assuming it.
 
@@ -102,10 +106,10 @@ A rejected package leaves the player running and showing the error. It does not 
 
 1. `DashboardSpec` builds under UBT for Win64 **and** Android ARM64, and the Android result is reported explicitly whichever way it goes.
 2. The CMake `dashboard-spec` build stays green on Windows and Linux with exceptions and RTTI off, and its doctest case and assertion counts do not drop.
-3. All 43 fixtures load through the engine loader. `well-formed` succeeds in both packed and unpacked form; the other 42 are rejected with the code `cases.json` expects.
-4. For every one of the 43, the code and the JSON pointer are **identical** between the archive form and the directory form. A mismatch is a failure, not a note.
+3. All 43 fixtures load through the engine loader in archive form, each under the profile `cases.json` gives it. `well-formed` succeeds; the other 42 are rejected with the code `cases.json` expects.
+4. For each of the **26 cases without `archive_only`**, the code and the JSON pointer are **identical** between the archive form and the directory form. A mismatch is a failure, not a note. The 17 archive-only cases are run in archive form only, and the report states that count so a future reader can tell a deliberate exclusion from a skipped test.
 5. Launching with `well-formed` renders the placeholder widget tree, in both packed and unpacked form.
-6. Launching with each rejection case shows the on-screen error naming the file and the pointer, and does not crash. Run all 42, not a sample.
+6. Launching with each of the 42 rejection cases shows the on-screen error naming the file and the pointer, and does not crash. Run all 42, not a sample.
 7. `scripts/doctor.ps1 -Profile workstation` exits 0 including the extended layering check, and the full Pester suite passes with no reduction in count.
 8. The device half of the PLAN 4.4 gate runs on the desk device (the Pixel), not the head unit, per PLAN 4.4. **This requires the phone connected over USB and is Claude's to run, not Codex's.** If the phone is unavailable the criterion is reported as not run, and the chunk is not complete until it is.
 
