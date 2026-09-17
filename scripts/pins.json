@@ -154,12 +154,12 @@
     {
       "id": "studio",
       "component": "Android Studio",
-      "expected": "installed, with a bundled JDK (jbr) in the supported major-version range",
+      "expected": "installed, with a bundled JDK (jbr)",
       "detect": "studio",
       "profiles": [
         "android"
       ],
-      "note": "The engine pins the SDK platform, build-tools, cmake and NDK in Engine/Config/Android/Android_SDK.json; it does not pin an Android Studio version. Studio is required because Epic's SetupAndroid script uses its sdkmanager, and because UnrealBuildTool substitutes Studio's bundled JDK for JAVA_HOME when its SDK layout check is not satisfied. That substitution is why this row checks the bundled JDK's version and not only that it exists: a Studio release whose JDK is newer than the engine's gradle compiles the native library and then fails the APK step."
+      "note": "The engine pins the SDK platform, build-tools, cmake and NDK in Engine/Config/Android/Android_SDK.json; it does not pin an Android Studio version. Studio is required because Epic's SetupAndroid script uses its sdkmanager. Its bundled JDK is what UnrealBuildTool puts on JAVA_HOME for the APK step, and recent Studio releases bundle one newer than the engine's gradle can read, which is why the project overrides gradle's JDK rather than depending on this one. The version here is reported, not enforced."
     },
     {
       "id": "ndk",
@@ -174,7 +174,7 @@
     {
       "id": "jdk",
       "component": "JDK",
-      "expected": "a JDK on JAVA_HOME or the search PATH, within the supported major-version range",
+      "expected": "a JDK on JAVA_HOME or the search PATH, major version 17 or newer",
       "detect": "jdk",
       "profiles": [
         "android"
@@ -182,7 +182,24 @@
       "command": "java",
       "arguments": [
         "-version"
-      ]
+      ],
+      "minimum_major": 17,
+      "note": "UnrealBuildTool rejects an Android build when the JDK on JAVA_HOME is older than 17. It does not use this JDK for gradle, so the gradle range is enforced by the project JDK row instead."
+    },
+    {
+      "id": "project-jdk",
+      "component": "Project JDK",
+      "expected": "UNREALDASH_JAVA_HOME naming a JDK in the supported major-version range",
+      "detect": "project-jdk",
+      "profiles": [
+        "android"
+      ],
+      "command": "java",
+      "arguments": [
+        "-version"
+      ],
+      "variable": "UNREALDASH_JAVA_HOME",
+      "note": "UnRealDash_UPL.xml writes this path into gradle.properties as org.gradle.java.home, which is the only lever the project has over gradle's JDK: UnrealBuildTool overwrites JAVA_HOME with Android Studio's bundled JDK, and the engine's own JavaPath config override loses to the same substitution. The doctor reads the process value first and the stored user value second, because UnrealBuildTool resolves the variable when it processes the UPL file and was observed taking the stored value even when the launching shell exported a different one."
     },
     {
       "id": "android-sdk",
@@ -324,6 +341,6 @@
   "jdk": {
     "minimum_major": 17,
     "maximum_major": 23,
-    "note": "The floor is the engine's gradle config, which sets sourceCompatibility and targetCompatibility to 17. The ceiling is the gradle the engine ships: gradle 8.13 cannot read a class file newer than Java 23 and fails the APK step with \"Unsupported class file major version\". Two rows enforce this range because UnrealBuildTool does not always use JAVA_HOME: when its Android SDK layout check is not satisfied it substitutes the JDK bundled with Android Studio, so that one has to be in range as well."
+    "note": "The range gradle must run on. The floor is the engine's gradle config, which sets sourceCompatibility and targetCompatibility to 17. The ceiling is the gradle the engine ships: gradle 8.13 cannot read a class file newer than Java 23 and fails the APK step with \"Unsupported class file major version\". The project supplies this JDK to gradle through org.gradle.java.home, written by UnRealDash_UPL.xml from UNREALDASH_JAVA_HOME, because UnrealBuildTool overwrites JAVA_HOME with the JDK bundled in Android Studio whenever its Android SDK layout check is not satisfied."
   }
 }

@@ -24,7 +24,9 @@ BeforeAll {
         workstation = $workstationRows
         # Engine target-platform support is a separate optional download, so each target profile
         # carries its own row for it rather than the workstation profile demanding both.
-        android = $workstationRows + @('Engine Android support', 'Android Studio', 'Android NDK', 'JDK', 'Android SDK')
+        # 'Project JDK' is a PLAN 0.7 amendment: JAVA_HOME is not the JDK gradle runs on, so the
+        # JDK the project hands gradle is checked separately from the one UnrealBuildTool requires.
+        android = $workstationRows + @('Engine Android support', 'Android Studio', 'Android NDK', 'JDK', 'Project JDK', 'Android SDK')
         linux = $workstationRows + @('Engine Linux support', 'Linux cross toolchain', 'LINUX_MULTIARCH_ROOT')
         device = $workstationRows + @('ADB reachability', 'Device free storage')
     }
@@ -246,11 +248,44 @@ exit 9
         Assert-Row (Invoke-Child 'doctor.ps1' $invokeArguments) 'C: free space' 'FAIL' 1
     }
 
-    It 'JDK prefers JAVA_HOME and enforces both ends of the supported major-version range' {
-        $data = New-FixturePins @('jdk')
+    It 'the project JDK row enforces both ends of the range gradle supports' {
+        # UnRealDash_UPL.xml writes this JDK into gradle.properties as org.gradle.java.home. It is a
+        # separate row from JDK because JAVA_HOME is not what gradle ends up running: UnrealBuildTool
+        # replaces it with Android Studio's bundled JDK when its SDK layout check is not satisfied.
+        $data = New-FixturePins @('project-jdk')
         $file = Save-FixturePins $data
         $floor = $data.jdk.minimum_major
         $ceiling = $data.jdk.maximum_major
+        $jdkHome = Join-Path $TestDrive 'project-jdk-home'
+        $arguments = @('-Profile', 'android', '-PinsFile', $file)
+        # Not set at all is a failure that names the variable. The row falls back to the stored
+        # user value, which is set on a configured machine, so the unset case is driven through a
+        # pins file naming a variable that cannot exist rather than by clearing the real one.
+        $absentData = New-FixturePins @('project-jdk')
+        $absentData.rows[0].variable = 'UNREALDASH_JAVA_HOME_ABSENT_FIXTURE'
+        $absent = Invoke-Child 'doctor.ps1' @('-Profile', 'android', '-PinsFile', (Save-FixturePins $absentData))
+        Assert-Row $absent 'Project JDK' 'FAIL' 1
+        $absent.Text | Should -Match 'UNREALDASH_JAVA_HOME_ABSENT_FIXTURE'
+        $file = Save-FixturePins $data
+        foreach ($case in @(
+            @{ Version = "$floor.0.1"; Status = 'PASS'; Code = 0 }
+            @{ Version = "$ceiling.0.1"; Status = 'PASS'; Code = 0 }
+            @{ Version = '11.0.2'; Status = 'FAIL'; Code = 1 }
+            @{ Version = "$($ceiling + 1).0.1"; Status = 'FAIL'; Code = 1 }
+        )) {
+            Write-Wrapper (Join-Path $jdkHome 'bin') 'java.ps1' "Write-Output 'openjdk version `"$($case.Version)`"'"
+            $result = Invoke-Child 'doctor.ps1' $arguments @{ UNREALDASH_JAVA_HOME = $jdkHome }
+            Assert-Row $result 'Project JDK' $case.Status $case.Code
+            $result.Text | Should -Match ([regex]::Escape($case.Version))
+        }
+    }
+
+    It 'JDK prefers JAVA_HOME and enforces the major-version floor' {
+        # A floor only. UnrealBuildTool refuses to build Android below 17, but it overwrites
+        # JAVA_HOME before gradle runs, so the range gradle needs belongs to the Project JDK row.
+        $data = New-FixturePins @('jdk')
+        $file = Save-FixturePins $data
+        $floor = $data.rows[0].minimum_major
         $jdkHome = Join-Path $TestDrive 'jdk-home'
         $directory = Join-Path $TestDrive 'java-path'
         Write-Wrapper $directory 'java.cmd' "@echo off`r`necho openjdk version `"$floor.0.1`""
@@ -265,15 +300,8 @@ exit 9
         Assert-Row $mismatch 'JDK' 'FAIL' 1
         $mismatch.Text | Should -Match 'JAVA_HOME'
         $mismatch.Text | Should -Match '11\.0\.2'
-        # A JDK above the ceiling also fails. Android Studio bundles one, and it compiles the native
-        # library and then fails the APK step, so the doctor has to reject it before the build does.
-        $above = $ceiling + 1
-        Write-Wrapper (Join-Path $jdkHome 'bin') 'java.ps1' "Write-Output 'openjdk version `"$above.0.1`"'"
-        $tooNew = Invoke-Child 'doctor.ps1' $arguments @{ JAVA_HOME = $jdkHome }
-        Assert-Row $tooNew 'JDK' 'FAIL' 1
-        $tooNew.Text | Should -Match 'too new'
-        # The ceiling itself is supported.
-        Write-Wrapper (Join-Path $jdkHome 'bin') 'java.ps1' "Write-Output 'openjdk version `"$ceiling.0.1`"'"
+        # A JDK above the gradle ceiling is fine here: this row is not what gradle runs on.
+        Write-Wrapper (Join-Path $jdkHome 'bin') 'java.ps1' 'Write-Output ''openjdk version "25.0.3"'''
         Assert-Row (Invoke-Child 'doctor.ps1' $arguments @{ JAVA_HOME = $jdkHome }) 'JDK' 'PASS' 0
         $fallback = Invoke-Child 'doctor.ps1' $arguments @{ JAVA_HOME = $null }
         Assert-Row $fallback 'JDK' 'PASS' 0

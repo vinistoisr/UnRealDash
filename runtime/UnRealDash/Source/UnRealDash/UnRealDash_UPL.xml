@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Tells gradle which JDK to build the APK with.
+
+  UnrealBuildTool does not always hand gradle the JDK on JAVA_HOME. When its Android SDK layout
+  check is not satisfied, AndroidPlatformSDK.TryGetEnvironmentForManualSDK replaces JAVA_HOME with
+  the JDK bundled inside Android Studio, and on some machines it always does. Android Studio
+  releases now bundle a JDK newer than the gradle the engine ships, and gradle 8.13 cannot read a
+  class file newer than Java 23: the native library compiles and then the APK step fails with
+  "Unsupported class file major version". The engine's own JavaPath config override loses to the
+  same substitution, so the only lever left is gradle's own, org.gradle.java.home.
+
+  The path comes from UNREALDASH_JAVA_HOME rather than JAVA_HOME because by the time this file is
+  processed JAVA_HOME has already been overwritten in UnrealBuildTool's process. The doctor's
+  android profile checks that variable and reports what to set it to. When it is not set this file
+  does nothing, so a machine whose JAVA_HOME survives keeps the engine's own behaviour.
+
+  gradle.properties is a Java properties file, where a backslash escapes the next character, so the
+  path is written with forward slashes.
+-->
+<root xmlns:android="http://schemas.android.com/apk/res/android">
+	<init>
+		<setBoolEnvVarDefined result="bHasProjectJdk" value="%UNREALDASH_JAVA_HOME%"/>
+		<setStringFromEnvVar result="ProjectJdk" value="%UNREALDASH_JAVA_HOME%"/>
+		<setStringReplace result="ProjectJdk" source="$S(ProjectJdk)" find="\" with="/"/>
+		<!-- Logged because the JDK gradle runs on is otherwise invisible until it fails. -->
+		<log text="UnRealDash: gradle JDK from UNREALDASH_JAVA_HOME = $S(ProjectJdk) (set: $B(bHasProjectJdk))"/>
+	</init>
+
+	<gradleProperties>
+		<if condition="bHasProjectJdk">
+			<true>
+				<insertNewline/>
+				<insertValue value="org.gradle.java.home=$S(ProjectJdk)"/>
+				<insertNewline/>
+			</true>
+		</if>
+	</gradleProperties>
+</root>
