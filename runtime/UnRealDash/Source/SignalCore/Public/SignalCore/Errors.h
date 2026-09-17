@@ -19,7 +19,13 @@ enum class ErrorCode : std::uint16_t {
     recording_version = 13,
     io_error = 14,
     non_finite = 15,
-    invalid_sequence = 16
+    invalid_sequence = 16,
+    pack_duplicate_frame_id,
+    pack_frames_unsorted,
+    pack_field_past_payload_length,
+    pack_zero_field_width,
+    pack_empty_frame_list,
+    pack_invalid_scale
 };
 struct Status {
     ErrorCode code{};

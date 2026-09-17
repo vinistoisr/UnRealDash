@@ -212,3 +212,69 @@ missing NaN values remain NaN. The received marker is registry bookkeeping, not 
 recording-v1 field. `DisplayValue::status` reports checked time-subtraction errors
 with invalid quality and a NaN value. `Export.h` preserves UBT's `SIGNALCORE_API`
 and defines it as empty only when the build system has not supplied it.
+
+
+## Binary telemetry (tasks 2.9, 2.10, 2.11)
+
+`DefinitionPack.h` owns plain frame and field definitions and validation. The
+caller keeps names and spans alive and immutable. The decoder validates its pack
+in the constructor; GetStatus returns the validation status and an invalid decoder
+publishes no samples. JSON stays in
+`dashboard-spec`. Supported integer widths are at most four bytes, matching the
+landed schema. Definitions specify effective signedness and declared units.
+
+`BinaryTelemetryV1Framer` starts in RESYNC. It requires a complete four-byte tag
+at candidate + 16 to confirm a candidate, uses a 64-byte fixed carry array with
+at most 20 bytes occupied, and scans complete caller-owned spans without copying.
+Callbacks consume payload pointers synchronously. EndOfStream counts all retained
+bytes as discarded and counts an enumerated candidate whose lookahead is incomplete.
+Reset applies the same discard accounting, retains cumulative counters and clears
+the stream offset and retained bytes. False synchronization is possible
+when payload bytes themselves form a candidate and its confirmation tag.
+
+The decoder uses the existing injected `Clock`, emits affine values in declared
+units, rejects raw sentinels before conversion, and refreshes held receive timestamps.
+`Sample.source` carries `FieldDefinition.signal` because the specified SampleSink
+has no separate binding argument. The JSON builder assigns these keys from zero in
+ascending frame order and field declaration order. A connector maps these keys to
+its signal registry; a decoder-wide sequence increases for every field emission.
+The generation setter resets sequence and health timestamps, retaining decoder
+counters. ReconnectBinaryTelemetryV1 resets the framer and increments the decoder
+generation together; generation overflow returns an error without changing either.
+
+The specification describes health but omits access to decoder timestamps and raw
+read notifications. `OnBytesReceived()` and `Health()` supply those two operations.
+Call OnBytesReceived only for nonempty reads, including garbage. Unseen decoder
+health timestamps start at Time::min so health is false before the first event.
+The public TelemetryHealth predicates use checked subtraction and inclusive deadlines.
+
+Status-role records publish their own fields according to declared acquisition and
+refresh transport and status health. They never refresh acquisition health or any
+telemetry-role signal. The converted pack marks status fields held, so their receive
+timestamps refresh and their age evidence remains unknown while telemetry signals
+expire during heartbeat-only traffic. TelemetryHealth is exported across module boundaries.
+
+Sentinels explicitly publish NaN with unavailable quality. A non-finite affine
+result publishes NaN with invalid quality and increments non_finite_results.
+Both count as published samples when a sink receives them.
+
+A tag and unknown identifier are classified from eight bytes and increment the
+framer's unknown_identifier_dropped once at that position. RESYNC advances one byte
+and includes it in bytes_discarded, preserving overlapping candidates. All skipped
+bytes, including retained bytes discarded at termination or reset, count as discarded. The decoder
+retains its separate counter for callers that pass unknown FrameEvents directly.
+The locks counter counts each RESYNC-to-SYNCED confirmation. The fuzz false_locks
+metric is max(locks - 1 - reconnects, 0) per input stream, summed across inputs.
+The harness uses fresh framers and no reconnects; streams_with_lock supplies the
+initial-lock baseline in the aggregate. The original generated-boundary metric is
+retained as false_boundary_frames, which does not claim that recovery counts prove
+incorrect frame boundaries. Reset retains cumulative framer counters across reconnects.
+
+The fuzz executable accepts --inputs, --seconds, --seed and --corpus. A zero seconds
+budget disables the time cap for the 10,000,000-input offline proof. Hex corpus
+comments `# boundaries:` identify true generated frame starts; arbitrary tag bytes
+are not treated as ground truth. New/delete instrumentation is thread-local and
+limited to the executable, with counting enabled only during framer/decoder work.
+No allocation instrumentation or mutable global state is in the library. Mutation
+inputs are at most 192 bytes (64 garbage bytes plus eight records); random feed
+chunks are 1 through 31 bytes. The seed is 1234 in the reported proofs.

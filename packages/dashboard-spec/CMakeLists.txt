@@ -16,14 +16,14 @@ if(MSVC)
 else()
     target_compile_options(miniz PRIVATE -Wall -Wextra)
 endif()
+add_subdirectory(../signal-core "${CMAKE_CURRENT_BINARY_DIR}/signal-core")
 add_library(dashboard_spec STATIC
+    src/DefinitionPackBuilder.cpp
     src/Errors.cpp src/BoundedParse.cpp src/SchemaValidation.cpp src/SemanticPass.cpp
-    src/PackageReader.cpp src/PathResolver.cpp src/ImageHeader.cpp src/RuleTreeBuilder.cpp
-    ../../runtime/UnRealDash/Source/SignalCore/Private/Units.cpp
-    ../../runtime/UnRealDash/Source/SignalCore/Private/Errors.cpp)
-target_include_directories(dashboard_spec PUBLIC include ../../runtime/UnRealDash/Source/SignalCore/Public)
+    src/PackageReader.cpp src/PathResolver.cpp src/ImageHeader.cpp src/RuleTreeBuilder.cpp)
+target_include_directories(dashboard_spec PUBLIC include)
 target_include_directories(dashboard_spec SYSTEM PRIVATE ../../third_party/rapidjson/include ../../third_party/valijson/include)
-target_link_libraries(dashboard_spec PRIVATE miniz)
+target_link_libraries(dashboard_spec PUBLIC signal_core PRIVATE miniz)
 target_compile_definitions(dashboard_spec PRIVATE VALIJSON_USE_EXCEPTIONS=0 RAPIDJSON_HAS_STDSTRING=1)
 add_executable(dashboard-spec-validate src/validate_main.cpp)
 target_link_libraries(dashboard-spec-validate PRIVATE dashboard_spec)
@@ -33,7 +33,9 @@ target_include_directories(dashboard-spec-tests SYSTEM PRIVATE ../../third_party
 target_include_directories(dashboard-spec-tests PRIVATE src)
 target_link_libraries(dashboard-spec-tests PRIVATE dashboard_spec)
 target_compile_definitions(dashboard-spec-tests PRIVATE DOCTEST_CONFIG_NO_EXCEPTIONS DOCTEST_CONFIG_NO_EXCEPTIONS_BUT_WITH_ALL_ASSERTS)
-foreach(target dashboard_spec dashboard-spec-validate dashboard-spec-tests)
+add_executable(telemetry-decode-jsonl tools/telemetry-decode-jsonl.cpp)
+target_link_libraries(telemetry-decode-jsonl PRIVATE dashboard_spec)
+foreach(target dashboard_spec dashboard-spec-validate dashboard-spec-tests telemetry-decode-jsonl)
     target_include_directories(${target} SYSTEM PRIVATE ../../third_party/rapidjson/include)
     target_compile_definitions(${target} PRIVATE RAPIDJSON_HAS_STDSTRING=1 DASHBOARD_SCHEMA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/schema" REPO_ROOT="${CMAKE_CURRENT_SOURCE_DIR}/../..")
     if(MSVC)

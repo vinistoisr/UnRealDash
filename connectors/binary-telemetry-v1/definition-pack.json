@@ -1,0 +1,939 @@
+{
+  "api": 1,
+  "frames": [
+    {
+      "id": 3200,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "acquisition": "live",
+          "byte_offset": 0,
+          "byte_order": "little",
+          "name": "rpm",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 2,
+          "byte_order": "little",
+          "name": "map_kpa",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "kPa"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 4,
+          "byte_order": "little",
+          "name": "engine_load",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 6,
+          "byte_order": "little",
+          "name": "iat",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "K"
+        }
+      ]
+    },
+    {
+      "id": 3201,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "acquisition": "live",
+          "byte_offset": 0,
+          "byte_order": "little",
+          "name": "boost",
+          "offset": 0.0,
+          "scale": 0.001,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "bar"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 2,
+          "byte_order": "little",
+          "name": "boost_target",
+          "offset": 0.0,
+          "scale": 0.001,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "bar"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 4,
+          "byte_order": "little",
+          "name": "boost_peak",
+          "offset": 0.0,
+          "scale": 0.001,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "bar"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 6,
+          "byte_order": "little",
+          "name": "n75_duty",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        }
+      ]
+    },
+    {
+      "id": 3202,
+      "id_format": "extended",
+      "length": 8,
+      "role": "status",
+      "signals": [
+        {
+          "acquisition": "held",
+          "byte_offset": 0,
+          "byte_order": "little",
+          "name": "baro",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "kPa"
+        },
+        {
+          "acquisition": "held",
+          "byte_offset": 2,
+          "byte_order": "little",
+          "name": "fault_codes",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "held",
+          "byte_offset": 4,
+          "byte_order": "little",
+          "name": "reconnects",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "held",
+          "byte_offset": 6,
+          "byte_order": "little",
+          "name": "sample_rate",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        }
+      ]
+    },
+    {
+      "id": 3203,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "acquisition": "live",
+          "byte_offset": 0,
+          "byte_order": "little",
+          "name": "coolant_c",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "degC"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 2,
+          "byte_order": "little",
+          "name": "oil_c",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "degC"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 4,
+          "byte_order": "little",
+          "name": "battery_v",
+          "offset": 0.0,
+          "scale": 0.001,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 6,
+          "byte_order": "little",
+          "name": "speed_kmh",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "km/h"
+        }
+      ]
+    },
+    {
+      "id": 3204,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "acquisition": "live",
+          "byte_offset": 0,
+          "byte_order": "little",
+          "name": "ambient_temp",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "degC"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 2,
+          "byte_order": "little",
+          "name": "maf",
+          "offset": 0.0,
+          "scale": 0.01,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 4,
+          "byte_order": "little",
+          "name": "throttle",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "dimensionless"
+        }
+      ]
+    },
+    {
+      "id": 3205,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "acquisition": "live",
+          "byte_offset": 0,
+          "byte_order": "little",
+          "name": "trim_short",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 2,
+          "byte_order": "little",
+          "name": "trim_long",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 4,
+          "byte_order": "little",
+          "name": "charge_air_temp",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "degC"
+        }
+      ]
+    },
+    {
+      "id": 3206,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "acquisition": "live",
+          "byte_offset": 0,
+          "byte_order": "little",
+          "name": "fault_1",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 2,
+          "byte_order": "little",
+          "name": "fault_2",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 4,
+          "byte_order": "little",
+          "name": "fault_3",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 6,
+          "byte_order": "little",
+          "name": "fault_4",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        }
+      ]
+    },
+    {
+      "id": 3207,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "acquisition": "live",
+          "byte_offset": 0,
+          "byte_order": "little",
+          "name": "check_engine",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 2,
+          "byte_order": "little",
+          "name": "overtemp_warning",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 4,
+          "byte_order": "little",
+          "name": "knock_warning",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 6,
+          "byte_order": "little",
+          "name": "boost_deviation_warning",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        }
+      ]
+    },
+    {
+      "id": 3208,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "acquisition": "live",
+          "byte_offset": 2,
+          "byte_order": "little",
+          "name": "fuel_rail_pressure",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "bar"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 4,
+          "byte_order": "little",
+          "name": "lambda_commanded",
+          "offset": 0.0,
+          "scale": 0.001,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 6,
+          "byte_order": "little",
+          "name": "pedal_position",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "dimensionless"
+        }
+      ]
+    },
+    {
+      "id": 3209,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "acquisition": "live",
+          "byte_offset": 0,
+          "byte_order": "little",
+          "name": "knock_cyl_1",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 2,
+          "byte_order": "little",
+          "name": "knock_cyl_2",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 4,
+          "byte_order": "little",
+          "name": "knock_cyl_3",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 6,
+          "byte_order": "little",
+          "name": "knock_cyl_4",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "dimensionless"
+        }
+      ]
+    },
+    {
+      "id": 3210,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "acquisition": "live",
+          "byte_offset": 0,
+          "byte_order": "little",
+          "name": "odometer",
+          "offset": 0.0,
+          "scale": 10.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 2,
+          "byte_order": "little",
+          "name": "catalyst_temp",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "degC"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 4,
+          "byte_order": "little",
+          "name": "run_time",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 6,
+          "byte_order": "little",
+          "name": "distance_since_clear",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        }
+      ]
+    },
+    {
+      "id": 3211,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "acquisition": "live",
+          "byte_offset": 0,
+          "byte_order": "little",
+          "name": "gear",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 2,
+          "byte_order": "little",
+          "name": "steering_counts",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 4,
+          "byte_order": "little",
+          "name": "ride_height_fl",
+          "offset": 0.0,
+          "scale": 0.001,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 6,
+          "byte_order": "little",
+          "name": "ride_height_fr",
+          "offset": 0.0,
+          "scale": 0.001,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        }
+      ]
+    },
+    {
+      "id": 3212,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "acquisition": "live",
+          "byte_offset": 0,
+          "byte_order": "little",
+          "name": "damper_1",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 2,
+          "byte_order": "little",
+          "name": "damper_2",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 4,
+          "byte_order": "little",
+          "name": "damper_3",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 6,
+          "byte_order": "little",
+          "name": "damper_4",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        }
+      ]
+    },
+    {
+      "id": 3213,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "acquisition": "live",
+          "byte_offset": 0,
+          "byte_order": "little",
+          "name": "ride_height_rear",
+          "offset": 0.0,
+          "scale": 0.001,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 2,
+          "byte_order": "little",
+          "name": "aux_visits",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 4,
+          "byte_order": "little",
+          "name": "aux_fails",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 6,
+          "byte_order": "little",
+          "name": "gear_age_s",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        }
+      ]
+    },
+    {
+      "id": 3214,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "acquisition": "live",
+          "byte_offset": 0,
+          "byte_order": "little",
+          "name": "turn_left",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 2,
+          "byte_order": "little",
+          "name": "turn_right",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 4,
+          "byte_order": "little",
+          "name": "steering_deg",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 6,
+          "byte_order": "little",
+          "name": "canbox_age",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        }
+      ]
+    },
+    {
+      "id": 3215,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "acquisition": "live",
+          "byte_offset": 0,
+          "byte_order": "little",
+          "name": "fuel_pump_duty",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 2,
+          "byte_order": "little",
+          "name": "fuel_temp",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "degC"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 4,
+          "byte_order": "little",
+          "name": "rail_spec_bar_abs",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "bar"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 6,
+          "byte_order": "little",
+          "name": "rail_actual_bar_abs",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "bar"
+        }
+      ]
+    },
+    {
+      "id": 3217,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "acquisition": "live",
+          "byte_offset": 0,
+          "byte_order": "little",
+          "name": "dcc_age_s",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 2,
+          "byte_order": "little",
+          "name": "dcc_status",
+          "offset": 0.0,
+          "scale": 1.0,
+          "sentinels": [],
+          "signed": false,
+          "type": "uint16",
+          "unit": "dimensionless"
+        }
+      ]
+    },
+    {
+      "id": 3219,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "acquisition": "live",
+          "byte_offset": 0,
+          "byte_order": "little",
+          "name": "timing_deg",
+          "offset": 0.0,
+          "scale": 0.1,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "dimensionless"
+        },
+        {
+          "acquisition": "live",
+          "byte_offset": 2,
+          "byte_order": "little",
+          "name": "inj_ms",
+          "offset": 0.0,
+          "scale": 0.01,
+          "sentinels": [],
+          "signed": true,
+          "type": "uint16",
+          "unit": "dimensionless"
+        }
+      ]
+    },
+    {
+      "id": 3220,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": []
+    }
+  ],
+  "id": "vehicle.binary-telemetry-v1",
+  "input": "binary-telemetry-v1",
+  "version": "0.1.0"
+}

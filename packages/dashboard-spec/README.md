@@ -160,3 +160,44 @@ The installed Visual Studio CMake 3.31.6-msvc6 and Ninja 1.12.1 ran the same pre
 successfully. This is a tool-version proof deviation, not a claim that the pinned
 versions were tested. No installation, network access or persistent environment
 change was performed. Proof output is reported in the session response; reports are not stored in this source tree.
+
+
+## Definition pack builder and differential tool (tasks 2.9, 2.12, 3.7)
+
+`DefinitionPackBuilder::Build(json, validator)` runs the bounded JSON pre-pass,
+schema validation and existing semantic validation before creating caller-owned
+storage. `Pack()` borrows that storage until the next Build or destruction. Failed
+builds expose an empty pack. Frames are sorted by identifier; names, sentinel
+arrays and field spans remain stable. Unknown units name their string and pointer.
+Frame lengths and offsets must fit the public uint8 representation. Signal keys
+are zero-based field ordinals after sorting frames, not authored signal bindings.
+
+The landed schema uses `signals`, permits empty signal arrays, and represents
+signed fields with unsigned width types plus `signed: true`. The converter and
+fixture follow that schema without modifying it. A field type still supplies the
+width and the explicit signed flag supplies effective signedness.
+
+`tools/telemetry-decode-jsonl.cpp` is the new package tools directory. Build the
+`telemetry-decode-jsonl` target and invoke it with `--pack <path>` and JSON Lines
+on standard input. It feeds every record through the real framer and decoder,
+appends a four-byte tag delimiter for single-record confirmation, emits fields
+on stdout and all parser counters as JSON on stderr. Values remain in declared
+units. An empty frame still contributes to the frame counter.
+
+The offline converter and differential driver import the owner's reference module
+by an explicit absolute path without writing Python caches beside it. The converter
+uses the fixed source label "the owner's schema XML (path withheld)". Conversion
+dates honor SOURCE_DATE_EPOCH in UTC, falling back to today. Unit aliases include kPA to kPa. The reference module supplies no unit or
+health metadata, so these are checked against the converted declarations rather
+than claimed as independent reference evidence. Its decode-call and field counts
+are measured by the driver. The differential report lists unconfirmed temperature
+and pressure conventions without converting them.
+
+Local chunk 05 proof used the permitted Visual Studio 17 2022 x64 generator and
+MSVC 14.44. The pinned per-user CMake 4.4.3 was inaccessible to the sandbox account,
+so the installed Visual Studio CMake 3.31.6-msvc6 was used. No schema, validator,
+vendored library, persistent environment setting or CI file was changed.
+
+The CMake build consumes the signal_core target through add_subdirectory, including
+its source-list drift check and compile options. Standalone signal-core presets
+build tools and tests by default; the nested library build leaves those targets off.

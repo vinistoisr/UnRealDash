@@ -1,0 +1,1186 @@
+{
+  "id": "test.binary-telemetry-v1",
+  "version": "0.1.0",
+  "api": 1,
+  "input": "binary-telemetry-v1",
+  "frames": [
+    {
+      "id": 3200,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "name": "test_0_0",
+          "byte_offset": 0,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "held",
+          "sentinels": []
+        },
+        {
+          "name": "test_0_1",
+          "byte_offset": 2,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_0_2",
+          "byte_offset": 4,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 0.1,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_0_3",
+          "byte_offset": 6,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": -40.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": [
+            65535
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3201,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "name": "test_1_0",
+          "byte_offset": 0,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": true,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "degC",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_1_1",
+          "byte_offset": 2,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_1_2",
+          "byte_offset": 4,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": true,
+          "scale": 0.1,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_1_3",
+          "byte_offset": 6,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": true,
+          "scale": 1.0,
+          "offset": -40.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        }
+      ]
+    },
+    {
+      "id": 3202,
+      "id_format": "extended",
+      "length": 8,
+      "role": "status",
+      "signals": [
+        {
+          "name": "test_2_0",
+          "byte_offset": 0,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "held",
+          "sentinels": []
+        },
+        {
+          "name": "test_2_1",
+          "byte_offset": 2,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "held",
+          "sentinels": []
+        },
+        {
+          "name": "test_2_2",
+          "byte_offset": 4,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 0.1,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "held",
+          "sentinels": []
+        },
+        {
+          "name": "test_2_3",
+          "byte_offset": 6,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": -40.0,
+          "unit": "dimensionless",
+          "acquisition": "held",
+          "sentinels": []
+        }
+      ]
+    },
+    {
+      "id": 3203,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "name": "test_3_0",
+          "byte_offset": 0,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_3_1",
+          "byte_offset": 2,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_3_2",
+          "byte_offset": 4,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 0.1,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_3_3",
+          "byte_offset": 6,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": -40.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        }
+      ]
+    },
+    {
+      "id": 3204,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "name": "test_4_0",
+          "byte_offset": 0,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_4_1",
+          "byte_offset": 2,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_4_2",
+          "byte_offset": 4,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 0.1,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_4_3",
+          "byte_offset": 6,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": -40.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        }
+      ]
+    },
+    {
+      "id": 3205,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "name": "test_5_0",
+          "byte_offset": 0,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_5_1",
+          "byte_offset": 2,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_5_2",
+          "byte_offset": 4,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 0.1,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_5_3",
+          "byte_offset": 6,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": -40.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        }
+      ]
+    },
+    {
+      "id": 3206,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "name": "test_6_0",
+          "byte_offset": 0,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_6_1",
+          "byte_offset": 2,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_6_2",
+          "byte_offset": 4,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 0.1,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_6_3",
+          "byte_offset": 6,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": -40.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        }
+      ]
+    },
+    {
+      "id": 3207,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "name": "test_7_0",
+          "byte_offset": 0,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_7_1",
+          "byte_offset": 2,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_7_2",
+          "byte_offset": 4,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 0.1,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_7_3",
+          "byte_offset": 6,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": -40.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        }
+      ]
+    },
+    {
+      "id": 3208,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "name": "test_8_0",
+          "byte_offset": 0,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_8_1",
+          "byte_offset": 2,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_8_2",
+          "byte_offset": 4,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 0.1,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_8_3",
+          "byte_offset": 6,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": -40.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        }
+      ]
+    },
+    {
+      "id": 3209,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "name": "test_9_0",
+          "byte_offset": 0,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_9_1",
+          "byte_offset": 2,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_9_2",
+          "byte_offset": 4,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 0.1,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_9_3",
+          "byte_offset": 6,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": -40.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        }
+      ]
+    },
+    {
+      "id": 3210,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "name": "test_10_0",
+          "byte_offset": 0,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_10_1",
+          "byte_offset": 2,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_10_2",
+          "byte_offset": 4,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 0.1,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_10_3",
+          "byte_offset": 6,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": -40.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        }
+      ]
+    },
+    {
+      "id": 3211,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "name": "test_11_0",
+          "byte_offset": 0,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_11_1",
+          "byte_offset": 2,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_11_2",
+          "byte_offset": 4,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 0.1,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_11_3",
+          "byte_offset": 6,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": -40.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        }
+      ]
+    },
+    {
+      "id": 3212,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "name": "test_12_0",
+          "byte_offset": 0,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_12_1",
+          "byte_offset": 2,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_12_2",
+          "byte_offset": 4,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 0.1,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_12_3",
+          "byte_offset": 6,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": -40.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        }
+      ]
+    },
+    {
+      "id": 3213,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "name": "test_13_0",
+          "byte_offset": 0,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_13_1",
+          "byte_offset": 2,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_13_2",
+          "byte_offset": 4,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 0.1,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_13_3",
+          "byte_offset": 6,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": -40.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        }
+      ]
+    },
+    {
+      "id": 3214,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "name": "test_14_0",
+          "byte_offset": 0,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_14_1",
+          "byte_offset": 2,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_14_2",
+          "byte_offset": 4,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 0.1,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_14_3",
+          "byte_offset": 6,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": -40.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        }
+      ]
+    },
+    {
+      "id": 3215,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "name": "test_15_0",
+          "byte_offset": 0,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_15_1",
+          "byte_offset": 2,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_15_2",
+          "byte_offset": 4,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 0.1,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_15_3",
+          "byte_offset": 6,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": -40.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        }
+      ]
+    },
+    {
+      "id": 3216,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "name": "test_16_0",
+          "byte_offset": 0,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_16_1",
+          "byte_offset": 2,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_16_2",
+          "byte_offset": 4,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 0.1,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_16_3",
+          "byte_offset": 6,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": -40.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        }
+      ]
+    },
+    {
+      "id": 3217,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "name": "test_17_0",
+          "byte_offset": 0,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_17_1",
+          "byte_offset": 2,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_17_2",
+          "byte_offset": 4,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 0.1,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_17_3",
+          "byte_offset": 6,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": -40.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        }
+      ]
+    },
+    {
+      "id": 3218,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "name": "test_18_0",
+          "byte_offset": 0,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_18_1",
+          "byte_offset": 2,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_18_2",
+          "byte_offset": 4,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 0.1,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_18_3",
+          "byte_offset": 6,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": -40.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        }
+      ]
+    },
+    {
+      "id": 3219,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "name": "test_19_0",
+          "byte_offset": 0,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_19_1",
+          "byte_offset": 2,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_19_2",
+          "byte_offset": 4,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 0.1,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_19_3",
+          "byte_offset": 6,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": -40.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        }
+      ]
+    },
+    {
+      "id": 3220,
+      "id_format": "extended",
+      "length": 8,
+      "role": "telemetry",
+      "signals": [
+        {
+          "name": "test_20_0",
+          "byte_offset": 0,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_20_1",
+          "byte_offset": 2,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_20_2",
+          "byte_offset": 4,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 0.1,
+          "offset": 0.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        },
+        {
+          "name": "test_20_3",
+          "byte_offset": 6,
+          "type": "uint16",
+          "byte_order": "little",
+          "signed": false,
+          "scale": 1.0,
+          "offset": -40.0,
+          "unit": "dimensionless",
+          "acquisition": "live",
+          "sentinels": []
+        }
+      ]
+    }
+  ]
+}
