@@ -19,7 +19,7 @@ BeforeAll {
     $pins = Get-Content (Join-Path $scripts 'pins.json') -Raw | ConvertFrom-Json
     $pwsh = Join-Path $PSHOME 'pwsh.exe'
     # These memberships come from PLAN.md 0.7, independently of pins.json.
-    $workstationRows = @('C: free space', 'Git LFS', 'cmake', 'ninja', 'Visual Studio', 'MSVC toolset', 'Windows SDK', 'Unreal Engine')
+    $workstationRows = @('C: free space', 'Git LFS', 'cmake', 'ninja', 'Visual Studio', 'MSVC toolset', 'Windows SDK', 'Unreal Engine', 'SignalCore layering')
     $planRows = @{
         workstation = $workstationRows
         # Engine target-platform support is a separate optional download, so each target profile
@@ -87,7 +87,7 @@ BeforeAll {
 }
 
 Describe 'Doctor profiles and seams' {
-    It '<Profile> prints exactly the PLAN 0.7 row set' -ForEach @(
+    It '<Profile> prints the PLAN 0.7 row set plus the PLAN 4.3 layering gate' -ForEach @(
         @{ Profile = 'workstation' }, @{ Profile = 'android' }, @{ Profile = 'linux' }, @{ Profile = 'device' }
     ) {
         $result = Invoke-Child 'doctor.ps1' @('-Profile', $Profile)

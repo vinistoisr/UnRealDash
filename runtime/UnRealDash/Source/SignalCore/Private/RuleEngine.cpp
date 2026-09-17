@@ -311,7 +311,7 @@ RuleResult RuleEngine::Evaluate(std::span<const SignalSample> samples, std::uint
 Status RuleEngine::Acknowledge(std::uint32_t rule_id) {
     if (!loaded_ || rule_id != definition_.rule_id)
         return Error(ErrorCode::invalid_configuration, "rule %u not loaded", rule_id);
-    result_.latched = false;
+    ClearLatch();
     return {};
 }
 } // namespace signal_core

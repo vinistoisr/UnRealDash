@@ -25,7 +25,7 @@ private:
     UPROPERTY(Transient) TObjectPtr<UFont> Font;
     FSmokeConfig Config;
     TUniquePtr<UnRealDashCore::FSmokeSimulator> Simulator;
-    UnRealDashCore::FSignalSample Sample = UnRealDashCore::ToEngineSample(signal_core::Sample{});
+    UnRealDashCore::FSignalSample Sample{};
     FString Csv = TEXT("schema_version,frame_index,engine_time_seconds,frame_time_milliseconds,value,quality,age_evidence\n");
     FString ScreenshotPath;
     FDelegateHandle ScreenshotHandle;

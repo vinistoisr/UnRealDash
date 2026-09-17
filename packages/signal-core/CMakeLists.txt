@@ -15,6 +15,9 @@ endif()
 message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "signal_core: C++20, exceptions OFF, RTTI OFF, warnings as errors")
 set(signal_sources
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../runtime/UnRealDash/Source/SignalCore/Private/Acquisition.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../runtime/UnRealDash/Source/SignalCore/Private/Connector.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../runtime/UnRealDash/Source/SignalCore/Private/MemoryConnector.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../runtime/UnRealDash/Source/SignalCore/Private/BinaryTelemetryV1.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../runtime/UnRealDash/Source/SignalCore/Private/DefinitionPack.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../runtime/UnRealDash/Source/SignalCore/Private/Units.cpp"
@@ -73,7 +76,9 @@ if(SIGNAL_CORE_BUILD_TOOLS_AND_TESTS)
         get_filename_component(name "${source}" NAME)
         if(NOT name STREQUAL "main.cpp")
             add_test(NAME "${name}" COMMAND signal-core-tests "--source-file=*${name}")
+            if(name STREQUAL "test_acquisition.cpp" OR name STREQUAL "test_threading_stress.cpp")
+                set_tests_properties("${name}" PROPERTIES TIMEOUT 60)
+            endif()
         endif()
     endforeach()
 endif()
-

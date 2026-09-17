@@ -135,9 +135,7 @@ void ASmokeHUD::BeginPlay()
     if (!Resolved.bRunnable) { FPlatformMisc::RequestExit(false); return; }
     Config = Resolved.Config;
     StartedAt = PreviousTime = GetWorld()->GetRealTimeSeconds();
-    Simulator = MakeUnique<UnRealDashCore::FSmokeSimulator>(signal_core::Clock{GetWorld(), [](void* Context) {
-        return signal_core::Time(static_cast<int64>(static_cast<UWorld*>(Context)->GetRealTimeSeconds() * 1.e9));
-    }});
+    Simulator = MakeUnique<UnRealDashCore::FSmokeSimulator>(UnRealDashCore::MakePlatformClock());
     const UnRealDashCore::FSmokeSimulatorOptions Options{
         Config.Scenario, Config.Seed, Config.DurationSeconds, Config.IntervalMilliseconds};
     const FString SimulationError = Simulator->Start(Options);
@@ -248,7 +246,7 @@ void ASmokeHUD::DrawHUD()
 
     const float W = static_cast<float>(Canvas->SizeX);
     const float H = static_cast<float>(Canvas->SizeY);
-    // Compared as the adapter's string rather than signal_core::Quality::valid on purpose: the
+    // Compared as the adapter's string rather than the internal quality enum on purpose: the
     // game module is not allowed to name signal-core, and chunk 08 adds a check that enforces it.
     const FLinearColor Accent = Quality == TEXT("valid")
         ? FLinearColor(0.25f, 0.78f, 0.95f) : FLinearColor(0.95f, 0.62f, 0.20f);

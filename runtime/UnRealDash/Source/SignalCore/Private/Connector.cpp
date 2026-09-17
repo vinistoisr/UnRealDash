@@ -1,0 +1,1 @@
+#include "SignalCore/Connector.h"

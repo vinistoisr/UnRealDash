@@ -1,24 +1,20 @@
 #pragma once
 #include "CoreTypes.h"
 #include "Containers/UnrealString.h"
-#include "SignalCore/Sample.h"
-
-namespace UnRealDashCore
-{
-struct FSignalSample
-{
-    double Value;
-    signal_core::Unit Unit;
-    uint64 Source;
-    uint64 Sequence;
-    int64 ReceiveNanoseconds;
-    int64 SourceNanoseconds;
-    bool bHasSourceTime;
-    signal_core::Quality Quality;
-    signal_core::AgeEvidence AgeEvidence;
-    uint64 Generation;
+#include <limits>
+namespace UnRealDashCore {
+enum class ESignalQuality : uint8 { Valid, Stale, Unavailable, Invalid };
+enum class ESignalAge : uint8 { Measured, Unknown };
+struct FSignalSample {
+    double Value = std::numeric_limits<double>::quiet_NaN();
+    uint8 Unit = 0;
+    uint64 Source = 0, Sequence = 0;
+    int64 ReceiveNanoseconds = 0, SourceNanoseconds = 0;
+    bool bHasSourceTime = false;
+    ESignalQuality Quality = ESignalQuality::Unavailable;
+    ESignalAge AgeEvidence = ESignalAge::Unknown;
+    uint64 Generation = 0;
 };
-UNREALDASHCORE_API FSignalSample ToEngineSample(const signal_core::Sample& Sample);
-UNREALDASHCORE_API FString ToString(signal_core::Quality Quality);
-UNREALDASHCORE_API FString ToString(signal_core::AgeEvidence Evidence);
+UNREALDASHCORE_API FString ToString(ESignalQuality Quality);
+UNREALDASHCORE_API FString ToString(ESignalAge Evidence);
 }

@@ -1,6 +1,9 @@
 #include "SignalCoreSmokeCommandlet.h"
 #include "SignalCore/SmokeSubset.h"
-#include "UnRealDashCore/SignalCoreAdapter.h"
+#include "SignalCore/ThreadingStressSuite.h"
+#include "Acquisition/StressThreadLauncher.h"
+#include "Misc/Parse.h"
+#include "SignalCoreAdapter.h"
 #include "Containers/StringConv.h"
 #include <cstdio>
 
@@ -15,7 +18,21 @@ USignalCoreSmokeCommandlet::USignalCoreSmokeCommandlet()
 
 int32 USignalCoreSmokeCommandlet::Main(const FString& Params)
 {
-    (void)Params;
+    if (FParse::Param(*Params, TEXT("stress")))
+    {
+        FStressThreadLauncher Launcher;
+        signal_core::threading_stress::NullAllocationProbe Probe;
+        unsigned Failures = 0;
+        for (unsigned Scenario = 0; Scenario < 5; ++Scenario)
+        {
+            auto Result = signal_core::threading_stress::RunScenario(Scenario,
+                [](bool Passed, const char* Name) {
+                    if (!Passed) std::printf("SignalCoreStress failed: %s\n", Name);
+                }, Launcher, Probe);
+            Failures += Result.failures;
+        }
+        return Failures == 0 ? 0 : 1;
+    }
     int32 Assertions = 0;
     int32 Failures = 0;
     const auto Check = [&Assertions, &Failures](bool Passed, const char* Name)

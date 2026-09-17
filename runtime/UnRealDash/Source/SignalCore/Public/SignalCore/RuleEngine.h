@@ -63,6 +63,8 @@ class SIGNALCORE_API RuleEngine {
     Status Load(const RuleDefinition &definition, std::span<const Signal> signals);
     RuleResult Evaluate(std::span<const SignalSample> samples, std::uint64_t generation);
     Status Acknowledge(std::uint32_t rule_id);
+    std::uint32_t RuleId() const { return definition_.rule_id; }
+    void ClearLatch() { result_.latched = false; }
     const RuleResult &Current() const { return result_; }
 
   private:

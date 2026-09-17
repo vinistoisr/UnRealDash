@@ -25,7 +25,8 @@ enum class ErrorCode : std::uint16_t {
     pack_field_past_payload_length,
     pack_zero_field_width,
     pack_empty_frame_list,
-    pack_invalid_scale
+    pack_invalid_scale,
+    need_more_data
 };
 struct Status {
     ErrorCode code{};
