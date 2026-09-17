@@ -19,6 +19,10 @@
 #include "UnrealClient.h"
 #include "DynamicRHI.h"
 #include "RHI.h"
+#include <filesystem>
+#include <fstream>
+#include <string>
+#include <system_error>
 
 ASmokeGameMode::ASmokeGameMode()
 {
@@ -158,7 +162,57 @@ void ASmokeHUD::BeginPlay()
     // Games hold the screen awake while they are foreground. Without this the device locks
     // mid-run, which on the first device pass turned a live capture into a lock screen photo.
     FPlatformApplicationMisc::ControlScreensaver(FPlatformApplicationMisc::Disable);
+    ProbeStandardFileApis(Config.Image, Saved);
     bReady = true;
+}
+
+// SPIKE PROBE for PLAN 4.4. dashboard-spec reads every file through std::ifstream over a
+// std::filesystem::path, and its traversal, symlink, hard-link and case rejections are built on
+// symlink_status, hard_link_count and canonical. If any of that is inert under Epic's Android
+// toolchain then porting that library into the engine needs a different plan, and finding out
+// mid-build is the expensive way. This answers it against a real pushed file on the device.
+// Delete this with the rest of the smoke spike.
+void ASmokeHUD::ProbeStandardFileApis(const FString& ImagePath, const FString& SavedDirectory)
+{
+    const std::string Image(TCHAR_TO_UTF8(*ImagePath));
+    const std::string Directory(TCHAR_TO_UTF8(*SavedDirectory));
+    std::error_code Code;
+
+    std::ifstream Stream(Image, std::ios::binary);
+    std::string Bytes;
+    if (Stream)
+    {
+        Bytes.resize(4096);
+        Stream.read(Bytes.data(), static_cast<std::streamsize>(Bytes.size()));
+        Bytes.resize(static_cast<std::size_t>(Stream.gcount()));
+    }
+    UE_LOG(LogUnRealDash, Display, TEXT("probe ifstream open=%s read_bytes=%d path=%s"),
+        Stream ? TEXT("true") : TEXT("false"), static_cast<int32>(Bytes.size()), *ImagePath);
+
+    const bool bIsDirectory = std::filesystem::is_directory(Directory, Code);
+    UE_LOG(LogUnRealDash, Display, TEXT("probe is_directory=%s error=%d"),
+        bIsDirectory ? TEXT("true") : TEXT("false"), Code.value());
+
+    const auto Status = std::filesystem::symlink_status(Image, Code);
+    UE_LOG(LogUnRealDash, Display, TEXT("probe symlink_status is_symlink=%s error=%d"),
+        std::filesystem::is_symlink(Status) ? TEXT("true") : TEXT("false"), Code.value());
+
+    const auto Links = std::filesystem::hard_link_count(Image, Code);
+    UE_LOG(LogUnRealDash, Display, TEXT("probe hard_link_count=%llu error=%d"),
+        static_cast<uint64>(Code ? 0 : Links), Code.value());
+
+    const auto Canonical = std::filesystem::canonical(Image, Code);
+    UE_LOG(LogUnRealDash, Display, TEXT("probe canonical error=%d path=%s"),
+        Code.value(), UTF8_TO_TCHAR(Canonical.string().c_str()));
+
+    const auto Size = std::filesystem::file_size(Image, Code);
+    UE_LOG(LogUnRealDash, Display, TEXT("probe file_size=%llu error=%d"),
+        static_cast<uint64>(Code ? 0 : Size), Code.value());
+
+    int32 Entries = 0;
+    for (std::filesystem::recursive_directory_iterator It(Directory, std::filesystem::directory_options::none, Code), End;
+         It != End && !Code; ++It) { ++Entries; if (Entries > 64) { break; } }
+    UE_LOG(LogUnRealDash, Display, TEXT("probe recursive_directory_iterator entries=%d error=%d"), Entries, Code.value());
 }
 void ASmokeHUD::DrawHUD()
 {

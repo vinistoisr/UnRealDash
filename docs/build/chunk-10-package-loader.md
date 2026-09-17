@@ -1,6 +1,6 @@
 # Build chunk 10: the package loader
 
-Status: draft for review, then a Codex build session. Covers PLAN.md task 4.4. Read PLAN.md (task 4.4, tasks 3.4 and 3.6, task 4.0's player.json, task 4.5's note that it owns the primitives, the Sequencing block) and docs/ARCHITECTURE.md before writing anything. PLAN.md is the authority on what; this file adds the exact mechanisms, proof commands and implementation constraints. If the two disagree, PLAN.md wins and the disagreement goes in the report.
+Status: revision 2, after a DeepSeek spec review that returned VERDICT: REVISE with one blocker and four majors, and after the Android filesystem question was answered on the device rather than left as a risk. Frozen for a Codex build session. Covers PLAN.md task 4.4. Read PLAN.md (task 4.4, tasks 3.4 and 3.6, task 4.0's player.json, task 4.5's note that it owns the primitives, the Sequencing block) and docs/ARCHITECTURE.md before writing anything. PLAN.md is the authority on what; this file adds the exact mechanisms, proof commands and implementation constraints. If the two disagree, PLAN.md wins and the disagreement goes in the report.
 
 ## Goal
 
@@ -22,7 +22,11 @@ Read out of the tree, not assumed. If one is wrong, stop and report it rather th
 - `tests/fixtures/packages/` holds 43 cases in `cases.json`, each with a `name` and an expected `code`. `well-formed` is the valid one.
 - **17 of the 43 carry `"archive_only": true` and have no meaningful directory form.** They are the ones a filesystem cannot represent: malformed zip bytes, zip64 structures, ZIP central-directory bounds, DOS attribute and reparse flags, and path forms no filesystem will create (`absolute-path`, `drive-letter`, `path-traversal`, `symlink`, `duplicate-normalized`, `case-collision`, `unicode-case-collision`, `unix-device-entry`). A `<name>/` directory exists on disk for some of them, but it does not reproduce the defect and must not be treated as a second form.
 
-  The archive-versus-directory parity in PLAN 4.4's gate therefore applies to the **26 cases without the flag**. Read the flag from `cases.json`; do not hardcode the list, and do not count directories on disk.
+  The archive-versus-directory parity in PLAN 4.4's gate therefore applies to the **26 cases without the flag**. Read the flag from `cases.json` at runtime rather than hardcoding it, and do not count directories on disk. The two sets as they stand today, so a miscount is visible rather than silent:
+
+  **archive_only, 17:** `absolute-path`, `case-collision`, `central-directory-byte-bound`, `central-directory-entry-count`, `dos-reparse-entry`, `drive-letter`, `duplicate-normalized`, `json-underdeclared-size`, `malformed-zip`, `path-traversal`, `symlink`, `unicode-case-collision`, `unix-device-entry`, `windows-attributes-entry`, `zip-bomb`, `zip64-locator-outside-file`, `zip64-small-legacy`.
+
+  **both forms, 26:** the remainder, including `well-formed`.
 - `cases.json` entries may also carry a `profile` key, which selects `mobile` or `desktop` and therefore which texture budget applies. Honour it rather than running every case under one profile.
 - **Every file read in `dashboard-spec` goes through one function**, `ReadBounded` in `src/BoundedParse.cpp:10`, and it uses `std::ifstream` over a `std::filesystem::path`. Three callers: the schema loader (`SchemaValidation.cpp:54`), the directory-form package entry reader (`PackageReader.cpp:233`) and the CLI (`validate_main.cpp:11`).
 
@@ -40,8 +44,16 @@ Read out of the tree, not assumed. If one is wrong, stop and report it rather th
 
 Follow the arrangement PLAN 4.2 established for `SignalCore` exactly, because it is what keeps the CMake build as the engine-independence enforcement:
 
-- Move the sources to `runtime/UnRealDash/Source/DashboardSpec/` (`Public/dashboard_spec/` for the existing `include/dashboard_spec/` headers, `Private/` for `src/`), plus a `DashboardSpec.Build.cs` and one module-registration file carrying `IMPLEMENT_MODULE`.
-- Change `packages/dashboard-spec/CMakeLists.txt` to compile those same files from their new location. `packages/dashboard-spec/` keeps its `CMakeLists.txt`, its doctest suite, its `schema/` directory, its tools and its README. Its build must stay green on `windows-latest` and `ubuntu-latest` with exceptions and RTTI off, and its case and assertion counts must not drop.
+This is a **move, not a copy.** After it, exactly one copy of each source file exists in the repository, and `packages/dashboard-spec/include/` and `packages/dashboard-spec/src/` are **deleted**. Do not leave forwarding headers. Every step below is required; a partial move leaves a tree where CMake and UBT disagree about which file is authoritative.
+
+1. `git mv packages/dashboard-spec/include/dashboard_spec/*` to `runtime/UnRealDash/Source/DashboardSpec/Public/dashboard_spec/`, and `packages/dashboard-spec/src/*` to `runtime/UnRealDash/Source/DashboardSpec/Private/`. Delete the emptied directories.
+2. The public headers include each other as `dashboard_spec/Foo.h`, so the include root is the directory **containing** `dashboard_spec/`. Both builds must see the same root: UBT gets `PublicIncludePaths.Add(.../DashboardSpec/Public)` and CMake gets `target_include_directories(dashboard_spec PUBLIC .../DashboardSpec/Public)`. `Private/` is an include root for neither; `Private/Internal.h` and `Private/PackageInternal.h` are included by path relative to the including file, exactly as they are today.
+3. Update `packages/dashboard-spec/CMakeLists.txt`'s source list to the new paths, and exclude the module-registration file.
+4. Update `DASHBOARD_SCHEMA_DIR` to the new schema location from deliverable 1a.
+5. The doctest suite and `tests/fixtures/` do **not** move. Check every relative path the tests and tools resolve against `CMAKE_CURRENT_SOURCE_DIR` or `REPO_ROOT` and fix any that assumed the sources sat beside them. `REPO_ROOT` is already defined in the CMakeLists for this purpose.
+6. Update `.github/workflows/spec-tools.yml` and `signal-core.yml` for any path that names `packages/dashboard-spec/src` or `include`. Both workflows are currently green; they must stay green.
+
+`packages/dashboard-spec/` keeps its `CMakeLists.txt`, its `CMakePresets.json`, its doctest suite, its tools and its README. Its build must stay green on `windows-latest` and `ubuntu-latest` with exceptions and RTTI off, and its case and assertion counts must not drop. Take those counts from the doctest reporter, not from reading the source.
 - `DashboardSpec.Build.cs`: `CppStandard = Cpp20`, `bEnableExceptions = false`, `bUseRTTI = false`, public dependency on `SignalCore`, private on `Core`, and system include paths to `third_party/rapidjson/include` and `third_party/valijson/include`. Compile `third_party/miniz/miniz.c` in the module. Do not define `_HAS_EXCEPTIONS` by hand; UBT sets it from `bEnableExceptions`, and chunk 01 already recorded that lesson in `SignalCore.Build.cs`.
 - No Unreal header, Unreal type or engine macro enters any `DashboardSpec` source file except the module-registration file, which the CMake build excludes. Extend chunk 08's layering check in `scripts/doctor.ps1` to cover this module on the same terms as `SignalCore`.
 
@@ -50,28 +62,66 @@ Follow the arrangement PLAN 4.2 established for `SignalCore` exactly, because it
 `Validator` reads its five schemas with `std::ifstream`, so they must exist on the filesystem of whatever machine runs the player.
 
 - Copy `packages/dashboard-spec/schema/` to `runtime/UnRealDash/Schema/` and make that the one source of truth. The CMake build and the CLI keep pointing at it through `DASHBOARD_SCHEMA_DIR`, so there is still exactly one copy of each schema in the repository.
-- In `DashboardSpec.Build.cs`, add each schema file as a `RuntimeDependency` with `StagedFileType.NonUFS`, so packaging puts them on the filesystem rather than inside the `.pak`.
-- `UnRealDashCore` resolves the directory as `FPaths::ProjectDir()` joined with `Schema`, passed through `IPlatformFile::GetPlatformPhysical().ConvertToAbsolutePathForExternalAppForWrite`. That is the same call the 4.0 smoke spike needed for `ProjectSavedDir`, and for the same reason: on Android the project-relative path is virtual and `ConvertRelativePathToFull` does not resolve it. Log the resolved path once at startup.
-- Prove it on the device, not just on Windows: list the five files at the resolved path on the Pixel before claiming this works.
+- In `DashboardSpec.Build.cs`, add each schema file as a `RuntimeDependency` with `StagedFileType.NonUFS`, so packaging puts them on the filesystem rather than inside the `.pak`. **Pin the staged destination explicitly** with the two-argument form, so each file lands at `$(ProjectDir)/Schema/<name>.schema.json`. Do not let the destination default: the default mirrors the source path, the five files would land somewhere under the source tree, and the resolver below would look in the right place and find nothing. That failure looks identical on Windows, where the source tree is present anyway, and only appears on device.
+- `UnRealDashCore` resolves the directory as `FPaths::ProjectDir()` joined with `Schema`, passed through `IPlatformFile::GetPlatformPhysical().**ConvertToAbsolutePathForExternalAppForRead**`. Use the read variant, not the write one. The 4.0 smoke spike used `...ForWrite` because it was resolving an output directory; this is an input directory, and on Android the two can resolve to different physical roots. Log the resolved path once at startup.
+- Prove it on the device, not just on Windows: list the five files at the resolved path on the Pixel, and read one of them with the validator, before claiming this works. A Windows pass proves nothing here, because on Windows the repository copy is present at a path that happens to work.
 
-**Prove `std::filesystem` on Android before building anything else.** Unreal's Android toolchain is not guaranteed to link it, and the entire directory-form path depends on it. Build the module for Android ARM64 as the **first** thing in this chunk and report the result. If it does not link, stop and report it; do not work around it by disabling the directory form, because the rejection-code parity in the gate requires both forms.
+**`std::filesystem` and `std::ifstream` are already proven on the device.** This was measured on 2026-09-17 on the Pixel 10 Pro, Vulkan, Development, by a probe in the 4.0 smoke spike reading a real pushed file under the app-specific external storage path. Results, all with `error=0`:
+
+```
+probe ifstream open=true read_bytes=4096
+probe is_directory=true
+probe symlink_status is_symlink=false
+probe hard_link_count=1
+probe canonical path=/storage/emulated/0/Android/data/com.unrealdash.player/files/UnrealGame/UnRealDash/UnRealDash/Saved/smoke.png
+probe file_size=94346
+probe recursive_directory_iterator entries=32
+```
+
+`hard_link_count` and `canonical` are the two that the traversal and symlink rejections depend on, and both work. So the directory form is viable on Android and this chunk does not need a fallback. You still build the module for Android ARM64 as the **first** step, because linking the whole library is a bigger surface than one probe, and you report that result either way.
 
 ### 2. Give the reader a way to hand back what it read
 
 Add to `PackageReader` an overload that returns content alongside the verdict. Keep the existing `Read(path, profile)` signature working and behaving identically, because `dashboard-spec-validate` and the 43-case test already depend on it.
 
 ```
-class LoadedPackage {            // owns its storage; move-only; no copy
+class LoadedPackage {
   public:
-    const Document& Doc() const;
-    // Asset bytes by normalized manifest name. Empty span when absent.
-    std::span<const std::uint8_t> Asset(std::string_view normalized_name) const;
+    LoadedPackage();
+    ~LoadedPackage();
+    LoadedPackage(LoadedPackage &&) noexcept;             // move-only
+    LoadedPackage &operator=(LoadedPackage &&) noexcept;
+    LoadedPackage(const LoadedPackage &) = delete;
+    LoadedPackage &operator=(const LoadedPackage &) = delete;
+
+    const Document &Doc() const;
+    // Errors are values here too. Returns E_PKG_ASSET_NOT_IN_PACKAGE when the name is unknown,
+    // and E_PKG_ASSET_UNREADABLE when a directory-form read or an allocation fails.
+    Error Asset(std::string_view normalized_name, std::span<const std::uint8_t> &out) const;
     std::span<const std::string_view> AssetNames() const;
+
+  private:
+    struct Storage;
+    Storage *storage_;      // owns the document, the asset bytes and the name table
 };
-Error PackageReader::Load(std::string_view path, Profile profile, LoadedPackage& out) const;
+Error PackageReader::Load(std::string_view path, Profile profile, LoadedPackage &out) const;
 ```
 
-`Load` runs the identical validation `Read` runs, in the identical order, and populates `out` only when the returned `Error` is `Ok()`. Implement `Read` in terms of `Load` so the two can never diverge; a second copy of the validation sequence is the defect this deliverable exists to prevent.
+**`LoadedPackage` owns everything it hands out and outlives the `PackageReader` that produced it.** It must not hold a pointer into the reader, the `Validator`, or a temporary buffer. Every span it returns points into `Storage`, and stays valid until the `LoadedPackage` is destroyed or moved from. This is stated because the alternative, spans into the reader, dangles the moment the reader goes out of scope and the compiler will not catch it.
+
+`Asset` is `const` and caches lazily for the directory form, so the cache member is `mutable`. Say so in the header.
+
+`Asset` returns `Error` rather than a bare span because the library compiles with exceptions off: a failed allocation for a 16 MiB asset cannot throw, and a bare span would have to report it as "absent", which is a silent fallback. Add `E_PKG_ASSET_UNREADABLE` to `ErrorCode` for that case; it is the only new code this chunk adds, and it takes the next free numeric value. Do not renumber anything.
+
+**Do not implement `Read` by calling `Load` and discarding the result.** That was in an earlier revision of this spec and it is incoherent: `Read` is documented as behaving identically to today, and today it returns a verdict without materializing the document or decompressing every asset. `Load`-then-discard would silently turn a validate-only call into a full load, change which limit violations surface at which stage, and re-point the 43 fixtures at a different code path.
+
+Instead, **both call one shared private function**:
+
+```
+Error Validate(std::string_view path, Profile profile, LoadedPackage* out) const;
+```
+
+`Read` passes `nullptr` and materializes nothing, so its behaviour and its cost are unchanged. `Load` passes `&out`, and the only difference is that the materializing branches run. There is exactly one validation sequence, in one order, which is what this deliverable is actually for.
 
 Assets are returned as bytes. `LoadedPackage` does not decode images and does not know what a texture is.
 
@@ -83,7 +133,7 @@ For the directory form, `Asset` reads the file lazily on first request and cache
 
 - `bool LoadPackage(const FString& Path, EDashProfile Profile, FDashPackage& Out, FDashLoadError& OutError)`.
 - `FDashLoadError` is a plain engine struct: `FString CodeName`, `int32 Code`, `FString Pointer`, `FString Message`, `FString Path`. It exposes **no `dashboard_spec::` type**, for the same layering reason `FFrameSnapshot` exposes no `signal_core::` type in chunk 08. `UnRealDashCore` is the only module that may include either library's headers.
-- `Path` comes from `-udash=<path>`. Per PLAN 4.7 the flag itself is not this chunk's, but the loader must accept the value; wire it minimally so the gate can run and note that 4.7 owns the flag surface.
+- `Path` comes from `-udash=<path>`. PLAN 4.7 owns the flag **surface**: the full flag set, the unknown-flag rejection, and the `player.json` equivalence. This chunk wires exactly one thing, and the boundary is precise so 4.7 has nothing to undo: read `-udash=` from the command line in the game module at startup and pass the value to `LoadPackage`. Do not add a flag table, do not validate unknown flags, do not touch `player.json`. If `-udash=` is absent, log that and show the same on-screen message path deliverable 5 defines, rather than loading a built-in document.
 - Profile selects the 3.6 texture budget: `mobile` on Android, `desktop` on Windows, overridable. Do not invent a third profile.
 
 ### 4. The component registry and the widget tree
@@ -91,6 +141,23 @@ For the directory form, `Asset` reads the file lazily on first request and cache
 docs/ARCHITECTURE.md requires that adding a primitive means registering one builder and that nothing switches on a type string outside the registry. Build that seam now, because 4.5 and 4.6 both plug into it and a `switch` here would have to be torn out twice.
 
 - `FComponentRegistry` maps a component type name to a builder callable. Registration is explicit at startup. An unknown type name is an error naming the type and the component's JSON pointer, not a silent skip.
+
+  **Pin the callable's signature now**, because a later task that has to widen it is a later task editing this registry, which is the thing the seam exists to prevent:
+
+  ```cpp
+  struct FComponentContext
+  {
+      const FDashComponent& Component;   // this node: type, id, parent id, properties
+      const FDashPackage&   Package;     // assets and theme tokens, for asset resolution
+      EDashProfile          Profile;     // mobile or desktop
+      UWidget*              Parent;      // already built, may be null for the root
+  };
+  using FComponentBuilder = TFunction<UWidget*(const FComponentContext&, FDashLoadError&)>;
+  ```
+
+  A builder returns `nullptr` and fills `OutError` on failure. Everything a primitive needs comes through `FComponentContext`, so adding a primitive adds one registration and nothing else.
+
+- `FDashComponent` is the engine-side view of one node: type name, stable id, parent id, JSON pointer, and typed property access. It exposes **no `dashboard_spec::` type**, for the same layering reason as `FDashLoadError`. `Document` is opaque, so deliverable 2 adds the accessor that walks the component section and yields these nodes; pin that accessor here rather than leaving 4.5 to invent it.
 - `FWidgetTreeBuilder` walks the document's component tree and calls the registry for each node, producing a parent/child `UWidget` tree with the document's IDs attached. It resolves parents by ID and never assumes a component's position in the tree.
 - This chunk registers **one** builder: a placeholder that renders the component's type name and ID in a box. That is enough to satisfy "renders" in the 4.4 gate and it is deliberately ugly. 4.5 replaces it by registering real builders; it must not have to modify the builder or the registry to do so.
 
@@ -123,11 +190,19 @@ A rejected package leaves the player running and showing the error. It does not 
 1. `DashboardSpec` builds under UBT for Win64 **and** Android ARM64, and the Android result is reported explicitly whichever way it goes.
 2. The CMake `dashboard-spec` build stays green on Windows and Linux with exceptions and RTTI off, and its doctest case and assertion counts do not drop.
 3. All 43 fixtures load through the engine loader in archive form, each under the profile `cases.json` gives it. `well-formed` succeeds; the other 42 are rejected with the code `cases.json` expects.
-4. For each of the **26 cases without `archive_only`**, the code and the JSON pointer are **identical** between the archive form and the directory form. A mismatch is a failure, not a note. The 17 archive-only cases are run in archive form only, and the report states that count so a future reader can tell a deliberate exclusion from a skipped test.
+4. For each of the **26 cases without `archive_only`**, both forms reach the same verdict and, when that verdict is a rejection, carry an **identical** code and JSON pointer. A mismatch is a failure, not a note.
+
+   Two traps to close, because tail equality alone is a weaker gate than it looks:
+   - A case that is rejected in one form and **accepted** in the other fails this criterion. Do not compare codes only among the cases that happened to reject in both.
+   - `well-formed` must be accepted in both forms. A gate that only checks rejections would pass if every case were rejected for the same reason.
+
+   The 17 archive-only cases run in archive form only. The report states that count, so a deliberate exclusion cannot later be mistaken for a skipped test.
 5. Launching with `well-formed` renders the placeholder widget tree, in both packed and unpacked form.
 6. Launching with each of the 42 rejection cases shows the on-screen error naming the file and the pointer, and does not crash. Run all 42, not a sample.
 7. `scripts/doctor.ps1 -Profile workstation` exits 0 including the extended layering check, and the full Pester suite passes with no reduction in count.
-8. The device half of the PLAN 4.4 gate runs on the desk device (the Pixel), not the head unit, per PLAN 4.4. **This requires the phone connected over USB and is Claude's to run, not Codex's.** If the phone is unavailable the criterion is reported as not run, and the chunk is not complete until it is.
+8. The device half of the PLAN 4.4 gate runs on the desk device (the Pixel), not the head unit, per PLAN 4.4. **This requires the phone connected over USB and is Claude's to run, not Codex's.**
+
+   Criteria 1 to 7 together mean the chunk is **built**. Criterion 8 is what makes it **complete**. A build session that satisfies 1 to 7 reports "built, device half not run" and is not claiming the chunk is done; only the device run closes it. State it in exactly those terms so the two are never conflated.
 
 ## Proof
 

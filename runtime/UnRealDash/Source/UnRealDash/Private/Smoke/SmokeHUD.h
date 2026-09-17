@@ -18,6 +18,8 @@ public:
     virtual void DrawHUD() override;
     virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 private:
+    // SPIKE PROBE for PLAN 4.4; see the note on the definition. Delete with the smoke spike.
+    static void ProbeStandardFileApis(const FString& ImagePath, const FString& SavedDirectory);
     UPROPERTY(Transient) TObjectPtr<UTexture2D> Texture;
     UPROPERTY(Transient) TObjectPtr<UMaterialInstanceDynamic> Material;
     UPROPERTY(Transient) TObjectPtr<UFont> Font;
