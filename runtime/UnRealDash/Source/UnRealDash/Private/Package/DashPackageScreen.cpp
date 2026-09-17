@@ -67,6 +67,12 @@ void ADashPackageHUD::BeginPlay()
     if (!Screen) { UE_LOG(LogUnRealDash, Error, TEXT("Cannot create package screen")); return; }
     Screen->Open(Path, UnRealDashCore::DefaultDashProfile());
     Screen->AddToViewport();
+    // One machine-readable verdict per run. The device half of the PLAN 4.4 gate is driven by
+    // launching once per fixture and reading logcat, and an accepted case otherwise produces no
+    // output at all, which would make "it worked" indistinguishable from "it died early".
+    UE_LOG(LogUnRealDash, Display, TEXT("DashVerdict accepted=%s code=%s pointer=%s path=%s"),
+        Screen->WasAccepted() ? TEXT("true") : TEXT("false"),
+        *Screen->LastError().CodeName, *Screen->LastError().Pointer, *Path);
 }
 ADashPackageGameMode::ADashPackageGameMode()
 {

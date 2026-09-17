@@ -11,6 +11,10 @@ class UDashPackageScreen : public UUserWidget
     GENERATED_BODY()
 public:
     void Open(const FString& Path, UnRealDashCore::EDashProfile Profile);
+    // Read by the HUD to emit one machine-readable verdict line per run; the device half of the
+    // PLAN 4.4 gate parses it out of logcat, where an accepted case otherwise logs nothing at all.
+    bool WasAccepted() const { return Accepted; }
+    const UnRealDashCore::FDashLoadError& LastError() const { return Error; }
 protected:
     virtual TSharedRef<SWidget> RebuildWidget() override;
 private:
