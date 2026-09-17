@@ -129,7 +129,7 @@ jobs:
         run: |
           export TSAN_OPTIONS="halt_on_error=1:exitcode=66:second_deadlock_stack=1"
           ./packages/signal-core/build/tsan/signal-core-tests \
-            --source-file=*test_threading_stress.cpp --reporters=console 2>&1 | tee tsan.log
+            --reporters=console 2>&1 | tee tsan.log
           grep -q "WARNING: ThreadSanitizer" tsan.log && { echo "FAIL: data race reported"; exit 1; }
           line=$(grep -E '^\[doctest\] assertions:' tsan.log | tail -1)
           [ -n "$line" ] || { echo "FAIL: no doctest assertion summary"; exit 1; }
