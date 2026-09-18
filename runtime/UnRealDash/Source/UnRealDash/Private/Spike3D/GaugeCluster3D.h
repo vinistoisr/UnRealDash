@@ -28,6 +28,7 @@ class AGaugeCluster3D : public AActor
     GENERATED_BODY()
 public:
     AGaugeCluster3D();
+    void SetCamera(AActor* InCamera) { Camera = InCamera; }
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaSeconds) override;
 
@@ -70,6 +71,19 @@ private:
     UPROPERTY(Transient) TArray<TObjectPtr<UTextRenderComponent>> Labels;
     TArray<FDial> Dials;
     TUniquePtr<UnRealDashCore::FSmokeSimulator> Simulator;
+    // Touch and mouse control. One finger orbits, two fingers pinch to zoom. The idle orbit stops
+    // the moment the user takes hold of it and does not come back, because a view that keeps
+    // drifting under your finger feels broken rather than alive.
+    void UpdateInput(float DeltaSeconds);
+    TWeakObjectPtr<AActor> Camera;
+    FVector2D LastTouch = FVector2D::ZeroVector;
+    float LastPinch = 0.f;
+    float Yaw = 0.f;
+    float Pitch = 0.f;
+    float Distance = 700.f;
+    bool bWasTouching = false;
+    bool bWasPinching = false;
+    bool bUserTookControl = false;
     double Elapsed = 0.0;
     double Observed = 0.0;
     bool bReady = false;

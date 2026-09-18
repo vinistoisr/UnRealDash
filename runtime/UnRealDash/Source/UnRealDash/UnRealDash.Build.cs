@@ -6,7 +6,7 @@ public class UnRealDash : ModuleRules
     {
         bUseUnity = false;
         PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine", "UnRealDashCore" });
-        PrivateDependencyModuleNames.AddRange(new[] { "UMG", "Slate", "SlateCore", "Json", "ImageWrapper", "RenderCore", "RHI", "ApplicationCore", "ProceduralMeshComponent" });
+        PrivateDependencyModuleNames.AddRange(new[] { "UMG", "Slate", "SlateCore", "Json", "ImageWrapper", "RenderCore", "RHI", "ApplicationCore", "ProceduralMeshComponent", "InputCore" });
         if (Target.Platform == UnrealTargetPlatform.Android)
         {
             // Supplies org.gradle.java.home. See the comment in the file for why the JDK gradle

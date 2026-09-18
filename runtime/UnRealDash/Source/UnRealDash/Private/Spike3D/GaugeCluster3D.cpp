@@ -7,6 +7,8 @@
 #include "Engine/PostProcessVolume.h"
 #include "Engine/World.h"
 #include "HAL/PlatformApplicationMisc.h"
+#include "GameFramework/PlayerController.h"
+#include "InputCoreTypes.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/Material.h"
 #include "Materials/MaterialInterface.h"
@@ -166,9 +168,18 @@ void AGaugeCluster3D::RebuildDynamic(FDial& Dial)
 
 void AGaugeCluster3D::BuildStatic()
 {
-    UMaterial* Unlit = LoadObject<UMaterial>(nullptr,
+    // EngineDebugMaterials is editor-only content and is not cooked into a package unless
+    // DefaultGame.ini asks for it, which it now does. The fallback exists because the failure mode
+    // without a material is a completely black screen with only a warning in the log, which looks
+    // like a dead app rather than a missing asset.
+    UMaterialInterface* Unlit = LoadObject<UMaterialInterface>(nullptr,
         TEXT("/Engine/EngineDebugMaterials/VertexColorViewMode_ColorOnly.VertexColorViewMode_ColorOnly"));
-    if (!Unlit) { UE_LOG(LogUnRealDash, Error, TEXT("Vertex colour material missing")); }
+    if (!Unlit)
+    {
+        UE_LOG(LogUnRealDash, Error, TEXT("Vertex colour material missing; falling back to a lit material, colours will be wrong"));
+        Unlit = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"));
+    }
+    if (!Unlit) { UE_LOG(LogUnRealDash, Error, TEXT("No usable material at all; the cluster will not be visible")); }
 
     StaticMeshPart = NewObject<UProceduralMeshComponent>(this);
     StaticMeshPart->SetupAttachment(Root);
@@ -282,7 +293,78 @@ void AGaugeCluster3D::Tick(float DeltaSeconds)
         RebuildDynamic(Dial);
     }
 
-    SetActorRotation(FRotator(0.f, 9.f * FMath::Sin(Elapsed * 0.22f), 0.f));
+    UpdateInput(DeltaSeconds);
+}
+
+void AGaugeCluster3D::UpdateInput(float DeltaSeconds)
+{
+    APlayerController* Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+    if (!Controller) { return; }
+
+    float X1 = 0.f, Y1 = 0.f, X2 = 0.f, Y2 = 0.f;
+    bool bTouch1 = false, bTouch2 = false;
+    Controller->GetInputTouchState(ETouchIndex::Touch1, X1, Y1, bTouch1);
+    Controller->GetInputTouchState(ETouchIndex::Touch2, X2, Y2, bTouch2);
+
+    // Mouse drag stands in for one finger so this is testable on the desktop.
+    if (!bTouch1 && Controller->IsInputKeyDown(EKeys::LeftMouseButton))
+    {
+        float MouseX = 0.f, MouseY = 0.f;
+        if (Controller->GetMousePosition(MouseX, MouseY)) { X1 = MouseX; Y1 = MouseY; bTouch1 = true; }
+    }
+
+    if (bTouch1 && bTouch2)
+    {
+        const float Pinch = FVector2D::Distance(FVector2D(X1, Y1), FVector2D(X2, Y2));
+        if (bWasPinching)
+        {
+            // Scale the step by the current distance so zooming feels the same far away as close.
+            Distance = FMath::Clamp(Distance - (Pinch - LastPinch) * (Distance / 420.f), 260.f, 2200.f);
+            bUserTookControl = true;
+        }
+        LastPinch = Pinch;
+        bWasPinching = true;
+        bWasTouching = false;
+    }
+    else if (bTouch1)
+    {
+        const FVector2D Now(X1, Y1);
+        if (bWasTouching)
+        {
+            const FVector2D Delta = Now - LastTouch;
+            Yaw = FMath::Clamp(Yaw + Delta.X * 0.28f, -75.f, 75.f);
+            Pitch = FMath::Clamp(Pitch - Delta.Y * 0.20f, -45.f, 45.f);
+            bUserTookControl = true;
+        }
+        LastTouch = Now;
+        bWasTouching = true;
+        bWasPinching = false;
+    }
+    else
+    {
+        bWasTouching = false;
+        bWasPinching = false;
+    }
+
+    // Mouse wheel zoom, again so the desktop behaves like the device.
+    const float Wheel = Controller->GetInputAnalogKeyState(EKeys::MouseWheelAxis);
+    if (!FMath::IsNearlyZero(Wheel))
+    {
+        Distance = FMath::Clamp(Distance - Wheel * 90.f, 260.f, 2200.f);
+        bUserTookControl = true;
+    }
+
+    if (!bUserTookControl)
+    {
+        Yaw = 9.f * FMath::Sin(Elapsed * 0.22f);
+    }
+    SetActorRotation(FRotator(Pitch, Yaw, 0.f));
+
+    if (AActor* Cam = Camera.Get())
+    {
+        const FVector Target(0.f, -Distance, 10.f);
+        Cam->SetActorLocation(FMath::VInterpTo(Cam->GetActorLocation(), Target, DeltaSeconds, 9.f));
+    }
 }
 
 AGaugeCluster3DGameMode::AGaugeCluster3DGameMode()
@@ -295,13 +377,19 @@ void AGaugeCluster3DGameMode::StartPlay()
     Super::StartPlay();
     UWorld* World = GetWorld();
     if (!World) { return; }
-    World->SpawnActor<AGaugeCluster3D>(FVector::ZeroVector, FRotator::ZeroRotator);
+    AGaugeCluster3D* Cluster = World->SpawnActor<AGaugeCluster3D>(FVector::ZeroVector, FRotator::ZeroRotator);
     if (ACameraActor* Camera = World->SpawnActor<ACameraActor>(FVector(0.f, -700.f, 10.f), FRotator(0.f, 90.f, 0.f)))
     {
         Camera->GetCameraComponent()->SetFieldOfView(62.f);
+        if (Cluster) { Cluster->SetCamera(Camera); }
         if (APlayerController* Controller = UGameplayStatics::GetPlayerController(World, 0))
         {
             Controller->SetViewTarget(Camera);
+            // Touch state is polled rather than bound, so these have to be on or every finger is
+            // dropped before it reaches the game.
+            Controller->bEnableTouchEvents = true;
+            Controller->bEnableTouchOverEvents = true;
+            Controller->bShowMouseCursor = false;
         }
     }
 }
