@@ -130,6 +130,9 @@ struct LoadedPackage::Storage {
     std::filesystem::path root;
     std::vector<AssetEntry> assets;
     std::vector<std::string_view> names;
+    // Kept past the load so a runtime can turn a document's asset reference into the name the
+    // entries were admitted under, through the same rules that admitted them.
+    PathResolver resolver;
 };
 LoadedPackage::LoadedPackage() : storage_(new Storage) {}
 LoadedPackage::~LoadedPackage() { delete storage_; }
@@ -145,6 +148,12 @@ LoadedPackage &LoadedPackage::operator=(LoadedPackage &&other) noexcept {
 const Document &LoadedPackage::Doc() const { return storage_->document; }
 std::span<const std::string_view> LoadedPackage::AssetNames() const {
     return storage_ ? std::span<const std::string_view>(storage_->names) : std::span<const std::string_view>();
+}
+Error LoadedPackage::ResolveAssetName(std::string_view reference, std::string &normalized) const {
+    normalized.clear();
+    if (!storage_)
+        return Fail(ErrorCode::E_PKG_ASSET_NOT_IN_PACKAGE, "", reference);
+    return storage_->resolver.Resolve(reference, normalized);
 }
 Error LoadedPackage::Asset(std::string_view name, std::span<const std::uint8_t> &out) const {
     out = {};
@@ -442,6 +451,7 @@ Error PackageReader::Validate(std::string_view path, Profile profile, LoadedPack
     if (out) {
         LoadedPackage loaded;
         auto &storage = *loaded.storage_;
+        storage.resolver = resolver;
         if (directory) {
             storage.root = std::filesystem::absolute(root, ec).lexically_normal();
             if (ec)

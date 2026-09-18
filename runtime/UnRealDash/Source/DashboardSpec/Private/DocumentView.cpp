@@ -65,4 +65,5 @@ bool Document::ComponentAt(std::size_t index, ComponentView &out) const {
     return true;
 }
 PropertyView Document::Theme() const { return Dashboard(*this).Member("theme"); }
+PropertyView Document::Root() const { return Dashboard(*this); }
 } // namespace dashboard_spec

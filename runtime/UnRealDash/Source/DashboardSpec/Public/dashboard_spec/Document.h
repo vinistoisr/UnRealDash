@@ -38,6 +38,9 @@ class DS_EXPORT Document {
     std::size_t ComponentCount() const;
     bool ComponentAt(std::size_t index, ComponentView &out) const;
     PropertyView Theme() const;
+    // The dashboard object itself, whether the file is a bare document or a sidecar
+    // wrapper. Reference viewport, bindings and pages are read through it.
+    PropertyView Root() const;
 
   private:
     Storage *storage_;

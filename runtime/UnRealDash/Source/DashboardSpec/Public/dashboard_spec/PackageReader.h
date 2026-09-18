@@ -3,6 +3,7 @@
 #include "dashboard_spec/Validator.h"
 #include <cstdint>
 #include <span>
+#include <string>
 namespace dashboard_spec {
 enum class Profile { mobile, desktop };
 class DS_EXPORT LoadedPackage {
@@ -16,6 +17,12 @@ class DS_EXPORT LoadedPackage {
     const Document &Doc() const;
     // Directory assets use a mutable lazy cache. Callers serialize first access.
     // Returned spans belong to this package until destruction or move-from.
+    // Turns a reference as a document writes it into the normalized name Asset expects. The
+    // document may spell an asset "assets//shared.png" or "assets/./shared.png"; the package
+    // reader normalizes entry names when it admits them, so a raw reference does not match one.
+    // Callers outside this library cannot normalize for themselves and must not try: the rules
+    // are the path gate, and a second implementation of them would be a second gate that drifts.
+    Error ResolveAssetName(std::string_view reference, std::string &normalized) const;
     Error Asset(std::string_view normalized_name, std::span<const std::uint8_t> &out) const;
     std::span<const std::string_view> AssetNames() const;
 
