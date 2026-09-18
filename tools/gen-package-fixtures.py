@@ -11,6 +11,11 @@ def generate():
     cases = json.loads((PACKAGES / 'cases.json').read_text(encoding='utf-8'))
     outputs = []
     for case in cases:
+        if case.get('external'):
+            # Built by its own generator, which pins geometry this one knows nothing about.
+            # Rebuilding it from a declarative entry list would silently replace it with an
+            # empty package and the gate that depends on it would pass against nothing.
+            continue
         directory = PACKAGES / case['name']
         directory.mkdir(parents=True, exist_ok=True)
         if case.get('base'):
