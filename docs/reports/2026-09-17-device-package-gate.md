@@ -50,22 +50,29 @@ runtime/UnRealDash/Saved/StagedBuilds/Android/UnRealDash/Schema/dashboard.schema
                                                              /signals.schema.json
 ```
 
-The failure is one step later, in what the APK carries. Listing the APK:
+The failure is one step later, in delivery. Three things are verified:
 
-```
-schema entries in UnRealDash-arm64.apk: 0
-assets/UECommandLine.txt
-assets/main.obb.png
-assets/vkqualitydata.vkq
-```
+1. The five files are listed in the staged non-UFS manifest,
+   `Saved/StagedBuilds/Android/Manifest_NonUFSFiles_Android.txt`, so staging did its job.
+2. Listing the built APK finds **zero** schema entries. With `bPackageDataInsideApk=True` the
+   cooked UFS data ships as `assets/main.obb.png`, and non-UFS files are not carried in it.
+3. The generated `Install_UnRealDash-arm64.apk` installer script uninstalls, installs the APK and
+   clears directories. The blocks where non-UFS pushes would appear are **empty**.
 
-With `bPackageDataInsideApk=True` the cooked UFS data ships as `assets/main.obb.png`. Files
-staged as **non-UFS** are not carried into it and never arrive on the device. `StagedFileType.NonUFS`
-is therefore correct for a desktop package and insufficient for Android.
+So in this configuration nothing delivers the files: they are neither inside the APK nor pushed by
+the installer.
 
-This is precisely the failure the chunk 10 spec predicted for a *different* reason, and the
-prediction still holds: it is invisible on Windows, where the repository copy sits at a path that
-happens to work, and only appears on device.
+**Corrected from an earlier version of this report.** It first said the `StagedFileType.NonUFS`
+mechanism is simply wrong for Android. That was concluded from "zero entries in the APK" alone and
+went further than the evidence. `AndroidPlatform.Automation.cs` shows UAT's own deploy step pushing
+non-UFS files by `adb push` from a manifest delta, so a full `RunUAT -deploy` may well deliver
+them. Whether it does is **not tested**, because the device is not available, and the gate here was
+run against a manual `adb install -r` of the APK, which skips the deploy step entirely.
+
+What that means for the fix: the choice is not "the mechanism is broken" but "the project should
+not depend on a deploy step it does not use". The gate, and any driveway or head-unit workflow,
+installs an APK directly. A delivery route that only works through `RunUAT -deploy` would keep
+failing in exactly the situation the desk device exists for.
 
 ## What this does and does not prove
 
@@ -82,6 +89,10 @@ are evidence about the loader, not about packaging.
 
 ## Options for the fix, none of them chosen yet
 
+0. First, cheaply, confirm whether `RunUAT ... -deploy` pushes them, since the manifest and the
+   automation source both suggest it should. That is one device run and it decides whether any of
+   the options below are needed at all. Even if it works, options 1 to 3 remain worth considering,
+   because a plain APK install must also work.
 1. Add the schemas to the APK through the UPL or `ExtraFilesToPackage` so they land in `assets/`
    and are extracted into the `UnrealGame` tree at first run, next to where the resolver already
    looks.
