@@ -205,6 +205,9 @@
                 "age_unknown"
               ]
             },
+            "z_order": {
+              "type": "integer"
+            },
             "properties": {}
           },
           "required": [
