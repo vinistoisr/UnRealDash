@@ -29,6 +29,11 @@ fixture geometry and writes the arithmetic down. If a fixture changes size, redo
 
 Exit codes: 0 pass, 1 fail, 2 usage or unreadable input, 3 environment mismatch (reported as
 not run, never as a pass and never as a failure).
+
+The environment is passed as repeated `--env KEY=VALUE` and checked against the
+`capture-environment.json` beside the reference. Every key that file records must be supplied: a key
+the caller leaves out counts as a mismatch, not as agreement. An earlier version skipped absent
+keys, which made the whole check a no-op for the gate script, its only caller.
 """
 
 import argparse
@@ -81,13 +86,23 @@ def compare(reference_path, candidate_path):
 def check_environment(reference_dir, actual):
     """A capture only compares meaningfully against a reference made on the same machine. GPU,
     driver and font rasterisation all move these numbers, and the hosted CI runners have no GPU.
-    A mismatch is reported as not run, so nobody reads it as a pass."""
+    A mismatch is reported as not run, so nobody reads it as a pass.
+
+    A key the caller did not supply counts as a mismatch, not as agreement. The earlier version
+    skipped any key whose actual value was empty, so a caller that passed neither --gpu nor
+    --driver silently satisfied every environment check. The gate script was exactly such a caller,
+    which made this whole function a no-op in the one place it mattered."""
     path = os.path.join(reference_dir, "capture-environment.json")
     if not os.path.exists(path):
         return None
     with open(path, encoding="utf-8") as handle:
         expected = json.load(handle)
-    differences = [k for k, v in expected.items() if actual.get(k) and actual[k] != v]
+    differences = []
+    for key, value in expected.items():
+        if not actual.get(key):
+            differences.append(key + " (not supplied)")
+        elif actual[key] != value:
+            differences.append(key)
     return differences
 
 
@@ -169,8 +184,11 @@ def main():
     parser.add_argument("reference", nargs="?")
     parser.add_argument("candidate", nargs="?")
     parser.add_argument("--self-test", action="store_true", help="prove the comparator can fail")
-    parser.add_argument("--gpu", default="", help="running GPU name, checked against the reference environment")
-    parser.add_argument("--driver", default="", help="running driver version")
+    # One repeatable flag rather than one flag per key. The key set is whatever
+    # capture-environment.json records, so hardcoding a couple of them guarantees the others go
+    # unchecked, and unchecked is what this comparison must never silently be.
+    parser.add_argument("--env", action="append", default=[], metavar="KEY=VALUE",
+                        help="a property of the running machine, repeatable (e.g. --env gpu=...)")
     arguments = parser.parse_args()
 
     if arguments.self_test:
@@ -182,8 +200,13 @@ def main():
             sys.stderr.write("missing: " + path + "\n")
             return 2
 
-    differences = check_environment(os.path.dirname(arguments.reference),
-                                    {"gpu": arguments.gpu, "driver": arguments.driver})
+    actual = {}
+    for pair in arguments.env:
+        key, separator, value = pair.partition("=")
+        if not separator:
+            parser.error("--env takes KEY=VALUE, got: " + pair)
+        actual[key] = value
+    differences = check_environment(os.path.dirname(arguments.reference), actual)
     if differences:
         print("NOT RUN: reference was captured on a different " + ", ".join(differences))
         return 3
