@@ -20,6 +20,10 @@ public:
 private:
     // SPIKE PROBE for PLAN 4.4; see the note on the definition. Delete with the smoke spike.
     static void ProbeStandardFileApis(const FString& ImagePath, const FString& SavedDirectory);
+    // SHIPPING TRACE, temporary; see the note on the definition.
+    void Trace(const FString& Where) const;
+    FString TracePath;
+    mutable int32 TraceDrawCalls = 0;
     UPROPERTY(Transient) TObjectPtr<UTexture2D> Texture;
     UPROPERTY(Transient) TObjectPtr<UMaterialInstanceDynamic> Material;
     UPROPERTY(Transient) TObjectPtr<UFont> Font;

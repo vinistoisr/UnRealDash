@@ -115,9 +115,21 @@ float Percentile(TArray<float> Values, float Fraction)
 }
 } // namespace
 // End SMOKE SPIKE ONLY block.
+// SHIPPING TRACE, temporary. Shipping strips UE_LOG and UnRealDash.Target.cs explains why enabling
+// it is not available on a Launcher engine install, so the only way to see how far a Shipping run
+// gets is to write to a file. Appends one line per milestone next to the Saved directory. Delete
+// this with the smoke spike, or once finding 6 is closed.
+void ASmokeHUD::Trace(const FString& Where) const
+{
+    const FString Path = TracePath.IsEmpty() ? FPaths::ProjectSavedDir() / TEXT("shipping-trace.txt") : TracePath;
+    FFileHelper::SaveStringToFile(Where + LINE_TERMINATOR, *Path,
+        FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM, &IFileManager::Get(), FILEWRITE_Append);
+}
+
 void ASmokeHUD::BeginPlay()
 {
     Super::BeginPlay();
+    Trace(TEXT("begin"));
     const FSmokeLog Log = [](const FString& Message) { UE_LOG(LogUnRealDash, Display, TEXT("%s"), *Message); };
     // ConvertRelativePathToFull is not enough on Android, where ProjectSavedDir is a virtual path
     // like ../../../UnRealDash/Saved/ that the platform file layer resolves. Asking the platform
@@ -125,6 +137,8 @@ void ASmokeHUD::BeginPlay()
     // is also the directory this run has to report so files can be pushed and pulled.
     const FString Saved = FPaths::ConvertRelativePathToFull(
         IPlatformFile::GetPlatformPhysical().ConvertToAbsolutePathForExternalAppForWrite(*FPaths::ProjectSavedDir()));
+    TracePath = Saved / TEXT("shipping-trace.txt");
+    Trace(FString::Printf(TEXT("saved=%s"), *Saved));
     // This actor is the engine composition boundary. Helpers receive these services as arguments.
     const auto Resolved = ResolveSmokeConfig(Saved, FCommandLine::Get(), [](const FString& Path) {
         FSmokeFileRead Read;
@@ -132,27 +146,32 @@ void ASmokeHUD::BeginPlay()
         if (!Read.bExists || !FFileHelper::LoadFileToString(Read.Contents, *Path)) { Read.Error = TEXT("Cannot read file"); }
         return Read;
     }, Log);
-    if (!Resolved.bRunnable) { FPlatformMisc::RequestExit(false); return; }
+    Trace(FString::Printf(TEXT("config runnable=%s errors=%d"), Resolved.bRunnable ? TEXT("true") : TEXT("false"), Resolved.Errors.Num()));
+    for (const FString& E : Resolved.Errors) { Trace(TEXT("  config error: ") + E); }
+    if (!Resolved.bRunnable) { Trace(TEXT("exit: config")); FPlatformMisc::RequestExit(false); return; }
     Config = Resolved.Config;
+    Trace(FString::Printf(TEXT("output_directory=%s run_seconds=%.2f"), *Config.OutputDirectory, Config.RunSeconds));
     StartedAt = PreviousTime = GetWorld()->GetRealTimeSeconds();
     Simulator = MakeUnique<UnRealDashCore::FSmokeSimulator>(UnRealDashCore::MakePlatformClock());
     const UnRealDashCore::FSmokeSimulatorOptions Options{
         Config.Scenario, Config.Seed, Config.DurationSeconds, Config.IntervalMilliseconds};
     const FString SimulationError = Simulator->Start(Options);
-    if (!SimulationError.IsEmpty()) { Log(SimulationError); FPlatformMisc::RequestExit(false); return; }
+    if (!SimulationError.IsEmpty()) { Trace(TEXT("exit: simulator ") + SimulationError); Log(SimulationError); FPlatformMisc::RequestExit(false); return; }
+    Trace(TEXT("simulator started"));
     IImageWrapperModule* Images = FModuleManager::LoadModulePtr<IImageWrapperModule>(TEXT("ImageWrapper"));
-    if (!Images) { Log(TEXT("ImageWrapper module unavailable")); FPlatformMisc::RequestExit(false); return; }
+    if (!Images) { Trace(TEXT("exit: ImageWrapper missing")); Log(TEXT("ImageWrapper module unavailable")); FPlatformMisc::RequestExit(false); return; }
     const auto Imported = LoadSmokeTexture(Config.Image, [](const FString& Path, TArray<uint8>& Bytes, FString& Error) {
         if (!FFileHelper::LoadFileToArray(Bytes, *Path)) { Error = TEXT("Cannot read PNG"); return false; }
         return true;
     }, *Images, Log);
-    if (!Imported.Texture) { Log(Imported.Error); FPlatformMisc::RequestExit(false); return; }
+    if (!Imported.Texture) { Trace(TEXT("exit: texture ") + Imported.Error); Log(Imported.Error); FPlatformMisc::RequestExit(false); return; }
+    Trace(TEXT("texture imported"));
     Texture = Imported.Texture;
     UMaterial* Base = LoadObject<UMaterial>(nullptr, TEXT("/Game/Smoke/M_Smoke.M_Smoke"));
     Font = LoadObject<UFont>(nullptr, TEXT("/Engine/EngineFonts/Roboto.Roboto"));
-    if (!Base || !Font) { Log(TEXT("Smoke material or font missing; run MakeSmokeAssets before packaging")); FPlatformMisc::RequestExit(false); return; }
+    if (!Base || !Font) { Trace(FString::Printf(TEXT("exit: material=%d font=%d"), Base ? 1 : 0, Font ? 1 : 0)); Log(TEXT("Smoke material or font missing; run MakeSmokeAssets before packaging")); FPlatformMisc::RequestExit(false); return; }
     Material = UMaterialInstanceDynamic::Create(Base, this);
-    if (!Material) { Log(TEXT("Smoke material instance creation failed")); FPlatformMisc::RequestExit(false); return; }
+    if (!Material) { Trace(TEXT("exit: material instance")); Log(TEXT("Smoke material instance creation failed")); FPlatformMisc::RequestExit(false); return; }
     Material->SetTextureParameterValue(TEXT("BaseTexture"), Texture);
     UE_LOG(LogUnRealDash, Display, TEXT("Smoke RHI=%s GPU=%s driver=%s internal_driver=%s"),
         GDynamicRHI ? GDynamicRHI->GetName() : TEXT("unavailable"), *GRHIAdapterName,
@@ -162,6 +181,7 @@ void ASmokeHUD::BeginPlay()
     FPlatformApplicationMisc::ControlScreensaver(FPlatformApplicationMisc::Disable);
     ProbeStandardFileApis(Config.Image, Saved);
     bReady = true;
+    Trace(TEXT("ready"));
 }
 
 // SPIKE PROBE for PLAN 4.4. dashboard-spec reads every file through std::ifstream over a
@@ -215,7 +235,12 @@ void ASmokeHUD::ProbeStandardFileApis(const FString& ImagePath, const FString& S
 void ASmokeHUD::DrawHUD()
 {
     Super::DrawHUD();
-    if (!bReady || !Canvas) { return; }
+    if (!bReady || !Canvas)
+    {
+        if (TraceDrawCalls < 3) { ++TraceDrawCalls; Trace(FString::Printf(TEXT("draw blocked ready=%d canvas=%d"), bReady ? 1 : 0, Canvas ? 1 : 0)); }
+        return;
+    }
+    if (TraceDrawCalls < 3) { ++TraceDrawCalls; Trace(TEXT("draw ok")); }
     const double Now = GetWorld()->GetRealTimeSeconds();
     const FString Error = Simulator->Tick(Sample);
     if (!Error.IsEmpty()) { UE_LOG(LogUnRealDash, Error, TEXT("%s"), *Error); bReady = false; FPlatformMisc::RequestExit(false); return; }
@@ -286,6 +311,7 @@ void ASmokeHUD::DrawHUD()
     PreviousTime = Now;
     if (!bExportRequested && Now - StartedAt >= Config.RunSeconds)
     {
+        Trace(FString::Printf(TEXT("export branch at %.2f s"), Now - StartedAt));
         if (!IFileManager::Get().MakeDirectory(*Config.OutputDirectory, true))
         {
             UE_LOG(LogUnRealDash, Error, TEXT("Cannot create output_directory=%s"), *Config.OutputDirectory);
