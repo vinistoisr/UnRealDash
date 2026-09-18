@@ -3,6 +3,8 @@
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
+#include "Components/ContentWidget.h"
+#include "Components/PanelWidget.h"
 #include "Components/ScaleBox.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
@@ -13,6 +15,7 @@
 #include "HAL/PlatformMisc.h"
 #include "Misc/Paths.h"
 #include "UnrealClient.h"
+#include "UnRealDashCore/DashScenario.h"
 
 void UDashPackageScreen::Open(const FString& Path, UnRealDashCore::EDashProfile InProfile,
     UnRealDashCore::EDashSignalState InState, float InFraction)
@@ -38,6 +41,10 @@ TSharedRef<SWidget> UDashPackageScreen::RebuildWidget()
         UnRealDashCore::FComponentRegistry Registry;
         UnRealDashCore::RegisterStage0Builders(Registry, *WidgetTree);
         Accepted = Builder.Build(Package, Profile, Registry, Theme, State, Fraction, Content, Error);
+        // The bindings are resolved once, here, not per frame. A string comparison against every
+        // declared signal for every binding every frame is invisible on a workstation and a dropped
+        // frame on a head unit.
+        if (Accepted) Accepted = Bindings.Build(Package, Builder.UpdatersById(), Error);
         if (!Accepted) UE_LOG(LogUnRealDash, Error, TEXT("%s"), *Error.DisplayText());
     }
     WidgetTree->RootWidget = Accepted ? BuildDocumentRoot(Content) : BuildErrorRoot();
@@ -51,6 +58,49 @@ TSharedRef<SWidget> UDashPackageScreen::RebuildWidget()
 // So nothing here adds padding, insets or a second scale. The one scale is the reference viewport
 // to the real viewport, and the root component's `scaling` chooses how it behaves when the two
 // differ. At equal sizes every option gives exactly 1.0.
+int32 UDashPackageScreen::CountWidgets(UWidget* Root)
+{
+    if (!Root) return 0;
+    int32 Total = 1;
+    if (UPanelWidget* Panel = Cast<UPanelWidget>(Root))
+        for (int32 Index = 0; Index < Panel->GetChildrenCount(); ++Index)
+            Total += CountWidgets(Panel->GetChildAt(Index));
+    else if (UContentWidget* Content = Cast<UContentWidget>(Root))
+        Total += CountWidgets(Content->GetContent());
+    return Total;
+}
+FString UDashPackageScreen::StartScenario(double DurationSeconds)
+{
+    if (!Accepted) return TEXT("No package is loaded");
+    UnRealDashCore::FDashScenarioOptions Options;
+    Options.DurationSeconds = DurationSeconds;
+    FString Failure;
+    const FString Recording = UnRealDashCore::BuildScenarioRecording(Bindings.SignalNames(), Bindings.SignalRanges(), Options, Failure);
+    if (Recording.IsEmpty()) return Failure;
+    Acquisition = MakeUnique<UnRealDashCore::FDashAcquisition>(Recording);
+    return Acquisition->Start();
+}
+void UDashPackageScreen::NativeTick(const FGeometry& Geometry, float DeltaTime)
+{
+    Super::NativeTick(Geometry, DeltaTime);
+    if (!Acquisition) return;
+    // Acquired once per tick and passed down. Acquiring per binding could straddle a publication
+    // and hand two components values from different ones, which is exactly what the triple buffer
+    // exists to prevent.
+    if (Acquisition->AcquireFrameSnapshot(Snapshot)) Bindings.Apply(Snapshot);
+
+    ++Ticks;
+    const int32 Widgets = WidgetTree ? WidgetTree->RootWidget ? CountWidgets(WidgetTree->RootWidget) : 0 : 0;
+    if (Ticks == 1)
+    {
+        FirstTickWidgets = Widgets;
+        UE_LOG(LogUnRealDash, Display, TEXT("DashWidgets tick=1 count=%d"), Widgets);
+    }
+    else if (Ticks == 600)
+    {
+        UE_LOG(LogUnRealDash, Display, TEXT("DashWidgets tick=600 count=%d first=%d"), Widgets, FirstTickWidgets);
+    }
+}
 UWidget* UDashPackageScreen::BuildDocumentRoot(UWidget* Content)
 {
     const FIntPoint Viewport = Package.ReferenceViewport();
@@ -158,6 +208,29 @@ void ADashPackageHUD::BeginPlay()
     }
     Screen->Open(Path, UnRealDashCore::DefaultDashProfile(), State, Fraction);
     Screen->AddToViewport();
+    // The PLAN 4.9 value source, until a connector exists. It generates bytes and the real pipeline
+    // consumes them, so a signal goes stale here because a deadline passed. Gate-only, beside
+    // -udash-state= and -udash-fraction=, and outside the runtime flag surface PLAN 4.7 owns.
+    FString ScenarioSeconds;
+    if (FParse::Value(FCommandLine::Get(), TEXT("udash-scenario="), ScenarioSeconds))
+    {
+        const double Duration = ScenarioSeconds.IsNumeric() ? FCString::Atod(*ScenarioSeconds) : 0.0;
+        if (Duration <= 0.0)
+        {
+            UE_LOG(LogUnRealDash, Error, TEXT("-udash-scenario must be a positive number of seconds, got %s"),
+                *ScenarioSeconds);
+            FPlatformMisc::RequestExit(false);
+            return;
+        }
+        const FString Failure = Screen->StartScenario(Duration);
+        if (!Failure.IsEmpty())
+        {
+            UE_LOG(LogUnRealDash, Error, TEXT("Scenario failed: %s"), *Failure);
+            FPlatformMisc::RequestExit(false);
+            return;
+        }
+        UE_LOG(LogUnRealDash, Display, TEXT("DashScenario seconds=%.3f"), Duration);
+    }
     // One machine-readable verdict per run. The device half of the PLAN 4.4 gate is driven by
     // launching once per fixture and reading logcat, and an accepted case otherwise produces no
     // output at all, which would make "it worked" indistinguishable from "it died early".
@@ -166,21 +239,48 @@ void ADashPackageHUD::BeginPlay()
         *Screen->LastError().CodeName, *Screen->LastError().Pointer, *Path,
         UnRealDashCore::SignalStateName(State));
     UE_LOG(LogUnRealDash, Display, TEXT("DashFraction value=%.4f"), Fraction);
-    if (FParse::Value(FCommandLine::Get(), TEXT("udash-shot="), ShotPath)) ScheduleShot();
+    if (FParse::Value(FCommandLine::Get(), TEXT("udash-shot="), ShotPath))
+    {
+        FString At;
+        float Delay = 0.f;
+        if (FParse::Value(FCommandLine::Get(), TEXT("udash-shot-at="), At))
+        {
+            if (!At.IsNumeric() || FCString::Atof(*At) < 0.f)
+            {
+                UE_LOG(LogUnRealDash, Error, TEXT("-udash-shot-at must be a non-negative number of seconds, got %s"), *At);
+                FPlatformMisc::RequestExit(false);
+                return;
+            }
+            Delay = FCString::Atof(*At);
+        }
+        ScheduleShot(Delay);
+    }
 }
 // Gate-only capture. bShowUI is true and must stay true: everything this project draws is UI, and
 // a capture taken with false writes a black image, so a gate comparing two of them would pass for
 // every fixture forever. That was found on the device on 2026-09-17 and is recorded in
 // docs/reports/2026-09-17-device-package-gate.md.
-void ADashPackageHUD::ScheduleShot()
+void ADashPackageHUD::ScheduleShot(float DelaySeconds)
 {
+    // Eight settling frames is the original behaviour, for a still document. A delay on top of it
+    // is what lets a gate capture the same scenario at two different points and compare them, which
+    // is the only way to show that a bound widget actually moved rather than merely rendered.
     ShotFramesRemaining = 8;
+    ShotDelaySeconds = DelaySeconds;
     GetWorldTimerManager().SetTimer(ShotTimer, this, &ADashPackageHUD::TickShot, 0.05f, true);
 }
 void ADashPackageHUD::TickShot()
 {
     if (--ShotFramesRemaining > 0) return;
     GetWorldTimerManager().ClearTimer(ShotTimer);
+    if (ShotDelaySeconds > 0.f)
+    {
+        const float Delay = ShotDelaySeconds;
+        ShotDelaySeconds = 0.f;
+        ShotFramesRemaining = 1;
+        GetWorldTimerManager().SetTimer(ShotTimer, this, &ADashPackageHUD::TickShot, Delay, false);
+        return;
+    }
     FScreenshotRequest::RequestScreenshot(ShotPath, true, false);
     UE_LOG(LogUnRealDash, Display, TEXT("DashShot path=%s"), *ShotPath);
     // One more beat so the request is serviced before the process leaves.

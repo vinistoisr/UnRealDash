@@ -65,6 +65,12 @@ inline constexpr float NeedleLength = 0.42f;
 inline constexpr float NeedleWidth = 0.03f;
 inline constexpr float ArcRadius = 0.42f;
 inline constexpr float ArcThickness = 0.06f;
+// Points per degree of swept arc. Slate draws a thick polyline as one quad per segment with no
+// join, so every turn leaves a notch on the outer edge whose width grows with both the thickness
+// and the turn angle. At one point per degree those notches are plainly visible on a 300 unit
+// gauge. Four points per degree makes each turn a quarter as sharp, and 270 degrees is still only
+// 1,081 points.
+inline constexpr double ArcPointsPerDegree = 4.0;
 
 // Where a gauge sits in its own declared range, 0 to 1. Reads minimum and maximum off the component
 // and applies the context's fraction. A range of zero width yields 0 rather than a division by zero.

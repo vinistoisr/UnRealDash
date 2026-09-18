@@ -41,12 +41,12 @@ FBuiltComponent BuildBarGauge(const FComponentContext& Context, FDashLoadError& 
         // agree about where minimum and maximum are. One point per degree swept: at 270 degrees
         // that is at most 271 points, which is enough that the step is invisible at any size this
         // runs at and few enough that the point list costs nothing.
-        const int32 Steps = FMath::Max(1, FMath::RoundToInt(SweepDegrees * Deflection));
+        const int32 Steps = FMath::Max(1, FMath::RoundToInt(SweepDegrees * Deflection * ArcPointsPerDegree));
         TArray<FVector2D> Points;
         Points.Reserve(Steps + 1);
         for (int32 Index = 0; Index <= Steps; ++Index)
         {
-            const double Degrees = SweepStartDegrees + static_cast<double>(Index);
+            const double Degrees = SweepStartDegrees + static_cast<double>(Index) / ArcPointsPerDegree;
             const double Radians = FMath::DegreesToRadians(Degrees);
             // Zero degrees is twelve o'clock and degrees increase clockwise, matching the needle's
             // render transform, so sine drives x and negative cosine drives y.
@@ -103,12 +103,13 @@ FBuiltComponent BuildBarGauge(const FComponentContext& Context, FDashLoadError& 
         {
             // The arc's point list is the only thing here that is rebuilt per update, because an
             // arc's length is its geometry. It is bounded at 271 points by the 270 degree sweep.
-            const int32 Steps = FMath::Max(1, FMath::RoundToInt(SweepDegrees * Deflection));
+            const int32 Steps = FMath::Max(1, FMath::RoundToInt(SweepDegrees * Deflection * ArcPointsPerDegree));
             TArray<FVector2D> Points;
             Points.Reserve(Steps + 1);
             for (int32 Index = 0; Index <= Steps; ++Index)
             {
-                const double Radians = FMath::DegreesToRadians(SweepStartDegrees + static_cast<double>(Index));
+                const double Degrees = SweepStartDegrees + static_cast<double>(Index) / ArcPointsPerDegree;
+                const double Radians = FMath::DegreesToRadians(Degrees);
                 Points.Add(FVector2D(0.5 + ArcRadius * FMath::Sin(Radians), 0.5 - ArcRadius * FMath::Cos(Radians)));
             }
             Arc->SetLines(Points, Colour, Side * ArcThickness);

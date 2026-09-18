@@ -29,11 +29,19 @@ int32 SDashLines::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeome
     for (const FVector2D& Point : Points)
         Local.Add(FVector2f(static_cast<float>(Point.X * Size.X), static_cast<float>(Point.Y * Size.Y)));
 
-    // Antialiasing off. The screenshot gate measures pixel extents, and an antialiased endpoint
-    // spreads the measured extent by a fraction of a pixel differently between driver versions,
-    // which would show up as a change nobody made.
+    // Antialiased, which also gets the joins.
+    //
+    // Chunk 12 turned it off so the screenshot gate would measure a stable extent. That was the
+    // wrong trade for a thick polyline: Slate's non-antialiased path draws each segment as its own
+    // quad with no join, so every turn leaves an uncovered notch on the outer edge, and a circular
+    // gauge came out visibly serrated. Raising the point density made the notches thinner without
+    // closing them, because the quads still do not overlap.
+    //
+    // Nothing measured depends on the difference. The gates that touch these two primitives use
+    // pixel-count floors with wide margins, an arc floor of 3,000 against about 8,000 measured,
+    // rather than an exact bounding box, so a fraction of a pixel at an edge changes nothing.
     FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), Local,
-        ESlateDrawEffect::None, Colour, /*bAntialias=*/false, Thickness);
+        ESlateDrawEffect::None, Colour, /*bAntialias=*/true, Thickness);
     return LayerId + 1;
 }
 

@@ -407,5 +407,12 @@
     "archive_only": false,
     "profile": "desktop",
     "external": true
+  },
+  {
+    "name": "live-stage0",
+    "code": "",
+    "archive_only": false,
+    "profile": "desktop",
+    "external": true
   }
 ]
