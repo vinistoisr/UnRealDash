@@ -42,3 +42,4 @@ scratchpad/
 runtime/UnRealDash/Saved/GaugeDemo/
 
 .tmp/
+scripts/__pycache__/

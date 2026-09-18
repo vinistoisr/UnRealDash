@@ -30,6 +30,9 @@ set(signal_sources
     "${CMAKE_CURRENT_SOURCE_DIR}/../../runtime/UnRealDash/Source/SignalCore/Private/JsonLinesText.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../runtime/UnRealDash/Source/SignalCore/Private/Scenarios.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../runtime/UnRealDash/Source/SignalCore/Private/Errors.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../runtime/UnRealDash/Source/SignalCore/Private/Reconnect.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../runtime/UnRealDash/Source/SignalCore/Private/BinaryTelemetryConnector.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../runtime/UnRealDash/Source/SignalCore/Private/TcpTransport.cpp"
 )
 file(GLOB disk_sources "${CMAKE_CURRENT_SOURCE_DIR}/../../runtime/UnRealDash/Source/SignalCore/Private/*.cpp")
 foreach(source IN LISTS signal_sources)

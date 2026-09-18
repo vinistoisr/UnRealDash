@@ -42,5 +42,10 @@ struct ConnectionHealth {
     std::uint64_t reconnects{};
     std::uint64_t bytes{};
     char last_error[128]{};
+    // PLAN 4.9 requires a connector to report its backoff state. Written by ReportBackoff in
+    // Reconnect.h, and left at zero by the connectors that never retry, which is the honest reading
+    // for a simulator or a file: they have no schedule to be waiting on.
+    std::uint64_t backoff_ms{};
+    std::uint64_t attempts_since_connect{};
 };
 } // namespace signal_core
