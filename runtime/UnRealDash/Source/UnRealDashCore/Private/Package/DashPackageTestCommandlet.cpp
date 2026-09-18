@@ -50,7 +50,7 @@ int32 UDashPackageTestCommandlet::Main(const FString& Params)
         FDashLoadError Error;
         FDashTheme Theme;
         Expect(Theme.Load(Package, Error), Package.Path() + TEXT(" theme ") + Error.Message);
-        const bool bBuilt = Builder.Build(Package, Profile, Registry, Theme, EDashSignalState::Valid, RootWidget, Error);
+        const bool bBuilt = Builder.Build(Package, Profile, Registry, Theme, EDashSignalState::Valid, 0.5f, RootWidget, Error);
         if (TreeCode.IsEmpty())
         {
             Expect(bBuilt, Package.Path() + TEXT(" widget tree ") + Error.Message);
@@ -112,7 +112,7 @@ int32 UDashPackageTestCommandlet::Main(const FString& Params)
     FDashLoadError UnknownError;
     FDashTheme EmptyTheme;
     Expect(!EmptyRegistry.Build({Unknown, EmptyPackage, EDashProfile::Desktop, nullptr, EmptyTheme,
-            EDashSignalState::Valid}, UnknownError) &&
+            EDashSignalState::Valid, 0.f}, UnknownError) &&
         UnknownError.Pointer == Unknown.Pointer && UnknownError.Message.Contains(Unknown.Type), TEXT("unknown registry type"));
     // An undeclared theme token must name the token and the caller's pointer. This is checked at
     // the API level rather than through a document because it cannot be reached through one: the

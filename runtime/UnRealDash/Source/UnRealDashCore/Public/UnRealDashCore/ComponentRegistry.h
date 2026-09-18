@@ -17,6 +17,10 @@ struct FComponentContext
     // in force. Both refer to state the caller owns for the whole build.
     const FDashTheme& Theme;
     EDashSignalState State;
+    // Where a bound gauge sits in its declared range, 0 to 1. Chunk 12 adds it for the same reason
+    // chunk 11 added State: the connectors that supply real values are PLAN 4.9, and a dial cannot
+    // be captured at a known deflection before one exists. It is a gate input, never data.
+    float Fraction = 0.f;
 };
 using FComponentBuilder = TFunction<UWidget*(const FComponentContext&, FDashLoadError&)>;
 
@@ -55,7 +59,8 @@ class UNREALDASHCORE_API FWidgetTreeBuilder
 {
 public:
     bool Build(const FDashPackage& Package, EDashProfile Profile, const FComponentRegistry& Registry,
-        const FDashTheme& Theme, EDashSignalState State, UWidget*& OutRoot, FDashLoadError& OutError);
+        const FDashTheme& Theme, EDashSignalState State, float Fraction, UWidget*& OutRoot,
+        FDashLoadError& OutError);
     // Exact document IDs remain attached to their widgets, independent of traversal order.
     const TMap<FString, UWidget*>& WidgetsById() const { return Widgets; }
 private:

@@ -11,7 +11,8 @@ class UDashPackageScreen : public UUserWidget
     GENERATED_BODY()
 public:
     void Open(const FString& Path, UnRealDashCore::EDashProfile Profile,
-        UnRealDashCore::EDashSignalState State = UnRealDashCore::EDashSignalState::Valid);
+        UnRealDashCore::EDashSignalState State = UnRealDashCore::EDashSignalState::Valid,
+        float Fraction = 0.f);
     // Read by the HUD to emit one machine-readable verdict line per run; the device half of the
     // PLAN 4.4 gate parses it out of logcat, where an accepted case otherwise logs nothing at all.
     bool WasAccepted() const { return Accepted; }
@@ -27,6 +28,7 @@ private:
     UnRealDashCore::FDashLoadError Error;
     UnRealDashCore::EDashProfile Profile = UnRealDashCore::EDashProfile::Desktop;
     UnRealDashCore::EDashSignalState State = UnRealDashCore::EDashSignalState::Valid;
+    float Fraction = 0.f;
     UnRealDashCore::FWidgetTreeBuilder Builder;
     bool Accepted = false;
 };

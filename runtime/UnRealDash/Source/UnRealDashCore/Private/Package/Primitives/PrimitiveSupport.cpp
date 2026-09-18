@@ -45,6 +45,44 @@ UCanvasPanelSlot* AddBottomBand(UWidgetTree& Tree, UCanvasPanel* Panel, UWidget*
     Slot->SetOffsets(FMargin(0.f, 0.f, 0.f, Height));
     return Slot;
 }
+bool GaugeDeflection(const FComponentContext& Context, float& Out, FDashLoadError& OutError)
+{
+    double Minimum = 0, Maximum = 0;
+    if (!Context.Component.Properties.Member(TEXT("minimum")).Number(Minimum) ||
+        !Context.Component.Properties.Member(TEXT("maximum")).Number(Maximum))
+    {
+        // Unreachable through LoadPackage: the schema makes both required on a dial and a bar gauge.
+        OutError = { TEXT("E_SCHEMA"), 7, Context.Component.Pointer + TEXT("/properties"),
+            TEXT("Gauge needs numeric minimum and maximum"), Context.Package.Path() };
+        return false;
+    }
+    const double Range = Maximum - Minimum;
+    // A zero or inverted range has no deflection to compute. Resting at the low end is the honest
+    // rendering, and it is not a silent fallback because there is no other defensible answer.
+    const double Value = Minimum + FMath::Clamp(static_cast<double>(Context.Fraction), 0.0, 1.0) * Range;
+    Out = Range > 0.0 ? static_cast<float>(FMath::Clamp((Value - Minimum) / Range, 0.0, 1.0)) : 0.f;
+    return true;
+}
+UCanvasPanelSlot* AddCentredSquare(UWidgetTree& Tree, UCanvasPanel* Panel, UWidget* Child, const FDashRect& Rect)
+{
+    UCanvasPanelSlot* Slot = Cast<UCanvasPanelSlot>(Panel->AddChild(Child));
+    if (!Slot) return nullptr;
+    const float Side = static_cast<float>(FMath::Min(Rect.Size.X, Rect.Size.Y));
+    Slot->SetAnchors(FAnchors(0.5f, 0.5f, 0.5f, 0.5f));
+    Slot->SetAlignment(FVector2D(0.5, 0.5));
+    Slot->SetAutoSize(false);
+    // On a point-anchored axis the offsets are position then size, so this is centred at the panel
+    // centre with a side of Side. See SConstraintCanvas.cpp lines 246 to 281.
+    Slot->SetOffsets(FMargin(0.f, 0.f, Side, Side));
+    return Slot;
+}
+bool RefuseStretchedCircle(const FComponentContext& Context, FDashLoadError& OutError)
+{
+    if (ResolveAspectPolicy(Context.Component, Context.Package) != TEXT("stretch")) return true;
+    OutError = { TEXT("E_ASPECT_POLICY_FORBIDDEN"), 18, Context.Component.Pointer + TEXT("/aspect_policy"),
+        TEXT("A circular gauge cannot be non-uniformly scaled"), Context.Package.Path() };
+    return false;
+}
 float TextSizeForHeight(double Height)
 {
     return static_cast<float>(FMath::Clamp(Height * 0.28, 12.0, 96.0));

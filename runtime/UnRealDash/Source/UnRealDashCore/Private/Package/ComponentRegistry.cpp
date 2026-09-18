@@ -48,7 +48,8 @@ bool AdoptIntoPanel(const FAdoptContext& Context, FDashLoadError& OutError)
     return ApplyLayout(Context.ChildComponent, Slot, Context.Package, OutError);
 }
 bool FWidgetTreeBuilder::Build(const FDashPackage& Package, EDashProfile Profile, const FComponentRegistry& Registry,
-    const FDashTheme& Theme, EDashSignalState State, UWidget*& OutRoot, FDashLoadError& OutError)
+    const FDashTheme& Theme, EDashSignalState State, float Fraction, UWidget*& OutRoot,
+    FDashLoadError& OutError)
 {
     Widgets.Reset();
     OutRoot = nullptr;
@@ -71,7 +72,7 @@ bool FWidgetTreeBuilder::Build(const FDashPackage& Package, EDashProfile Profile
                 if (!Found) continue;
                 Parent = *Found;
             }
-            UWidget* Built = Registry.Build({Node, Package, Profile, Parent, Theme, State}, OutError);
+            UWidget* Built = Registry.Build({Node, Package, Profile, Parent, Theme, State, Fraction}, OutError);
             if (!Built) { Widgets.Reset(); return false; }
             Built->SetToolTipText(FText::FromString(Node.Id));
             if (Parent)

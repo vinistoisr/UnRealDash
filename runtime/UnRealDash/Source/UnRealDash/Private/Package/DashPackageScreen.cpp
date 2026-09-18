@@ -15,10 +15,11 @@
 #include "UnrealClient.h"
 
 void UDashPackageScreen::Open(const FString& Path, UnRealDashCore::EDashProfile InProfile,
-    UnRealDashCore::EDashSignalState InState)
+    UnRealDashCore::EDashSignalState InState, float InFraction)
 {
     Profile = InProfile;
     State = InState;
+    Fraction = InFraction;
     if (Path.IsEmpty())
     {
         Error = { TEXT("E_SCHEMA"), 7, TEXT(""), TEXT("No package supplied. Launch with -udash=<path>."), Path };
@@ -36,7 +37,7 @@ TSharedRef<SWidget> UDashPackageScreen::RebuildWidget()
     {
         UnRealDashCore::FComponentRegistry Registry;
         UnRealDashCore::RegisterStage0Builders(Registry, *WidgetTree);
-        Accepted = Builder.Build(Package, Profile, Registry, Theme, State, Content, Error);
+        Accepted = Builder.Build(Package, Profile, Registry, Theme, State, Fraction, Content, Error);
         if (!Accepted) UE_LOG(LogUnRealDash, Error, TEXT("%s"), *Error.DisplayText());
     }
     WidgetTree->RootWidget = Accepted ? BuildDocumentRoot(Content) : BuildErrorRoot();
@@ -131,7 +132,31 @@ void ADashPackageHUD::BeginPlay()
         FPlatformMisc::RequestExit(false);
         return;
     }
-    Screen->Open(Path, UnRealDashCore::DefaultDashProfile(), State);
+    // The PLAN 4.6 counterpart of -udash-state=, and a gate switch for the same reason: the
+    // connectors that supply real values are PLAN 4.9, and a dial cannot be captured at a known
+    // deflection before one exists. It supplies one synthetic constant to every bound gauge, as a
+    // fraction of that gauge's declared range. It is not data and the reports say so.
+    float Fraction = 0.f;
+    FString FractionText;
+    if (FParse::Value(FCommandLine::Get(), TEXT("udash-fraction="), FractionText))
+    {
+        if (!FractionText.IsNumeric())
+        {
+            UE_LOG(LogUnRealDash, Error, TEXT("Unparsable -udash-fraction=%s"), *FractionText);
+            FPlatformMisc::RequestExit(false);
+            return;
+        }
+        Fraction = FCString::Atof(*FractionText);
+        if (Fraction < 0.f || Fraction > 1.f)
+        {
+            // Clamping silently would let a mistyped gate run capture a different deflection than
+            // the one it printed and still look green.
+            UE_LOG(LogUnRealDash, Error, TEXT("-udash-fraction must be between 0 and 1, got %s"), *FractionText);
+            FPlatformMisc::RequestExit(false);
+            return;
+        }
+    }
+    Screen->Open(Path, UnRealDashCore::DefaultDashProfile(), State, Fraction);
     Screen->AddToViewport();
     // One machine-readable verdict per run. The device half of the PLAN 4.4 gate is driven by
     // launching once per fixture and reading logcat, and an accepted case otherwise produces no
@@ -140,6 +165,7 @@ void ADashPackageHUD::BeginPlay()
         Screen->WasAccepted() ? TEXT("true") : TEXT("false"),
         *Screen->LastError().CodeName, *Screen->LastError().Pointer, *Path,
         UnRealDashCore::SignalStateName(State));
+    UE_LOG(LogUnRealDash, Display, TEXT("DashFraction value=%.4f"), Fraction);
     if (FParse::Value(FCommandLine::Get(), TEXT("udash-shot="), ShotPath)) ScheduleShot();
 }
 // Gate-only capture. bShowUI is true and must stay true: everything this project draws is UI, and

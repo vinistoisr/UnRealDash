@@ -56,6 +56,19 @@ bool ApplyLayout(const FDashComponent& Component, UPanelSlot* Slot, const FDashP
     Canvas->SetAlignment(Point);
     Canvas->SetAutoSize(false);
     Canvas->SetOffsets(FMargin(Rect.Position.X, Rect.Position.Y, Rect.Size.X, Rect.Size.Y));
+    // Stacking comes from the document's z_order, and it has to: the order components are written
+    // in is not recoverable at runtime. BoundedParse.cpp:118-132 sorts every object's members by
+    // name, deliberately, so that schema diagnostics do not depend on the author's ordering, and
+    // JSON object member order is not significant in the first place. Before z_order existed, two
+    // overlapping siblings stacked by component id, which is deterministic but is layout by naming
+    // convention: a dial named "dial" was painted under its own face image named "face" with no way
+    // for the document to say otherwise.
+    //
+    // Equal z_order still ties by component id, so a document that does not care is unaffected and
+    // every render is still deterministic.
+    double ZOrder = 0;
+    Component.Node.Member(TEXT("z_order")).Number(ZOrder);
+    Canvas->SetZOrder(static_cast<float>(ZOrder));
     return true;
 }
 FString ResolveAspectPolicy(const FDashComponent& Component, const FDashPackage& Package)
@@ -63,9 +76,11 @@ FString ResolveAspectPolicy(const FDashComponent& Component, const FDashPackage&
     FString Policy;
     Component.Node.Member(TEXT("aspect_policy")).String(Policy);
     if (Policy != TEXT("inherit")) return Policy;
-    // Walk up until something declares a policy. A chain that inherits all the way to the root
-    // resolves to preserve, which is the schema's conservative option and the one that never
-    // distorts artwork.
+    // Walk up taking the policy from CONTAINER ancestors only, and keep walking past any other
+    // type. That is exactly what the semantic pass does (SemanticPass.cpp:267-272), and the two
+    // must agree: the pass is what rejects a circular gauge under an inherited stretch, so a
+    // runtime that resolved inherit differently could non-uniformly scale a dial the validator
+    // accepted. Taking the policy from any ancestor, as this did before, was such a divergence.
     FString ParentId = Component.ParentId;
     const auto Nodes = Package.Components();
     for (int32 Depth = 0; Depth < Nodes.Num() && !ParentId.IsEmpty(); ++Depth)
@@ -73,11 +88,17 @@ FString ResolveAspectPolicy(const FDashComponent& Component, const FDashPackage&
         const FDashComponent* Parent = nullptr;
         for (const auto& Node : Nodes) if (Node.Id == ParentId) { Parent = &Node; break; }
         if (!Parent) break;
-        FString ParentPolicy;
-        Parent->Node.Member(TEXT("aspect_policy")).String(ParentPolicy);
-        if (ParentPolicy != TEXT("inherit")) return ParentPolicy;
+        if (Parent->Type == TEXT("container"))
+        {
+            FString ParentPolicy;
+            Parent->Node.Member(TEXT("aspect_policy")).String(ParentPolicy);
+            if (ParentPolicy != TEXT("inherit")) return ParentPolicy;
+        }
         ParentId = Parent->ParentId;
     }
+    // A chain that inherits all the way to the root resolves to preserve. The semantic pass leaves
+    // it as inherit and its stretch check simply does not fire, so preserve is the reading that
+    // agrees with it and never distorts artwork.
     return TEXT("preserve");
 }
 namespace
