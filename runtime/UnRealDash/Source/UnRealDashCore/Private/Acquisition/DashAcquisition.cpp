@@ -94,10 +94,12 @@ bool FDashAcquisition::AcquireFrameSnapshot(FFrameSnapshot& Out) {
     if (!Impl->bStarted.load(std::memory_order_acquire)) return false;
     const auto Snapshot = Impl->Exchange->Acquire();
     Out.Samples.SetNum(static_cast<int32>(Snapshot.samples.size()));
+    Out.SignalIds.SetNum(static_cast<int32>(Snapshot.samples.size()));
     Out.Present.SetNum(static_cast<int32>(Snapshot.samples.size()));
     int32 Present = 0;
     for (std::size_t Index = 0; Index < Snapshot.samples.size(); ++Index) {
         Out.Samples[static_cast<int32>(Index)] = ToEngineSample(Snapshot.samples[Index].sample);
+        Out.SignalIds[static_cast<int32>(Index)] = Snapshot.samples[Index].signal;
         if (Snapshot.samples[Index].received) Out.Present[Present++] = Snapshot.samples[Index].signal;
     }
     Out.Present.SetNum(Present, EAllowShrinking::No);

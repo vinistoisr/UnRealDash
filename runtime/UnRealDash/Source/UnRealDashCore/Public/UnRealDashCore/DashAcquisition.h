@@ -11,6 +11,12 @@ struct FAcquisitionThresholdRule {
 };
 struct FFrameSnapshot {
     TArray<FSignalSample> Samples;
+    // One signal id per entry of Samples, in the same order. Present is a COMPACTED list of the
+    // ids that were received this publication, so its indices do not line up with Samples and a
+    // consumer cannot use it to find out which signal a sample belongs to. A live binding needs
+    // exactly that, so it gets its own aligned array rather than an index arithmetic rule someone
+    // has to remember.
+    TArray<uint32> SignalIds;
     TArray<uint32> Present;
     uint64 FrameIndex = 0;
     int64 AcquisitionNanoseconds = 0;

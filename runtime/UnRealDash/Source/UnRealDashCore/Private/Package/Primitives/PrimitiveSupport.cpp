@@ -63,6 +63,23 @@ bool GaugeDeflection(const FComponentContext& Context, float& Out, FDashLoadErro
     Out = Range > 0.0 ? static_cast<float>(FMath::Clamp((Value - Minimum) / Range, 0.0, 1.0)) : 0.f;
     return true;
 }
+bool ReadGaugeRange(const FComponentContext& Context, FGaugeRange& Out, FDashLoadError& OutError)
+{
+    if (!Context.Component.Properties.Member(TEXT("minimum")).Number(Out.Minimum) ||
+        !Context.Component.Properties.Member(TEXT("maximum")).Number(Out.Maximum))
+    {
+        OutError = { TEXT("E_SCHEMA"), 7, Context.Component.Pointer + TEXT("/properties"),
+            TEXT("Gauge needs numeric minimum and maximum"), Context.Package.Path() };
+        return false;
+    }
+    return true;
+}
+float FGaugeRange::Deflection(const FDashSignalValue& Reading) const
+{
+    const double Range = Maximum - Minimum;
+    if (!Reading.bHasValue || Range <= 0.0) return 0.f;
+    return static_cast<float>(FMath::Clamp((Reading.Value - Minimum) / Range, 0.0, 1.0));
+}
 UCanvasPanelSlot* AddCentredSquare(UWidgetTree& Tree, UCanvasPanel* Panel, UWidget* Child, const FDashRect& Rect)
 {
     UCanvasPanelSlot* Slot = Cast<UCanvasPanelSlot>(Panel->AddChild(Child));
@@ -95,10 +112,97 @@ namespace
 // revision 4 alongside the other schema gaps rather than presented as a design choice.
 const TCHAR* BadgeGlyph = TEXT("?");
 }
-bool ApplyMissingData(const FComponentContext& Context, UWidgetTree& Tree, UCanvasPanel* Panel,
-    UWidget* Content, UTextBlock* ValueText, FDashLoadError& OutError)
+namespace
 {
-    if (Context.State == EDashSignalState::Valid) return true;
+// The four schema states in a fixed order, so a resolved colour can be indexed rather than looked
+// up by string every frame.
+constexpr EDashSignalState StateOrder[FMissingDataPresenter::StateCount] = {
+    EDashSignalState::Stale, EDashSignalState::Unavailable,
+    EDashSignalState::Invalid, EDashSignalState::AgeUnknown};
+
+int32 IndexOf(EDashSignalState State)
+{
+    for (int32 Index = 0; Index < FMissingDataPresenter::StateCount; ++Index)
+        if (StateOrder[Index] == State) return Index;
+    return INDEX_NONE;
+}
+}
+
+void FMissingDataPresenter::Apply(EDashSignalState State) const
+{
+    const int32 Index = IndexOf(State);
+
+    // Start from the valid rendering every time, so a return to Valid restores what was there and
+    // a change between two non-valid states does not leave the previous one's marks behind.
+    if (Content)
+    {
+        Content->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+        Content->SetRenderOpacity(1.f);
+    }
+    if (ValueText)
+    {
+        ValueText->SetText(ValidText);
+        ValueText->SetColorAndOpacity(FSlateColor(ValidColour));
+    }
+    if (Badge) Badge->SetVisibility(ESlateVisibility::Collapsed);
+    if (Band) Band->SetVisibility(ESlateVisibility::Collapsed);
+    if (Index == INDEX_NONE) return;
+
+    const FString& Shown = Presentation[Index];
+    const FLinearColor& Colour = StateColour[Index];
+
+    if (Shown == TEXT("hidden"))
+    {
+        if (Content) Content->SetVisibility(ESlateVisibility::Hidden);
+    }
+    else if (Shown == TEXT("last_value_dimmed"))
+    {
+        // Dimmed, not removed: the last reading is still the best information available, and hiding
+        // it would read as a fault in the display rather than in the signal.
+        if (Content) Content->SetRenderOpacity(0.35f);
+    }
+    else if (Shown == TEXT("dash"))
+    {
+        // A primitive with value text replaces it. One with no text has nothing to dash, so its
+        // content is hidden and the band alone carries the state; see chunk-11 revision 4 C2.
+        if (ValueText)
+        {
+            ValueText->SetText(FText::FromString(TEXT("--")));
+            ValueText->SetColorAndOpacity(FSlateColor(Colour));
+        }
+        else if (Content) Content->SetVisibility(ESlateVisibility::Hidden);
+    }
+    else if (Shown == TEXT("icon"))
+    {
+        // The value stays readable and gains a badge, which is what makes age_unknown structurally
+        // distinct from valid rather than merely dimmer. The chunk 11 gate measures glyph coverage
+        // and band colour, not opacity, precisely so the difference cannot be a judgement call.
+        if (Badge)
+        {
+            Badge->SetColorAndOpacity(FSlateColor(Colour));
+            Badge->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+        }
+    }
+
+    if (Band)
+    {
+        Band->SetColorAndOpacity(Colour);
+        Band->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+    }
+}
+
+bool BuildMissingData(const FComponentContext& Context, UWidgetTree& Tree, UCanvasPanel* Panel,
+    UWidget* Content, UTextBlock* ValueText, FMissingDataPresenter& Out, FDashLoadError& OutError)
+{
+    Out = {};
+    Out.Content = Content;
+    Out.ValueText = ValueText;
+    if (ValueText)
+    {
+        Out.ValidText = ValueText->GetText();
+        Out.ValidColour = ValueText->GetColorAndOpacity().GetSpecifiedColor();
+    }
+
     // A component the document binds to no signal has no signal state to present. Missing data is a
     // property of a signal, and a component bound to nothing has no signal that could be stale.
     //
@@ -109,59 +213,45 @@ bool ApplyMissingData(const FComponentContext& Context, UWidgetTree& Tree, UCanv
     // three, so the gate could not have failed for the thing it measures.
     if (!BindingFor(Context.Component, Context.Package).Exists()) return true;
 
-    const FString Presentation = PresentationFor(Context.Component, Context.State);
-    const FString Token = PresentationTokenFor(Context.Component, Context.State);
-    const FString Pointer = PresentationPointerFor(Context.Component, Context.State);
-    FLinearColor StateColour;
-    if (!Context.Theme.Resolve(Token, Pointer, StateColour, OutError)) return false;
+    // Every state's token is resolved here rather than when it first fires, so a theme error
+    // surfaces at load instead of the first time a signal happens to go stale on a device.
+    for (int32 Index = 0; Index < FMissingDataPresenter::StateCount; ++Index)
+    {
+        const EDashSignalState State = StateOrder[Index];
+        Out.Presentation[Index] = PresentationFor(Context.Component, State);
+        if (!Context.Theme.Resolve(PresentationTokenFor(Context.Component, State),
+                PresentationPointerFor(Context.Component, State), Out.StateColour[Index], OutError))
+            return false;
+    }
 
-    if (Presentation == TEXT("hidden"))
+    // Built once, collapsed, and only ever shown or hidden afterwards.
+    if (ValueText)
     {
-        if (Content) Content->SetVisibility(ESlateVisibility::Hidden);
-    }
-    else if (Presentation == TEXT("last_value_dimmed"))
-    {
-        // Dimmed, not removed: the last reading is still the best information available, and
-        // hiding it would read as a fault in the display rather than in the signal.
-        if (Content) Content->SetRenderOpacity(0.35f);
-    }
-    else if (Presentation == TEXT("dash"))
-    {
-        // A primitive with value text replaces it. One with no text has nothing to dash, so its
-        // content is hidden and the band alone carries the state; see revision 4 C2.
-        if (ValueText) { ValueText->SetText(FText::FromString(TEXT("--"))); ValueText->SetColorAndOpacity(FSlateColor(StateColour)); }
-        else if (Content) Content->SetVisibility(ESlateVisibility::Hidden);
-    }
-    else if (Presentation == TEXT("icon"))
-    {
-        // The value stays readable and gains a badge, which is what makes age_unknown structurally
-        // distinct from valid rather than merely dimmer. Criterion 4 measures glyph coverage and
-        // band colour, not opacity, precisely so the difference cannot be a judgement call.
-        //
-        // The badge is its own text block so it can carry the state token colour. Appending it to
-        // the value text instead would draw it in the value's colour, and the state's colour would
-        // then appear nowhere but the band.
-        if (ValueText)
+        if (UOverlay* Host = Cast<UOverlay>(ValueText->GetParent()))
         {
-            if (UOverlay* Host = Cast<UOverlay>(ValueText->GetParent()))
+            Out.Badge = Tree.ConstructWidget<UTextBlock>();
+            Out.Badge->SetText(FText::FromString(BadgeGlyph));
+            Out.Badge->SetFont(ValueText->GetFont());
+            Out.Badge->SetVisibility(ESlateVisibility::Collapsed);
+            if (UOverlaySlot* Slot = Cast<UOverlaySlot>(Host->AddChild(Out.Badge)))
             {
-                UTextBlock* Badge = Tree.ConstructWidget<UTextBlock>();
-                Badge->SetText(FText::FromString(BadgeGlyph));
-                Badge->SetColorAndOpacity(FSlateColor(StateColour));
-                Badge->SetFont(ValueText->GetFont());
-                if (UOverlaySlot* Slot = Cast<UOverlaySlot>(Host->AddChild(Badge)))
-                {
-                    Slot->SetHorizontalAlignment(HAlign_Right);
-                    Slot->SetVerticalAlignment(VAlign_Center);
-                    // Clear of the edge. Flush against it the glyph reads as clipped rather than
-                    // as a badge, which is the opposite of what a state marker is for.
-                    Slot->SetPadding(FMargin(0.f, 0.f, 12.f, 0.f));
-                }
+                Slot->SetHorizontalAlignment(HAlign_Right);
+                Slot->SetVerticalAlignment(VAlign_Center);
+                // Clear of the edge. Flush against it the glyph reads as clipped rather than as a
+                // badge, which is the opposite of what a state marker is for.
+                Slot->SetPadding(FMargin(0.f, 0.f, 12.f, 0.f));
             }
         }
     }
+    Out.Band = MakeFill(Tree, FLinearColor::White);
+    Out.Band->SetVisibility(ESlateVisibility::Collapsed);
+    AddBottomBand(Tree, Panel, Out.Band, StatusBandHeight);
 
-    AddBottomBand(Tree, Panel, MakeFill(Tree, StateColour), StatusBandHeight);
+    // The initial render. Before the presenter existed this happened as a side effect of building,
+    // and moving the rendering into an updater silently stopped it: the widgets were built in their
+    // valid appearance and nothing applied the state until a signal arrived. With -udash-state that
+    // meant all three states captured identically, which the chunk 11 gate caught immediately.
+    Out.Apply(Context.State);
     return true;
 }
 }

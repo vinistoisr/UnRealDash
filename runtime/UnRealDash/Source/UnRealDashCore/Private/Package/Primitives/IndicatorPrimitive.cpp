@@ -11,15 +11,15 @@ namespace UnRealDashCore
 // dark cluster reads as a cluster with nothing lit rather than as a display that failed to draw.
 // See chunk-11 revision 4 C6; artwork-backed lamps arrive with the PLAN 4.6 primitives, which have
 // asset fields in the schema.
-UWidget* BuildIndicator(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree)
+FBuiltComponent BuildIndicator(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree)
 {
     FDashRect Rect;
-    if (!ReadRect(Context.Component, Context.Package, Rect, OutError)) return nullptr;
+    if (!ReadRect(Context.Component, Context.Package, Rect, OutError)) return {};
 
     FLinearColor Colour;
     if (!Context.Theme.ResolveColour(Context.Component.Properties.Member(TEXT("colour")),
             Context.Component.Pointer + TEXT("/properties/colour"), Colour, OutError))
-        return nullptr;
+        return {};
 
     // No rule is evaluated in this chunk: PLAN 4.5 renders a frozen document, and wiring a lamp to
     // a live rule result is 4.9's connector work. Off is the honest state to draw for a lamp whose
@@ -33,8 +33,20 @@ UWidget* BuildIndicator(const FComponentContext& Context, FDashLoadError& OutErr
     UImage* Lamp = MakeFill(Tree, Drawn);
     AddFilling(Tree, Panel, Lamp);
 
-    if (!ApplyMissingData(Context, Tree, Panel, Lamp, nullptr, OutError)) return nullptr;
+    FMissingDataPresenter Presenter;
+    if (!BuildMissingData(Context, Tree, Panel, Lamp, nullptr, Presenter, OutError)) return {};
     ApplyClipping(Panel, Context.Component);
-    return Panel;
+    if (!BindingFor(Context.Component, Context.Package).Exists()) return {Panel, {}};
+
+    const FLinearColor Lit = Colour;
+    const FLinearColor Dim = Drawn;
+    // A bound lamp lights on a non-zero reading. Chunk 12 drew it permanently off because nothing
+    // could tell it otherwise; a binding now can. A rule result driving it is PLAN 5.x.
+    return {Panel, [Lamp, Lit, Dim, Presenter](const FDashSignalValue& Reading)
+    {
+        const bool bOn = Reading.bHasValue && Reading.State == EDashSignalState::Valid && Reading.Value != 0.0;
+        Lamp->SetColorAndOpacity(bOn ? Lit : Dim);
+        Presenter.Apply(Reading.State);
+    }};
 }
 }

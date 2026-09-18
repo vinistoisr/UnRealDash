@@ -143,6 +143,10 @@ FDashValue FDashPackage::Bindings() const
 {
     return Impl ? FPackageAccess::Value(Impl->Payload, Impl->Payload->Doc().Root().Member("bindings")) : FDashValue();
 }
+FDashValue FDashPackage::Signals() const
+{
+    return Impl ? FPackageAccess::Value(Impl->Payload, Impl->Payload->Doc().Signals()) : FDashValue();
+}
 FDashValue FDashPackage::Pages() const
 {
     return Impl ? FPackageAccess::Value(Impl->Payload, Impl->Payload->Doc().Root().Member("pages")) : FDashValue();

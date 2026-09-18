@@ -22,7 +22,34 @@ struct FComponentContext
     // be captured at a known deflection before one exists. It is a gate input, never data.
     float Fraction = 0.f;
 };
-using FComponentBuilder = TFunction<UWidget*(const FComponentContext&, FDashLoadError&)>;
+// One signal's current reading, as a primitive needs to see it. The state is the four missing-data
+// states plus Valid, so a primitive never has to look at Quality and AgeEvidence itself.
+struct FDashSignalValue
+{
+    double Value = 0.0;
+    EDashSignalState State = EDashSignalState::Unavailable;
+    // False before the first sample arrives. Distinct from a state of Unavailable, which means a
+    // signal that was declared and is not currently readable rather than one never heard from.
+    bool bHasValue = false;
+};
+
+// Applies a new reading to a widget that is already built. It sets properties and never adds or
+// removes a child: it runs every frame on the game thread, and a tree that grew by one widget per
+// frame would be a leak measured in minutes.
+//
+// It captures raw widget pointers, which are owned by the UWidgetTree the build used and live
+// exactly as long as it does. An updater must not outlive that tree.
+using FComponentUpdater = TFunction<void(const FDashSignalValue&)>;
+
+// What a builder returns. The updater is unset for a component the document binds to no signal,
+// which is most of them, and that is the same question BindingFor already answers for missing-data
+// rendering rather than a second rule to remember.
+struct FBuiltComponent
+{
+    UWidget* Widget = nullptr;
+    FComponentUpdater Updater;
+};
+using FComponentBuilder = TFunction<FBuiltComponent(const FComponentContext&, FDashLoadError&)>;
 
 // How a built parent takes a child. It is registered beside the builder, keyed by the PARENT's
 // type, so the tree builder never learns that a page_switch routes children into per-page panels
@@ -47,7 +74,7 @@ class UNREALDASHCORE_API FComponentRegistry
 {
 public:
     void Register(const FString& Type, FComponentBuilder Builder, FComponentAdopter Adopter = nullptr);
-    UWidget* Build(const FComponentContext& Context, FDashLoadError& OutError) const;
+    FBuiltComponent Build(const FComponentContext& Context, FDashLoadError& OutError) const;
     // Adds Child to Parent using the adopter registered for the parent component's type.
     bool Adopt(const FAdoptContext& Context, FDashLoadError& OutError) const;
     bool Knows(const FString& Type) const { return Builders.Contains(Type); }
@@ -63,8 +90,12 @@ public:
         FDashLoadError& OutError);
     // Exact document IDs remain attached to their widgets, independent of traversal order.
     const TMap<FString, UWidget*>& WidgetsById() const { return Widgets; }
+    // Only the components that bind a signal appear here. Keyed the same way, populated in the
+    // same pass, and valid for as long as the widget tree the build used.
+    const TMap<FString, FComponentUpdater>& UpdatersById() const { return Updaters; }
 private:
     TMap<FString, UWidget*> Widgets;
+    TMap<FString, FComponentUpdater> Updaters;
 };
 // The Stage 0 primitive set: container, readout, image, shape, indicator and page_switch. The three
 // the schema also defines, analog_dial, bar_gauge and history_graph, belong to PLAN 4.6 and are

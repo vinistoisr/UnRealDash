@@ -112,7 +112,7 @@ int32 UDashPackageTestCommandlet::Main(const FString& Params)
     FDashLoadError UnknownError;
     FDashTheme EmptyTheme;
     Expect(!EmptyRegistry.Build({Unknown, EmptyPackage, EDashProfile::Desktop, nullptr, EmptyTheme,
-            EDashSignalState::Valid, 0.f}, UnknownError) &&
+            EDashSignalState::Valid, 0.f}, UnknownError).Widget &&
         UnknownError.Pointer == Unknown.Pointer && UnknownError.Message.Contains(Unknown.Type), TEXT("unknown registry type"));
     // An undeclared theme token must name the token and the caller's pointer. This is checked at
     // the API level rather than through a document because it cannot be reached through one: the

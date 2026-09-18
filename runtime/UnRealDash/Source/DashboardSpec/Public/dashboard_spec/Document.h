@@ -41,6 +41,9 @@ class DS_EXPORT Document {
     // The dashboard object itself, whether the file is a bare document or a sidecar
     // wrapper. Reference viewport, bindings and pages are read through it.
     PropertyView Root() const;
+    // The signals document, when the bundle carries one. A package may ship signals.json beside
+    // dashboard.json, and a binding's signal name resolves against it.
+    PropertyView Signals() const;
 
   private:
     Storage *storage_;

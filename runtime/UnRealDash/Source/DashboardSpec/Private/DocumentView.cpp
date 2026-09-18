@@ -66,4 +66,7 @@ bool Document::ComponentAt(std::size_t index, ComponentView &out) const {
 }
 PropertyView Document::Theme() const { return Dashboard(*this).Member("theme"); }
 PropertyView Document::Root() const { return Dashboard(*this); }
+// Signals sit beside the dashboard in the bundle rather than inside it, so this reads from the
+// document root rather than through Dashboard().
+PropertyView Document::Signals() const { return PropertyView(&Data().json).Member("signals"); }
 } // namespace dashboard_spec

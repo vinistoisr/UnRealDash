@@ -36,17 +36,17 @@ int32 PageIndexOfChild(const FDashComponent& Switch, const FDashComponent& Child
 // Swaps the visible page. Every declared page gets its own panel, filling the switch, and all but
 // the initial one are collapsed. Collapsed rather than hidden, so a page that is not showing costs
 // no layout and cannot contribute a pixel to a capture.
-UWidget* BuildPageSwitch(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree)
+FBuiltComponent BuildPageSwitch(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree)
 {
     FDashRect Rect;
-    if (!ReadRect(Context.Component, Context.Package, Rect, OutError)) return nullptr;
+    if (!ReadRect(Context.Component, Context.Package, Rect, OutError)) return {};
 
     FString Initial;
     if (!Context.Component.Properties.Member(TEXT("initial_page")).String(Initial))
     {
         OutError = { TEXT("E_SCHEMA"), 7, Context.Component.Pointer + TEXT("/properties/initial_page"),
             TEXT("Page switch needs an initial_page property"), Context.Package.Path() };
-        return nullptr;
+        return {};
     }
     UCanvasPanel* Panel = MakePanel(Tree);
     const FDashValue Declared = Context.Component.Properties.Member(TEXT("pages"));
@@ -69,11 +69,12 @@ UWidget* BuildPageSwitch(const FComponentContext& Context, FDashLoadError& OutEr
         // declared pages. Kept so the switch cannot render every page at once if that ever changes.
         OutError = { TEXT("E_UNRESOLVED_PAGE"), 11, Context.Component.Pointer + TEXT("/properties/initial_page"),
             FString::Printf(TEXT("initial_page %s is not one of the declared pages"), *Initial), Context.Package.Path() };
-        return nullptr;
+        return {};
     }
     // A page_switch binds no signal, so it presents no missing-data state; see revision 4 C1.
     ApplyClipping(Panel, Context.Component);
-    return Panel;
+    // No updater; page selection is 5.x, not a signal.
+    return {Panel, {}};
 }
 bool AdoptIntoPage(const FAdoptContext& Context, FDashLoadError& OutError)
 {

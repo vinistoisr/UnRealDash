@@ -15,29 +15,29 @@ namespace UnRealDashCore
 // criterion 6 and the only one of the three that reaches a builder at all: an unknown component
 // type is rejected by schema validation and an unresolved theme token by the semantic pass, both
 // before a package finishes loading. See chunk-11 revision 4, C3 and C7.
-UWidget* BuildShape(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree)
+FBuiltComponent BuildShape(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree)
 {
     FDashRect Rect;
-    if (!ReadRect(Context.Component, Context.Package, Rect, OutError)) return nullptr;
+    if (!ReadRect(Context.Component, Context.Package, Rect, OutError)) return {};
 
     FString Kind;
     if (!Context.Component.Properties.Member(TEXT("kind")).String(Kind))
     {
         OutError = { TEXT("E_SCHEMA"), 7, Context.Component.Pointer + TEXT("/properties/kind"),
             TEXT("Shape needs a kind property"), Context.Package.Path() };
-        return nullptr;
+        return {};
     }
     if (Kind == TEXT("ellipse"))
     {
         OutError = { TEXT("E_SCHEMA"), 7, Context.Component.Pointer + TEXT("/properties/kind"),
             TEXT("Shape kind ellipse is not drawn: a curve that is not a corner radius is artwork "
                  "and belongs in an image asset"), Context.Package.Path() };
-        return nullptr;
+        return {};
     }
     FLinearColor Colour;
     if (!Context.Theme.ResolveColour(Context.Component.Properties.Member(TEXT("colour")),
             Context.Component.Pointer + TEXT("/properties/colour"), Colour, OutError))
-        return nullptr;
+        return {};
 
     UCanvasPanel* Panel = MakePanel(Tree);
     UImage* Fill = MakeFill(Tree, Colour);
@@ -65,6 +65,7 @@ UWidget* BuildShape(const FComponentContext& Context, FDashLoadError& OutError, 
     // missing_data object on it anyway, and that declaration is parsed and ignored; revision 4 C1
     // records why treating its presence as an error is unbuildable.
     ApplyClipping(Panel, Context.Component);
-    return Panel;
+    // No updater; see the note on the container.
+    return {Panel, {}};
 }
 }

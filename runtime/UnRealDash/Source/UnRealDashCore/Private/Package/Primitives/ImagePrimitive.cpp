@@ -54,10 +54,10 @@ bool DecodePng(TConstArrayView<uint8> Bytes, UTexture2D*& Out, FString& Error)
 // opt-in to multiply a theme colour over artwork, and applying one by default is exactly the
 // RealDash trap the owner's own notes record: every image gauge there must be forced to white or
 // the artwork renders tinted. See chunk-11 revision 4 C5.
-UWidget* BuildImage(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree)
+FBuiltComponent BuildImage(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree)
 {
     FDashRect Rect;
-    if (!ReadRect(Context.Component, Context.Package, Rect, OutError)) return nullptr;
+    if (!ReadRect(Context.Component, Context.Package, Rect, OutError)) return {};
 
     FString Name;
     if (!Context.Component.Properties.Member(TEXT("asset")).String(Name))
@@ -65,7 +65,7 @@ UWidget* BuildImage(const FComponentContext& Context, FDashLoadError& OutError, 
         // Unreachable through LoadPackage: the schema makes `asset` required on an image.
         OutError = { TEXT("E_SCHEMA"), 7, Context.Component.Pointer + TEXT("/properties/asset"),
             TEXT("Image needs an asset property"), Context.Package.Path() };
-        return nullptr;
+        return {};
     }
     TConstArrayView<uint8> Bytes;
     // A missing asset is a readable error naming the component, not a blank space. A blank space
@@ -73,7 +73,7 @@ UWidget* BuildImage(const FComponentContext& Context, FDashLoadError& OutError, 
     if (!Context.Package.Asset(Name, Bytes, OutError))
     {
         OutError.Pointer = Context.Component.Pointer + TEXT("/properties/asset");
-        return nullptr;
+        return {};
     }
     UTexture2D* Texture = nullptr;
     FString Error;
@@ -81,7 +81,7 @@ UWidget* BuildImage(const FComponentContext& Context, FDashLoadError& OutError, 
     {
         OutError = { TEXT("E_PKG_ASSET_UNREADABLE"), 45, Context.Component.Pointer + TEXT("/properties/asset"),
             Name + TEXT(": ") + Error, Context.Package.Path() };
-        return nullptr;
+        return {};
     }
     UCanvasPanel* Panel = MakePanel(Tree);
     UImage* Picture = Tree.ConstructWidget<UImage>();
@@ -102,8 +102,12 @@ UWidget* BuildImage(const FComponentContext& Context, FDashLoadError& OutError, 
     }
     AddFilling(Tree, Panel, Fit);
 
-    if (!ApplyMissingData(Context, Tree, Panel, Fit, nullptr, OutError)) return nullptr;
+    FMissingDataPresenter Presenter;
+    if (!BuildMissingData(Context, Tree, Panel, Fit, nullptr, Presenter, OutError)) return {};
     ApplyClipping(Panel, Context.Component);
-    return Panel;
+    if (!BindingFor(Context.Component, Context.Package).Exists()) return {Panel, {}};
+    // State only. A bound image shows whether its signal is readable; the artwork itself does not
+    // change, because no field in the schema could tell it to.
+    return {Panel, [Presenter](const FDashSignalValue& Reading) { Presenter.Apply(Reading.State); }};
 }
 }

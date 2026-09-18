@@ -9,20 +9,20 @@ void FComponentRegistry::Register(const FString& Type, FComponentBuilder Builder
 {
     Builders.Add(Type, FEntry{ MoveTemp(Builder), Adopter ? MoveTemp(Adopter) : FComponentAdopter(&AdoptIntoPanel) });
 }
-UWidget* FComponentRegistry::Build(const FComponentContext& Context, FDashLoadError& OutError) const
+FBuiltComponent FComponentRegistry::Build(const FComponentContext& Context, FDashLoadError& OutError) const
 {
     const FEntry* Entry = Builders.Find(Context.Component.Type);
     if (!Entry)
     {
         OutError = { TEXT("E_SCHEMA"), 7, Context.Component.Pointer,
             FString::Printf(TEXT("Unknown component type: %s"), *Context.Component.Type), Context.Package.Path() };
-        return nullptr;
+        return {};
     }
-    UWidget* Widget = Entry->Builder(Context, OutError);
-    if (!Widget && OutError.CodeName.IsEmpty())
+    FBuiltComponent Built = Entry->Builder(Context, OutError);
+    if (!Built.Widget && OutError.CodeName.IsEmpty())
         OutError = { TEXT("E_SCHEMA"), 7, Context.Component.Pointer,
             FString::Printf(TEXT("Builder failed for type: %s"), *Context.Component.Type), Context.Package.Path() };
-    return Widget;
+    return Built;
 }
 bool FComponentRegistry::Adopt(const FAdoptContext& Context, FDashLoadError& OutError) const
 {
@@ -52,6 +52,7 @@ bool FWidgetTreeBuilder::Build(const FDashPackage& Package, EDashProfile Profile
     FDashLoadError& OutError)
 {
     Widgets.Reset();
+    Updaters.Reset();
     OutRoot = nullptr;
     OutError = {};
     const auto Nodes = Package.Components();
@@ -72,9 +73,12 @@ bool FWidgetTreeBuilder::Build(const FDashPackage& Package, EDashProfile Profile
                 if (!Found) continue;
                 Parent = *Found;
             }
-            UWidget* Built = Registry.Build({Node, Package, Profile, Parent, Theme, State, Fraction}, OutError);
-            if (!Built) { Widgets.Reset(); return false; }
+            const FBuiltComponent Component = Registry.Build({Node, Package, Profile, Parent, Theme, State, Fraction}, OutError);
+            UWidget* Built = Component.Widget;
+            if (!Built) { Widgets.Reset(); Updaters.Reset(); return false; }
             Built->SetToolTipText(FText::FromString(Node.Id));
+            // Only the components that bind a signal produce one, which is most of them not.
+            if (Component.Updater) Updaters.Add(Node.Id, Component.Updater);
             if (Parent)
             {
                 const FDashComponent* const* ParentNode = ById.Find(Node.ParentId);
@@ -83,10 +87,11 @@ bool FWidgetTreeBuilder::Build(const FDashPackage& Package, EDashProfile Profile
                     OutError = { TEXT("E_UNRESOLVED_PARENT"), 12, Node.Pointer,
                         TEXT("Parent component is not in the document"), Package.Path() };
                     Widgets.Reset();
+                    Updaters.Reset();
                     return false;
                 }
                 if (!Registry.Adopt({Parent, **ParentNode, Built, Node, Package}, OutError))
-                { Widgets.Reset(); return false; }
+                { Widgets.Reset(); Updaters.Reset(); return false; }
             }
             else
             {
@@ -94,6 +99,7 @@ bool FWidgetTreeBuilder::Build(const FDashPackage& Package, EDashProfile Profile
                 {
                     OutError = { TEXT("E_MULTIPLE_ROOTS"), 16, Node.Pointer, TEXT("Multiple root widgets"), Package.Path() };
                     Widgets.Reset();
+                    Updaters.Reset();
                     return false;
                 }
                 Root = Built;

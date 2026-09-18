@@ -64,6 +64,9 @@ public:
     FDashValue Bindings() const;
     // Keyed by page name, each an array of component ids.
     FDashValue Pages() const;
+    // The package's signals document, if it ships one. A binding names a signal by string and the
+    // registry works in numbers; this is the table that joins them.
+    FDashValue Signals() const;
     TArray<FString> AssetNames() const;
     // Takes an asset reference exactly as the document writes it and normalizes it through the
     // package path rules before looking it up.

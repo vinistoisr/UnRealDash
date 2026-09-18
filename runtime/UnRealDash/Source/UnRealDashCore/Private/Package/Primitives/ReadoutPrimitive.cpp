@@ -8,6 +8,7 @@
 
 namespace UnRealDashCore
 {
+FString FormatValue(double Value, const FString& Format);
 namespace
 {
 // The schema gives a readout `text` and an optional `colour`, and nothing else; format lives on the
@@ -16,6 +17,21 @@ namespace
 //
 // Only the printf conversions the binding format can name are honoured, and a format this cannot
 // read leaves the text alone rather than printing a guess.
+// Formats a live number through the binding's format. The build-time path formats the document's
+// frozen text through the same rules, so a value and a placeholder cannot disagree about precision.
+FString FormatNumber(double Value, const FString& Format)
+{
+    if (Format.IsEmpty()) return FString::SanitizeFloat(Value);
+    const TCHAR Conversion = Format[Format.Len() - 1];
+    if (Conversion == TEXT('d')) return FString::Printf(TEXT("%lld"), static_cast<int64>(Value));
+    if (Conversion != TEXT('f') && Conversion != TEXT('e') && Conversion != TEXT('g'))
+        return FString::SanitizeFloat(Value);
+    int32 Precision = 6;
+    int32 Dot = INDEX_NONE;
+    if (Format.FindChar(TEXT('.'), Dot))
+        Precision = FCString::Atoi(*Format.Mid(Dot + 1, Format.Len() - Dot - 2));
+    return FString::Printf(TEXT("%.*f"), FMath::Clamp(Precision, 0, 17), Value);
+}
 FString ApplyBindingFormat(const FString& Text, const FString& Format)
 {
     if (Format.IsEmpty()) return Text;
@@ -35,10 +51,11 @@ FString ApplyBindingFormat(const FString& Text, const FString& Format)
     return FString::Printf(TEXT("%.*f"), Precision, Value);
 }
 }
-UWidget* BuildReadout(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree)
+FString FormatValue(double Value, const FString& Format) { return FormatNumber(Value, Format); }
+FBuiltComponent BuildReadout(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree)
 {
     FDashRect Rect;
-    if (!ReadRect(Context.Component, Context.Package, Rect, OutError)) return nullptr;
+    if (!ReadRect(Context.Component, Context.Package, Rect, OutError)) return {};
 
     FString Text;
     if (!Context.Component.Properties.Member(TEXT("text")).String(Text))
@@ -46,7 +63,7 @@ UWidget* BuildReadout(const FComponentContext& Context, FDashLoadError& OutError
         // Unreachable through LoadPackage: the schema makes `text` required on a readout.
         OutError = { TEXT("E_SCHEMA"), 7, Context.Component.Pointer + TEXT("/properties/text"),
             TEXT("Readout needs a text property"), Context.Package.Path() };
-        return nullptr;
+        return {};
     }
     FString Format;
     BindingFor(Context.Component, Context.Package).Member(TEXT("format")).String(Format);
@@ -55,7 +72,7 @@ UWidget* BuildReadout(const FComponentContext& Context, FDashLoadError& OutError
     const FDashValue Declared = Context.Component.Properties.Member(TEXT("colour"));
     if (Declared.Exists() && !Context.Theme.ResolveColour(Declared,
             Context.Component.Pointer + TEXT("/properties/colour"), Colour, OutError))
-        return nullptr;
+        return {};
 
     UCanvasPanel* Panel = MakePanel(Tree);
     UTextBlock* Value = Tree.ConstructWidget<UTextBlock>();
@@ -77,8 +94,20 @@ UWidget* BuildReadout(const FComponentContext& Context, FDashLoadError& OutError
     if (UCanvasPanelSlot* Slot = AddFilling(Tree, Panel, Centre))
         Slot->SetOffsets(FMargin(0.f, 0.f, 0.f, StatusBandHeight));
 
-    if (!ApplyMissingData(Context, Tree, Panel, Centre, Value, OutError)) return nullptr;
+    FMissingDataPresenter Presenter;
+    if (!BuildMissingData(Context, Tree, Panel, Centre, Value, Presenter, OutError)) return {};
     ApplyClipping(Panel, Context.Component);
-    return Panel;
+
+    if (!BindingFor(Context.Component, Context.Package).Exists())
+        return {Panel, {}};
+
+    // The updater sets text and state and nothing else. Format is the binding's, resolved at build
+    // time, so a per-frame update does not re-read the document.
+    return {Panel, [Value, Presenter, Format](const FDashSignalValue& Reading)
+    {
+        if (Reading.bHasValue)
+            Presenter.ValueText->SetText(FText::FromString(FormatValue(Reading.Value, Format)));
+        Presenter.Apply(Reading.State);
+    }};
 }
 }

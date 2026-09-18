@@ -133,14 +133,22 @@ if (Invoke-Capture $preserved 720 '0.0' $control) {
     }
 }
 
-# Criterion 5: the circular bar gauge, the linear bar gauge and the history graph each draw
-# something, at a deflection where each has a visible extent. The floors are recorded here.
+# Criterion 5: the circular bar gauge and the linear bar gauge each draw something, at a deflection
+# where each has a visible extent. The floors are recorded here.
+#
+# The history graph is NOT measured here any more, and that is a deliberate reduction in what this
+# gate covers. Chunk 12 filled its buffer at build time from -udash-fraction, so a static capture
+# could measure a trace. Chunk 14 removed that: a history graph has no samples until a signal
+# arrives, and a synthetic ramp standing in for a series was inventing data. With no live source in
+# this gate the trace is correctly empty, so measuring it here could only be satisfied by putting
+# the invented data back. Its coverage moves to the chunk 14 live gate, where a real series drives
+# it, and this comment is here so the gap is visible rather than quietly dropped.
 $deflected = Join-Path $WorkDirectory 'dials-720-deflected.png'
 if (Invoke-Capture $package 720 '0.6' $deflected) {
     Write-Host 'criterion 5, every remaining primitive draws:'
     # Floors chosen well under the measured counts but far above zero, so a primitive that stopped
     # drawing fails rather than measuring a stray pixel and passing.
-    foreach ($entry in @(@('arc', 3000), @('bar', 10000), @('trace', 500))) {
+    foreach ($entry in @(@('arc', 3000), @('bar', 10000))) {
         $result = Measure-Ratio $deflected $traceColours[$entry[0]] $entry[1]
         if ([double]::IsNaN($result.Ratio)) { Fail "criterion 5: $($entry[0]) drew fewer than $($entry[1]) pixels" }
     }

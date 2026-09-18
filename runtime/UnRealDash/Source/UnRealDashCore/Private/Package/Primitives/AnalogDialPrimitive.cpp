@@ -14,18 +14,18 @@ namespace UnRealDashCore
 // the document positions behind this one. That is how the owner's own RealDash cluster for the
 // Scirocco is built: the face is authored as SVG and rendered to PNG at 2x, and the only thing that
 // moves at runtime is a rotating needle sprite.
-UWidget* BuildAnalogDial(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree)
+FBuiltComponent BuildAnalogDial(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree)
 {
     FDashRect Rect;
-    if (!ReadRect(Context.Component, Context.Package, Rect, OutError)) return nullptr;
-    if (!RefuseStretchedCircle(Context, OutError)) return nullptr;
+    if (!ReadRect(Context.Component, Context.Package, Rect, OutError)) return {};
+    if (!RefuseStretchedCircle(Context, OutError)) return {};
 
     FLinearColor Colour;
     if (!Context.Theme.ResolveColour(Context.Component.Properties.Member(TEXT("colour")),
             Context.Component.Pointer + TEXT("/properties/colour"), Colour, OutError))
-        return nullptr;
+        return {};
     float Deflection = 0.f;
-    if (!GaugeDeflection(Context, Deflection, OutError)) return nullptr;
+    if (!GaugeDeflection(Context, Deflection, OutError)) return {};
 
     UCanvasPanel* Panel = MakePanel(Tree);
     // The working square, so a dial in a non-square rect sweeps a circle rather than an ellipse.
@@ -48,8 +48,22 @@ UWidget* BuildAnalogDial(const FComponentContext& Context, FDashLoadError& OutEr
     Transform.Angle = SweepStartDegrees + SweepDegrees * Deflection;
     Needle->SetRenderTransform(Transform);
 
-    if (!ApplyMissingData(Context, Tree, Panel, Needle, nullptr, OutError)) return nullptr;
+    FMissingDataPresenter Presenter;
+    if (!BuildMissingData(Context, Tree, Panel, Needle, nullptr, Presenter, OutError)) return {};
     ApplyClipping(Panel, Context.Component);
-    return Panel;
+    if (!BindingFor(Context.Component, Context.Package).Exists()) return {Panel, {}};
+
+    FGaugeRange Range;
+    if (!ReadGaugeRange(Context, Range, OutError)) return {};
+    // A render transform angle, not a redraw. The needle widget, its pivot and its geometry are
+    // fixed at build time and only the angle moves, which is the whole point of drawing a needle
+    // as a rotated rectangle rather than as a polyline recomputed per frame.
+    return {Panel, [Needle, Range, Presenter](const FDashSignalValue& Reading)
+    {
+        FWidgetTransform Transform;
+        Transform.Angle = SweepStartDegrees + SweepDegrees * Range.Deflection(Reading);
+        Needle->SetRenderTransform(Transform);
+        Presenter.Apply(Reading.State);
+    }};
 }
 }

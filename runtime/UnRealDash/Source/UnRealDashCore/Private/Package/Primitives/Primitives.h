@@ -38,20 +38,20 @@ inline constexpr float StatusBandHeight = 48.f;
 // a readout only text and colour.
 float TextSizeForHeight(double Height);
 
-UWidget* BuildContainer(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree);
-UWidget* BuildReadout(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree);
-UWidget* BuildImage(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree);
-UWidget* BuildShape(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree);
-UWidget* BuildIndicator(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree);
-UWidget* BuildPageSwitch(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree);
+FBuiltComponent BuildContainer(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree);
+FBuiltComponent BuildReadout(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree);
+FBuiltComponent BuildImage(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree);
+FBuiltComponent BuildShape(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree);
+FBuiltComponent BuildIndicator(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree);
+FBuiltComponent BuildPageSwitch(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree);
 
 // PLAN 4.6. Each draws only the part that moves: the needle, the filled portion, the trace. The
 // face, bezel, tick band, numerals, track, axes and labels are image components the document
 // positions behind them, because the schema gives none of these three an asset field and a
 // primitive that drew its own ornament could not be restyled by a document.
-UWidget* BuildAnalogDial(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree);
-UWidget* BuildBarGauge(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree);
-UWidget* BuildHistoryGraph(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree);
+FBuiltComponent BuildAnalogDial(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree);
+FBuiltComponent BuildBarGauge(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree);
+FBuiltComponent BuildHistoryGraph(const FComponentContext& Context, FDashLoadError& OutError, UWidgetTree& Tree);
 
 // The automotive sweep: 270 degrees, starting at 225 degrees clockwise from twelve o'clock, so a
 // gauge at minimum points to the lower left and at maximum to the lower right. It is not a document
@@ -70,6 +70,17 @@ inline constexpr float ArcThickness = 0.06f;
 // and applies the context's fraction. A range of zero width yields 0 rather than a division by zero.
 bool GaugeDeflection(const FComponentContext& Context, float& Out, FDashLoadError& OutError);
 
+// The same mapping for a live reading. The range is read once at build time and captured, so a
+// per-frame update does not re-read the document. A reading with no value rests at the low end,
+// which is the same answer an unbound gauge gives and for the same reason.
+struct FGaugeRange
+{
+    double Minimum = 0.0;
+    double Maximum = 0.0;
+    float Deflection(const FDashSignalValue& Reading) const;
+};
+bool ReadGaugeRange(const FComponentContext& Context, FGaugeRange& Out, FDashLoadError& OutError);
+
 // The largest square centred in the component's rect, added as a canvas child. A dial in a
 // non-square rect keeps a circular sweep instead of tracing an ellipse, and SDashLines normalizes
 // to its own allotted size, so an arc is only circular inside a square.
@@ -85,12 +96,41 @@ bool RefuseStretchedCircle(const FComponentContext& Context, FDashLoadError& Out
 // but the initial one. A child no page lists is an error naming its pointer.
 bool AdoptIntoPage(const FAdoptContext& Context, FDashLoadError& OutError);
 
-// Shared missing-data rendering for the three primitives that bind a signal. Applies the declared
-// presentation to Content and paints the state band on Panel. Returns false only on a theme error.
+// Missing-data rendering, built once and then only set.
 //
-// container, shape and page_switch bind no signal and never call this. The schema requires
+// Chunk 11 built this as a function that ran at construction and painted the state band as a new
+// child. Chunk 14 has to call it every frame, because a signal's state changes while the tree stays
+// put, and adding a child per frame would be a leak measured in minutes. So the band and the badge
+// are built once, every state's colour is resolved once, and Apply sets colours and visibility and
+// nothing else.
+//
+// It also has to be reversible. The dash presentation replaced the value text in place, which lost
+// the text a return to Valid would need. The original is kept here.
+//
+// container, shape and page_switch bind no signal and never build one. The schema requires
 // missing_data on them anyway, so their declaration is parsed and ignored; see chunk-11 revision 4
 // C1 for why treating its presence as an error is unbuildable.
-bool ApplyMissingData(const FComponentContext& Context, UWidgetTree& Tree, UCanvasPanel* Panel,
-    UWidget* Content, UTextBlock* ValueText, FDashLoadError& OutError);
+struct FMissingDataPresenter
+{
+    // The four schema states, in the order EDashSignalState declares them after Valid.
+    static constexpr int32 StateCount = 4;
+
+    UImage* Band = nullptr;
+    UTextBlock* Badge = nullptr;
+    UWidget* Content = nullptr;
+    UTextBlock* ValueText = nullptr;
+
+    FText ValidText;
+    FLinearColor ValidColour = FLinearColor::White;
+    FString Presentation[StateCount];
+    FLinearColor StateColour[StateCount];
+
+    void Apply(EDashSignalState State) const;
+};
+
+// Builds the band and the badge and resolves every state's token, so a theme error surfaces at load
+// rather than the first time a signal happens to go stale on a device. Content and ValueText may be
+// null for a primitive that has neither.
+bool BuildMissingData(const FComponentContext& Context, UWidgetTree& Tree, UCanvasPanel* Panel,
+    UWidget* Content, UTextBlock* ValueText, FMissingDataPresenter& Out, FDashLoadError& OutError);
 }
