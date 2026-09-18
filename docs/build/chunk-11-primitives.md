@@ -1,6 +1,6 @@
 # Build chunk 11: the Stage 0 UMG primitives
 
-Status: revision 3. Revision 1 drew six blockers and the verdict that it was a narrative design document rather than a build order. Revision 2 resolved all nine, then drew one more that mattered: the comparator thresholds were never tied to the size of the thing being compared, so the mutation check could have passed the gate it exists to break. Revision 3 pins the fixture geometry and writes the arithmetic down. Earlier: a spec review returned six blockers and the verdict that revision 1 was "a narrative design document, not a build order". That was correct: it described intent where it needed to state decisions, and the screenshot gate in particular was unbuildable. Frozen for a Codex build session. Covers PLAN.md task 4.5. Read PLAN.md (task 4.5, task 4.6 so you know what you are not building, task 3.x for the document model, the Sequencing block) and docs/ARCHITECTURE.md before writing anything. PLAN.md is the authority on what; this file adds the exact mechanisms, proof commands and implementation constraints. If the two disagree, PLAN.md wins and the disagreement goes in the report.
+Status: revision 4. Revision 3 was frozen against a spec that six schema facts contradict; the resolutions are the last section of this file and they, not revision 3, are what gets built. Revision 1 drew six blockers and the verdict that it was a narrative design document rather than a build order. Revision 2 resolved all nine, then drew one more that mattered: the comparator thresholds were never tied to the size of the thing being compared, so the mutation check could have passed the gate it exists to break. Revision 3 pins the fixture geometry and writes the arithmetic down. Earlier: a spec review returned six blockers and the verdict that revision 1 was "a narrative design document, not a build order". That was correct: it described intent where it needed to state decisions, and the screenshot gate in particular was unbuildable. Frozen for a Codex build session. Covers PLAN.md task 4.5. Read PLAN.md (task 4.5, task 4.6 so you know what you are not building, task 3.x for the document model, the Sequencing block) and docs/ARCHITECTURE.md before writing anything. PLAN.md is the authority on what; this file adds the exact mechanisms, proof commands and implementation constraints. If the two disagree, PLAN.md wins and the disagreement goes in the report.
 
 ## Goal
 
@@ -184,3 +184,252 @@ Codex's pasted proof is advisory. Claude re-runs everything.
 ## Report format
 
 End with: files added or changed (one line each: path, what, which PLAN.md task), the proof output verbatim for what you ran, the per-pixel tolerance chosen and why, the measured difference between each pair of states in criterion 3, an explicit list of what you did not run and why, any deviation from PLAN.md or this spec with the reason, and anything you could not do.
+
+---
+
+## Revision 4: six conflicts between this spec and the schema, and how each is resolved
+
+Revision 3 was frozen without checking every deliverable against
+`packages/dashboard-spec/schema/dashboard.schema.json` and the checked-in fixtures. Six of its
+statements are contradicted by the tree. Each is recorded here with the command that shows it and
+the decision that replaces it. Nothing below changes the schema: the fixture this chunk authors
+must pass the existing validator and semantic pass unchanged, so the schema is the fixed point and
+this spec is what moves.
+
+### C1. `missing_data` is required on every component, so its presence can never be an error
+
+Revision 3, deliverable 3: "`container`, `shape` and `page_switch` bind no signal and are exempt;
+if the document declares `missing_data` on one of those, it is an error naming the pointer."
+
+The schema lists `missing_data` in the component `required` array, with all four states required
+inside it. Every component in every valid fixture therefore declares it, including components that
+bind no signal:
+
+```
+python -c "import json;d=json.load(open('tests/fixtures/documents/valid/missing-data-four-states.json'));print(d['components']['root']['type'], list(d['components']['root']['missing_data']))"
+container ['stale', 'unavailable', 'invalid', 'age_unknown']
+```
+
+`page-switch.json` declares it on a `page_switch` in the same way. Implementing revision 3's rule
+would reject both fixtures, which criterion 5 requires to keep rendering. The rule is unbuildable
+and is withdrawn.
+
+**Decision.** For `container`, `shape` and `page_switch` the `missing_data` object is parsed and
+ignored. This is not a silent fallback: those primitives have no signal, so there is no state to
+present, and the schema gives the document no way to omit the field.
+
+### C2. The n/a cells in the presentation matrix are also unenforceable
+
+Revision 3: "A presentation marked n/a in a document is an error naming the pointer." The matrix
+marks `dash` n/a for `image` and `indicator`. But `page-switch.json` declares
+`unavailable: {presentation: "dash"}` on its `indicator`, and criterion 5 requires that fixture to
+render. The rule contradicts the same checked-in corpus.
+
+**Decision.** No cell is an error. `dash` on a primitive with no value text renders the state band
+in the state's token colour with the component's content hidden. That is a defined rendering, named
+here, and the same three-way structural distinction criterion 4 measures still holds.
+
+### C3. `shape` may be `ellipse` in the schema and may not be a curve in this spec
+
+The schema's `kind` enum is `["line", "rectangle", "ellipse"]`. Revision 3 allows only axis-aligned
+rectangles, rounded rectangles and straight lines, on the grounds that anything curved is artwork.
+No valid fixture uses `ellipse`:
+
+```
+grep -l ellipse tests/fixtures/documents/valid/*.json   # no output
+```
+
+**Decision.** The builder implements `line` and `rectangle`. `ellipse` produces a readable error
+naming the component's JSON pointer and saying that a curve is artwork and belongs in an `image`
+asset. It does not crash and it does not draw an approximation.
+
+**This replaces the third error case in criterion 6**, which was "`missing_data` declared on a
+primitive that binds no signal" and is withdrawn under C1. The property under test is unchanged: a
+document the schema accepts but this runtime cannot honour produces a readable, pointer-naming
+error rather than a crash or a silent skip.
+
+### C4. `readout` has no format, units or precision; the binding does
+
+Revision 3, deliverable 1: "`readout`: text and numeric, with format, units and precision from the
+document." The schema's `readout` properties are `text` (required) and `colour` (optional), and
+nothing else; `additionalProperties` is false. Format lives on the binding instead:
+
+```
+"bindings": { "root": { "property": "value", "signal": "temperature", "format": ".1f" } }
+```
+
+and the unit is a property of the signal definition (`"unit": "K"`).
+
+**Decision.** The readout renders `text`, coloured by `colour` when present, which is either a
+literal `#rrggbb` or `{"token": "..."}`. Format and precision are read from the binding's `format`
+field for the component. Units come from the signal. No schema change, no invented field.
+
+### C5. `image` has no `tint` property
+
+Revision 3, deliverable 2: "A token is applied to an `image` only when that component sets `tint`
+explicitly." The schema's `image` properties are `asset` and nothing else.
+
+**Decision.** Images are never tinted in this chunk. The RealDash trap the deliverable was guarding
+against is avoided by construction rather than by a flag. If a later chunk adds tinting it must add
+the field as opt-in, and this paragraph is the reason.
+
+### C6. `indicator` has no on and off artwork
+
+Revision 3, deliverable 1: "`indicator`: a lamp with on and off artwork." The schema's `indicator`
+properties are `colour` and nothing else. There are no asset fields to resolve.
+
+**Decision.** The lamp is drawn from its `colour`. On is the colour at full value; off is the same
+hue at 18 percent value, which keeps it visibly present against the panel background rather than
+absent. The requirement that off must not look like a broken cluster is met; the artwork half is a
+PLAN 4.6 concern, where the dial primitives bring their own asset fields.
+
+### Two further corrections to the facts block
+
+- Revision 3 says the existing fixtures cover neither `image` nor `shape`. That is wrong:
+  `nine-primitives.json` contains an `image` with `assets/shared.png` and a `shape` with
+  `kind: "line"`. Authoring `all-primitives-stage0.json` is still required, but for the reason in
+  the threshold arithmetic rather than for coverage: no existing fixture pins the geometry that
+  criteria 2, 3 and 4 measure.
+- The corpus test walks the fixture directory rather than a checked-in list
+  (`test_corpus.cpp`, `for (const char *side : {"valid", "invalid"})`), so a new fixture is picked
+  up with no list to update. `CHECK(valid >= 20)` stays green.
+
+### Two mechanisms revision 3 needed and did not specify
+
+**M1. Layout must be 1:1 with `reference_viewport` or the pixel arithmetic is meaningless.**
+`UDashPackageScreen::RebuildWidget` currently wraps the built root in a `USizeBox` of width 1160
+inside a `UBorder` with 24 units of padding. Under that wrapper a component declared 320 by 180 does
+not occupy 320 by 180 pixels of a 1280 by 720 capture, and the 57,600 pixel figure criterion 3
+depends on is wrong. `reference_viewport` is also not exposed by `FDashPackage`.
+
+**Decision.** Add `FDashPackage::ReferenceViewport()`. For an accepted package the screen lays the
+document out in a `UScaleBox` over a `USizeBox` sized to the reference viewport, so a 1280 by 720
+document captured at 1280 by 720 maps one document unit to one pixel. The existing padded wrapper
+is kept for the error path, where no document geometry exists to honour.
+
+**M2. Criterion 4 needs a deterministic way to force each missing-data state.**
+The fixture binds constants, so nothing in the document can put a signal into `age_unknown` or
+`stale`, and the capture conditions forbid a running scenario.
+
+**Decision.** A gate-only launch switch, `-udash-state=valid|age_unknown|stale`, forces every
+signal-bound primitive into that state for the run. It sits beside `-udash-batch=`, which is
+already a gate switch and deliberately outside the runtime command-line surface PLAN 4.7 owns.
+Values stay frozen; only the state presentation changes, which is exactly what criterion 4
+measures.
+
+### C7. Two of criterion 6's three error cases never reach a builder
+
+Verified rather than assumed:
+
+- An unknown component type is rejected by schema validation. The component `type` is an enum of
+  the nine names and the final `else` branch is `{"properties": {"type": false}}`, so a tenth name
+  fails before the package loads.
+- A missing theme token is rejected by the semantic pass, for component colours and for
+  `missing_data.*.token` alike (`SemanticPass.cpp:308`, `E_UNRESOLVED_THEME_TOKEN`, and the loop at
+  line 327 that walks every `missing_data` state's token).
+
+So a loaded package can carry neither. `FComponentRegistry::Build`'s unknown-type error and
+`FDashTheme::Resolve`'s unresolved-token error are kept as defence in depth, because both are
+callable outside a validated document, but neither is reachable through `LoadPackage`.
+
+**Decision.** Criterion 6 still runs all three cases end to end and still requires a readable
+pointer-naming error and no crash from each. The report must say which layer produced each one.
+Only the `ellipse` case of C3 exercises this chunk's own error handling; the other two verify that
+chunk 10's load path is doing its job. That is the correct outcome rather than a gap: the load path
+being thorough is why so little malformed input can reach a builder.
+
+### C8. The gate had no capture trigger, and the icon presentation has no icon
+
+Two more gaps, both found while building rather than while writing revision 4.
+
+**The capture trigger.** Criteria 2, 3 and 4 all require a screenshot of the package screen, and
+nothing in `UDashPackageScreen` or `ADashPackageHUD` requested one. The only
+`FScreenshotRequest::RequestScreenshot` in the tree was in the 4.0 smoke spike, which is a
+different HUD. The non-goals section said to use what 4.4 already wired, and 4.4 wired no capture.
+Without one the three criteria could not be run at all.
+
+**Decision.** `ADashPackageHUD` gains `-udash-shot=<path>`, a gate switch beside `-udash-batch=`
+and `-udash-state=`, which captures after the widget tree has been laid out and drawn and then
+exits. `bShowUI` is `true`, for the reason already in the facts block: everything this project
+draws is UI, and a capture taken with `false` writes a black image, which would make the
+comparator pass every fixture forever.
+
+**The icon presentation.** A `missing_data` state declares a `presentation` of `icon` but the
+schema gives it only a `presentation` and a `token`. There is no icon asset field, so the image
+primitive can consume artwork through `asset` while an `icon` presentation cannot. It is rendered
+as a text badge beside the value, in the state's token colour.
+
+**Decision.** The badge is what the document actually offers, and it is recorded here rather than
+presented as a design choice. Criterion 4 does not rest on it: the status band carries the
+measurable difference, because glyph coverage is a font metric this repository cannot pin.
+
+### C9. What the spec review of revision 4 changed
+
+DeepSeek reviewed revision 4 against the tree before the build and again against the built code.
+Five findings were real and are fixed; one was an engine-semantics claim it could not read in this
+repository, and that one was settled by measurement rather than by argument.
+
+**Criterion 4 could not have failed for the primitive it names.** This is the finding that mattered.
+`-udash-state` forced every signal-capable primitive into the state at once, so in the gate fixture
+the image and the lamp between them moved 66,816 pixels of a 921,600 pixel frame. The three states
+would have been mutually distinguishable even if the `readout` the criterion names had rendered
+identically in all three.
+
+**Decision.** A component the document binds to no signal has no signal state to present, and
+`ApplyMissingData` now returns before rendering one. That is the honest semantics independently of
+the gate: missing data is a property of a signal, and a component bound to nothing has no signal
+that could be stale. It also isolates criterion 4 to `speed`, the fixture's only bound component,
+so the three pairs now rest on the readout's status band and glyphs alone.
+
+**The `age_unknown` badge was drawn in the value colour, not the state colour.** The `icon`
+presentation appended a glyph to the existing text block, which carries the readout's own colour, so
+the state's token colour appeared only in the band. The badge is now its own text block coloured
+with the state token.
+
+**The capture environment check was a no-op.** `compare-capture.py` skipped any key the caller left
+empty, and `run-capture-gate.ps1` passed neither `--gpu` nor `--driver`, so a reference captured on
+different hardware would have been compared as though it came from the same machine. A key the
+caller does not supply is now a mismatch rather than agreement, and the gate script reads the
+adapter and passes both.
+
+**Criterion 3 names the wrong component.** Criterion 3 above says to change "the `readout` fill
+token". The `readout` has no fill token; its only colour is its text colour, and changing that would
+move glyph pixels alone and could fall under the 9,216 pixel threshold. The mutation target is
+`gauge_fill`, the 320 by 180 `shape` behind the readout, at pointer
+`/dashboard/components/gauge_fill/properties/colour/token`. `scripts/mutate-chunk11-fixture.py`
+mutates that one and refuses to run if the fixture no longer declares it, so the criterion is
+evaluable as implemented; this paragraph corrects the wording.
+
+**The claim that was not accepted.** The review read the status band's canvas slot as being laid out
+below the panel and clipped away, and the readout's text area as growing by 48 units rather than
+reserving 48. Both readings depend on `UCanvasPanelSlot` offset semantics, which differ by axis
+according to whether that axis is anchored to a point or stretched: on a stretched axis the offsets
+are insets, and on a point axis they are position and size. The band is anchored to a point
+vertically and stretched horizontally, so `FMargin(0, 0, 0, 48)` is full width, bottom aligned, 48
+tall.
+
+A reviewer that cannot run the engine should not be taken on trust here, and neither should a
+recollection of the engine's behaviour, so this was settled by reading
+`Engine/Source/Runtime/Slate/Private/Widgets/Layout/SConstraintCanvas.cpp` lines 246 to 281:
+
+```
+const bool bIsVerticalStretch = Anchors.Minimum.Y != Anchors.Maximum.Y;
+const FVector2D SlotSize = FVector2D(Offset.Right, Offset.Bottom);
+const FVector2D Size = AutoSize ? CurWidget->GetDesiredSize() : SlotSize;
+FVector2D AlignmentOffset = Size * Alignment;
+...
+if (bIsVerticalStretch) {
+    LocalPosition.Y = AnchorPixels.Top + Offset.Top;
+    LocalSize.Y = AnchorPixels.Bottom - LocalPosition.Y - Offset.Bottom;
+} else {
+    LocalPosition.Y = AnchorPixels.Top + Offset.Top - AlignmentOffset.Y;
+    LocalSize.Y = Size.Y;
+}
+```
+
+On a stretched axis `Offset.Bottom` is subtracted, so it is an inset: the readout's content area is
+180 minus 48, which is 132, not 180 plus 48. On a point-anchored axis `Offset.Bottom` is the size
+and `Alignment` moves the widget back by it: for the band, `AnchorPixels.Top` is 180,
+`AlignmentOffset.Y` is 48, so `LocalPosition.Y` is 132 and `LocalSize.Y` is 48. The band occupies
+132 to 180 inside a panel 180 tall, which is inside the clip rectangle, and measures 320 by 48.
+The capture in the report is the second, independent check of the same thing.
