@@ -44,9 +44,36 @@ conclude the scene never runs. Measure `Binaries/Win64/UnRealDash-Win64-Shipping
 - **Missing content.** `M_Smoke`, `L_Smoke` and the engine fonts are all in the Shipping pak, and the
   `EngineFonts` list is byte for byte the same as the Development Android package.
 
+## Narrowed again: no HUD runs at all
+
+File-based tracing was added to `ASmokeHUD`, one line per milestone including every early return,
+written with `FFileHelper` so it works where `UE_LOG` is compiled out. The instrumented Shipping
+binary was verified to contain the trace strings, searching as UTF-16 because `TEXT()` literals are
+wide and an ASCII search finds nothing and looks like a missing build.
+
+**The trace file is never created.** Not at the resolved Saved path, not at the project-relative
+fallback, nowhere on disk. So `ASmokeHUD::BeginPlay` does not run, which rules out every early
+return inside it and the whole export path below it.
+
+It is not specific to that HUD. Launching the same Shipping build with no map URL, so chunk 10's
+`GlobalDefaultGameMode` package loader is active, and passing `-udash=` with a package that is known
+good, produces a window that is entirely black. The package screen renders neither the document nor
+its on-screen error, and that screen is the one thing in this project guaranteed to draw something
+in every case.
+
+So the failure is above the HUD: in Shipping, the engine initialises and opens a window, and then no
+HUD or UMG surface is created or drawn.
+
 ## Still open
 
-Where in the export path it stops. The candidates are that `ASmokeHUD::BeginPlay` returns early and
+Why no HUD is created. The next step is tracing above this layer rather than inside it: game
+instance start, map load completion, game mode construction and HUD class instantiation. The same
+file-based technique works there.
+
+Superseded: the earlier note that the candidates were inside `BeginPlay`, `DrawHUD` or the write
+itself. All three are excluded by the trace never appearing.
+
+Previously the open question was where in the export path it stops. The candidates are that `ASmokeHUD::BeginPlay` returns early and
 leaves `bReady` false, that `DrawHUD` never reaches the run-length branch, or that the branch runs
 and the write fails.
 
