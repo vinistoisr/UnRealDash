@@ -1,6 +1,6 @@
 # Build chunk 11: the Stage 0 UMG primitives
 
-Status: revision 2, after a spec review returned six blockers and the verdict that revision 1 was "a narrative design document, not a build order". That was correct: it described intent where it needed to state decisions, and the screenshot gate in particular was unbuildable. Frozen for a Codex build session. Covers PLAN.md task 4.5. Read PLAN.md (task 4.5, task 4.6 so you know what you are not building, task 3.x for the document model, the Sequencing block) and docs/ARCHITECTURE.md before writing anything. PLAN.md is the authority on what; this file adds the exact mechanisms, proof commands and implementation constraints. If the two disagree, PLAN.md wins and the disagreement goes in the report.
+Status: revision 3. Revision 1 drew six blockers and the verdict that it was a narrative design document rather than a build order. Revision 2 resolved all nine, then drew one more that mattered: the comparator thresholds were never tied to the size of the thing being compared, so the mutation check could have passed the gate it exists to break. Revision 3 pins the fixture geometry and writes the arithmetic down. Earlier: a spec review returned six blockers and the verdict that revision 1 was "a narrative design document, not a build order". That was correct: it described intent where it needed to state decisions, and the screenshot gate in particular was unbuildable. Frozen for a Codex build session. Covers PLAN.md task 4.5. Read PLAN.md (task 4.5, task 4.6 so you know what you are not building, task 3.x for the document model, the Sequencing block) and docs/ARCHITECTURE.md before writing anything. PLAN.md is the authority on what; this file adds the exact mechanisms, proof commands and implementation constraints. If the two disagree, PLAN.md wins and the disagreement goes in the report.
 
 ## Goal
 
@@ -108,6 +108,25 @@ Values must be frozen, not sampled: the fixture binds constants, not a running s
 - **Pass when `worst <= 48` and `moved <= 0.001`.**
 
 The two-part rule is deliberate. A single max-delta rule fails on one antialiased glyph edge; a single percentage rule lets a whole component change colour as long as it is small. Requiring both means text edges may differ slightly while any component actually changing appearance is caught. The threshold of 8 is below what a human sees on a dark panel and above driver-level rounding; 0.1 percent of a 1280x720 frame is about 920 pixels, roughly one glyph's worth of edge.
+
+**The thresholds only mean anything if the fixture is big enough to move them.** A review of revision 2 caught this: if the readout under test is small, recolouring it moves fewer pixels than the pass threshold, so the mutation check would pass the gate it is supposed to break. The fixture is therefore constrained, and the arithmetic is written down rather than assumed.
+
+A 1280x720 frame is 921,600 pixels, so the thresholds are:
+
+| threshold | fraction | pixels |
+| --- | ---: | ---: |
+| pass, `moved` at most | 0.001 | 922 |
+| three states differ, `moved` over | 0.005 | 4,608 |
+| mutation fails, `moved` over | 0.01 | 9,216 |
+
+The fixture must satisfy them by construction:
+
+- The readout under test is **320 by 180** with an opaque filled background, which is 57,600 pixels. Recolouring its fill token moves all of them, `moved` about 0.0625, which is six times the mutation threshold rather than scraping past it.
+- Each of the three states additionally paints a **status band across the readout's full width, 320 by 48**, in that state's token colour: 15,360 pixels, over three times the distinguishability threshold. The band is what makes criterion 4 hold regardless of how much area a glyph happens to cover, because glyph coverage is a font metric and not something this spec can pin.
+
+The band is not a trick to satisfy the gate. A dashboard that shows signal state as a visible band rather than as slightly dimmer text is the more usable design, and it is what makes the state legible at a glance in a moving car.
+
+Record these numbers in the test alongside the thresholds. If a later fixture changes size, the arithmetic has to be redone, and the test should say so.
 
 **References are machine-specific and this gate does not run in CI.** GPU, driver and font rasterisation all move these numbers, and the hosted runners have no GPU. Check the references in under `tests/fixtures/references/`, and beside them a `capture-environment.json` recording GPU name, driver version, engine version and resolution. A mismatch between that file and the running machine is reported as **not run**, never as a pass and never as a failure. Say so in the report.
 
