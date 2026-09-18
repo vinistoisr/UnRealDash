@@ -1,0 +1,167 @@
+# Build chunk 11: the Stage 0 UMG primitives
+
+Status: revision 2, after a spec review returned six blockers and the verdict that revision 1 was "a narrative design document, not a build order". That was correct: it described intent where it needed to state decisions, and the screenshot gate in particular was unbuildable. Frozen for a Codex build session. Covers PLAN.md task 4.5. Read PLAN.md (task 4.5, task 4.6 so you know what you are not building, task 3.x for the document model, the Sequencing block) and docs/ARCHITECTURE.md before writing anything. PLAN.md is the authority on what; this file adds the exact mechanisms, proof commands and implementation constraints. If the two disagree, PLAN.md wins and the disagreement goes in the report.
+
+## Goal
+
+This is the task that makes the project look like a product rather than plumbing. Everything underneath it exists and is proven: the document loads, validates and reaches the engine through `FDashPackage`, and `FComponentRegistry` is waiting for builders keyed by component type.
+
+## Facts this chunk depends on
+
+Every line here was checked against the tree, not recalled. Re-check them with the same commands before building; a fact with no command behind it is an assumption.
+
+- The schema defines **nine** component types in `packages/dashboard-spec/schema/dashboard.schema.json`: `readout`, `image`, `shape`, `analog_dial`, `bar_gauge`, `indicator`, `history_graph`, `container`, `page_switch`.
+
+  **This chunk owns six of them**: `readout`, `image`, `shape`, `indicator`, `container`, `page_switch`. PLAN 4.6 owns `analog_dial`, `bar_gauge` and `history_graph`. Do not build those three, and do not register placeholder builders for them that look finished.
+- The same schema defines `anchor` (nine positions), `scaling` (`uniform`, `stretch`, `none`) and `aspect_policy` (`preserve`, `stretch`, `inherit`) per component.
+- Missing data is declared per component under `missing_data`, with four independent states: `stale`, `unavailable`, `invalid` and **`age_unknown`**. Each takes a `presentation` of `dash`, `hidden`, `last_value_dimmed` or `icon`. PLAN 4.5's gate turns on `age_unknown` being visibly distinct from both valid and stale, and the schema already has the field for it.
+- `FComponentRegistry` is delivered and matches what chunk 10 pinned:
+
+  ```cpp
+  struct FComponentContext { const FDashComponent& Component; const FDashPackage& Package;
+                             EDashProfile Profile; UWidget* Parent; };
+  using FComponentBuilder = TFunction<UWidget*(const FComponentContext&, FDashLoadError&)>;
+  ```
+
+  `FWidgetTreeBuilder::Build` walks the tree and `WidgetsById()` returns the id to widget map. `RegisterPlaceholderBuilders` is what this chunk replaces.
+- `FDashPackage::Asset(name, out, error)` returns package asset bytes, and `FDashComponent` exposes type, id, parent id, JSON pointer and typed properties, with **no `dashboard_spec::` type in either**. The layering check in `scripts/doctor.ps1` enforces that the game module names neither library.
+- The existing document fixtures in `tests/fixtures/documents/valid/` (27 files) cover `container`, `readout`, `indicator`, `page_switch`, `analog_dial` and `history_graph`. **None covers `image` or `shape`.** The richest is `page-switch.json` with three types. This chunk authors the fixture its own gate needs.
+- Runtime PNG import into a `UTexture2D` is already proven on the device by PLAN 4.0, through `IImageWrapperModule`, `UTexture2D::CreateTransient` and `UpdateResource`.
+- **`FScreenshotRequest::RequestScreenshot` takes `bShowUI` as its second argument, and it must be `true` here.** With `false` the capture excludes all UI and writes a black image. That was found on the device on 2026-09-17: everything this project draws is UI, so a gate comparing captures taken with `false` would compare two black images and pass for every fixture, forever. See `docs/reports/2026-09-17-device-package-gate.md`.
+
+## The design decision this chunk exists to encode
+
+**Primitives consume artwork. They do not generate ornament.**
+
+The reference for quality is the owner's own RealDash cluster for the Scirocco, in `C:\Users\Vincent\scirocco-dash`. Its gauge faces are authored as SVG and rendered to transparent PNG at 2x by `dash/generate_assets.py`: chrome bezel, a dense band of fine white ticks with heavier majors, red ticks for the redline drawn inside that band rather than as a filled arc, and large numerals sitting inside the band. At runtime only two things move: a needle sprite rotates, and text values change.
+
+That is the shape this chunk must support, and the package format already assumes it. Packages carry PNG assets with a manifest, per-profile texture budgets and image dimension limits, and `image` is a first-class component type.
+
+So: the `image` primitive is the workhorse, not a decoration. A dial face, a bezel, an indicator icon and a background are all images positioned by the document. Do not draw bezels, tick bands or numerals in code. A primitive that generates its own ornament cannot be restyled by a document, which defeats the point of having a document.
+
+One trap worth copying from the owner's notes: RealDash multiplies a per-gauge colour over image gauges, so every image gauge must be set to pure white or the artwork renders tinted. Theme tokens here can make exactly that mistake. A token that tints an image must be opt-in per component, never a default.
+
+## Deliverables
+
+### 1. Six builders, registered and nothing else
+
+In `UnRealDashCore`, `Private/Package/Primitives/`, one file per primitive, registered through a single `RegisterStage0Builders(FComponentRegistry&, UWidgetTree&)` that replaces `RegisterPlaceholderBuilders`. Adding a primitive later must mean adding one file and one registration line, and touching neither the registry nor `FWidgetTreeBuilder`.
+
+- **`container`**: a panel that positions children by `anchor`, honours `scaling`, and clips. Containers nest; `containers-three-deep.json` already exists as a fixture and must render.
+- **`readout`**: text and numeric, with format, units and precision from the document. This is the primitive the missing-data gate is measured on.
+- **`image`**: resolves an asset name through `FDashPackage::Asset`, decodes with `IImageWrapperModule`, and honours `aspect_policy`. `preserve` must never scale non-uniformly. A missing asset is a readable error, not a blank space.
+- **`shape`**: the one primitive allowed to draw rather than sample artwork, and the boundary is operational rather than a matter of taste. It may draw **only** axis-aligned rectangles, rounded rectangles and straight lines, with a single uniform fill and a single uniform stroke. Anything with a curve that is not a corner radius, any gradient, any text, and any repeated element such as a tick band must be an image asset. If a visual element cannot be expressed under that rule, it is artwork, and drawing it in code is the defect this chunk exists to prevent.
+- **`indicator`**: a lamp with on and off artwork, driven by a rule result. Off must be visibly off rather than absent, so a dark cluster does not look broken.
+- **`page_switch`**: swaps the visible page. `page-switch.json` already exists and must render both pages.
+
+### 2. Theme tokens, day and night
+
+Colours, and only colours, come from the document's theme section. Two token sets, day and night.
+
+- Selection is one engine-side call, `FDashTheme::SetMode(EDashThemeMode::Day | Night)`, defaulting to `Day`. There is no document field for it and no automatic switching; 5.x owns that.
+- A component referencing a token that does not exist is an **error** naming the token and the component's JSON pointer, surfaced the same way a malformed component is. It is not a silent fallback to white, because a silently defaulted colour looks like a design choice and docs/ARCHITECTURE.md forbids silent fallbacks.
+- A token is applied to an `image` only when that component sets `tint` explicitly. Default is no tint. This is the RealDash trap above: a per-gauge colour multiplied over artwork by default turns every face the theme colour.
+
+### 3. Missing-data rendering, with the matrix pinned
+
+Only primitives that bind a signal have missing-data states. That is `readout`, `image` and `indicator`. **`container`, `shape` and `page_switch` bind no signal and are exempt**; if the document declares `missing_data` on one of those, it is an error naming the pointer, not something to implement.
+
+Required combinations, and nothing else is required in this chunk:
+
+| primitive | dash | hidden | last_value_dimmed | icon |
+| --- | --- | --- | --- | --- |
+| `readout` | required | required | required | required |
+| `image` | n/a, no text to dash | required | required | required |
+| `indicator` | n/a | required | required | required |
+
+A presentation marked n/a in a document is an error naming the pointer.
+
+**`age_unknown` must be structurally distinct, not merely dimmer.** A signal fed by a `held` definition-pack field carries a real measurement whose age is unknown, so it is neither valid nor stale. For the gate's `readout` the three states are rendered as:
+
+- **valid**: the value text alone.
+- **age_unknown**: the value text plus a distinct badge glyph adjacent to it, in the `age_unknown` token colour.
+- **stale**: the `dash` presentation, so no value text at all.
+
+Those three differ in glyph coverage, not opacity, which is what makes criterion 3 measurable rather than a judgement call. A pair that differed only by a few percent of alpha would pass a tolerance test while looking identical.
+
+### 4. The fixture, the capture conditions and the comparator
+
+No existing fixture covers `image` or `shape`, so author `tests/fixtures/documents/valid/all-primitives-stage0.json` exercising all six, plus the package assets it needs. It must pass the existing validator and semantic pass unchanged, and be added to whatever list the C++ and Python validators already walk.
+
+**Capture conditions are part of the gate.** A screenshot comparison is only meaningful if the frame is deterministic, and by default it is not: temporal antialiasing, auto exposure, bloom and animated values all move between runs on the same machine.
+
+Capture with exactly this, and record it in the test rather than in a person's memory:
+
+```
+-windowed -ResX=1280 -ResY=720 -nosplash -unattended
+-ExecCmds="r.PostProcessAAQuality 0, r.DefaultFeature.AntiAliasing 0, r.DefaultFeature.Bloom 0, r.DefaultFeature.AutoExposure 0, r.DefaultFeature.MotionBlur 0, r.ScreenPercentage 100, r.Tonemapper.Sharpen 0"
+```
+
+Values must be frozen, not sampled: the fixture binds constants, not a running scenario, so two captures of the same document are identical by construction. If any primitive needs a live value to render, that is a defect in this chunk, not a reason to loosen the comparator.
+
+**The comparator is specified, not left to judgement.** Implement it once, in `scripts/compare-capture.py`, and use it for every criterion below.
+
+- Both images must have identical dimensions. A size mismatch is an immediate fail, never a resize.
+- Compare 8-bit RGB. **Alpha is ignored**, because the captures are opaque and an alpha channel that differs invisibly would fail the gate for no reason.
+- Per pixel, `d(p) = max over channels of |reference - candidate|`.
+- Report two numbers every run, pass or fail: `worst = max d(p)` and `moved = fraction of pixels with d(p) > 8`.
+- **Pass when `worst <= 48` and `moved <= 0.001`.**
+
+The two-part rule is deliberate. A single max-delta rule fails on one antialiased glyph edge; a single percentage rule lets a whole component change colour as long as it is small. Requiring both means text edges may differ slightly while any component actually changing appearance is caught. The threshold of 8 is below what a human sees on a dark panel and above driver-level rounding; 0.1 percent of a 1280x720 frame is about 920 pixels, roughly one glyph's worth of edge.
+
+**References are machine-specific and this gate does not run in CI.** GPU, driver and font rasterisation all move these numbers, and the hosted runners have no GPU. Check the references in under `tests/fixtures/references/`, and beside them a `capture-environment.json` recording GPU name, driver version, engine version and resolution. A mismatch between that file and the running machine is reported as **not run**, never as a pass and never as a failure. Say so in the report.
+
+## Constraints
+
+- No `dashboard_spec::` or `signal_core::` name in the `UnRealDash` game module. `scripts/doctor.ps1` enforces it and the Pester test fails the build if it is broken.
+- No hand-authored widget Blueprints. docs/ARCHITECTURE.md forbids it: the document is the only source of layout.
+- Nothing switches on a component type string outside the registry.
+- Errors are values. A malformed component is a readable on-screen error naming the JSON pointer, never a crash and never a silent skip.
+- `RequestScreenshot`'s `bShowUI` is `true`. Anything else makes the gate meaningless.
+- No em dashes in any file, comment or printed string.
+
+## Non-goals
+
+- `analog_dial`, `bar_gauge` and `history_graph`. Those are PLAN 4.6.
+- The command-line surface, which is 4.7. Use what 4.4 already wired.
+- The debug overlay, which is 4.8.
+- Any device work. The gate here is desktop captures.
+- Authoring beautiful artwork. This chunk proves the primitives consume artwork correctly; a fixture PNG may be plain.
+
+## Pass/fail criteria
+
+Each is a command that exits non-zero on failure. Criteria 2, 3 and 5 all use `scripts/compare-capture.py` and its two numbers.
+
+1. `all-primitives-stage0.json` renders every one of the six primitives, in both packed and unpacked package form.
+2. A capture of that fixture, taken under the conditions above, passes against the checked-in reference: `worst <= 48` and `moved <= 0.001`. Print both numbers.
+3. **The mutation check, named exactly so it is evaluable.** Change the `readout` fill token in the fixture from its theme value to `#FF00FF`, recapture, and compare against the same reference with the same comparator. It must fail, and `moved` must exceed **0.01**, that is more than ten times the pass threshold. A mutation that only just crosses the line proves the comparator is twitchy rather than that the gate works. Restore the fixture and confirm it passes again.
+4. Three captures of the same `readout` under valid, `age_unknown` and stale conditions are mutually distinguishable: for each of the three pairs, `moved` exceeds **0.005**. Report all three pair numbers, not just a pass. This is the same comparator as criterion 2, so a builder cannot satisfy one metric here and another there.
+5. `containers-three-deep.json` and `page-switch.json` still render, so existing fixtures are not regressed.
+6. An unknown component type, a missing theme token, and `missing_data` declared on a primitive that binds no signal each produce a readable error naming the offending JSON pointer, and none of them crashes.
+7. Both CMake suites stay green with no drop in case or assertion count, taken from the doctest reporter rather than counted by hand.
+8. `scripts/doctor.ps1 -Profile workstation` exits 0 including the layering check, and the full Pester suite passes with `-CI`.
+9. UBT builds Win64 and Android ARM64. Android is a build check here, not a device run.
+
+## Proof
+
+Codex runs these and pastes the output verbatim.
+
+```
+cd packages/dashboard-spec && cmake --preset default && cmake --build --preset default
+cd packages/dashboard-spec && ctest --preset default --output-on-failure
+cd packages/signal-core && ctest --preset default --output-on-failure
+pwsh -NoProfile -File scripts/doctor.ps1 -Profile workstation; echo "exit=$LASTEXITCODE"
+pwsh -NoProfile -Command "Invoke-Pester -Path scripts/tests -CI -Output Detailed"
+git status --short
+```
+
+On this machine a Ninja configure needs a developer environment:
+`cmd /c "call \"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat\" >nul 2>&1 && cmake --preset default"`. Without it you get `LNK1104 cannot open file kernel32.lib`, which is an environment problem and not a code one.
+
+`[claude]` The UBT builds, the fixture renders, the reference captures, the mutation check in criterion 2 and the three-state comparison in criterion 3.
+
+Codex's pasted proof is advisory. Claude re-runs everything.
+
+## Report format
+
+End with: files added or changed (one line each: path, what, which PLAN.md task), the proof output verbatim for what you ran, the per-pixel tolerance chosen and why, the measured difference between each pair of states in criterion 3, an explicit list of what you did not run and why, any deviation from PLAN.md or this spec with the reason, and anything you could not do.
