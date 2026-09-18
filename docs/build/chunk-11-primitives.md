@@ -281,7 +281,21 @@ properties are `colour` and nothing else. There are no asset fields to resolve.
 **Decision.** The lamp is drawn from its `colour`. On is the colour at full value; off is the same
 hue at 18 percent value, which keeps it visibly present against the panel background rather than
 absent. The requirement that off must not look like a broken cluster is met; the artwork half is a
-PLAN 4.6 concern, where the dial primitives bring their own asset fields.
+PLAN 4.6 concern.
+
+**Correction, made while planning chunk 12.** This paragraph originally said the PLAN 4.6 dial
+primitives bring their own asset fields. They do not: `analog_dial` declares only `minimum`,
+`maximum` and `colour`, `bar_gauge` adds `circular`, and `history_graph` declares `history_samples`
+and `colour`. No component type in the schema except `image` names an asset. Artwork reaches a dial
+the way it reaches every other primitive, as `image` components the document positions behind it,
+which is the composition the RealDash reference uses and the one this chunk's design rule already
+implies.
+
+**A second correction.** `ResolveAspectPolicy` took the policy from any ancestor that declared one.
+The semantic pass takes it from `container` ancestors only and walks past every other type
+(`SemanticPass.cpp:267-272`). The two have to agree, because the pass is what rejects a circular
+gauge under an inherited `stretch`, and a runtime that resolved `inherit` differently could scale a
+dial non-uniformly that the validator had accepted. The runtime now matches the pass.
 
 ### Two further corrections to the facts block
 
