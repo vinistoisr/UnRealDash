@@ -19,21 +19,22 @@ EDashSignalState StateFromSample(const FSignalSample& Sample)
 }
 
 bool FDashBindingTable::Build(const FDashPackage& Package, const TMap<FString, FComponentUpdater>& Updaters,
-    FDashLoadError& OutError)
+    const TMap<FString, uint32>& NameToId, FDashLoadError& OutError)
 {
     Entries.Reset();
     Names.Reset();
     Ranges.Reset();
 
     // Document order is signal id order; see the note on the class.
-    const FDashValue Declared = Package.Signals().Member(TEXT("signals"));
-    for (int32 Index = 0; Index < Declared.Num(); ++Index)
+    const FDashValue DeclaredSignals = Package.Signals().Member(TEXT("signals"));
+    for (int32 Index = 0; Index < DeclaredSignals.Num(); ++Index)
     {
         FString Name;
-        Declared.Element(Index).Member(TEXT("id")).String(Name);
+        DeclaredSignals.Element(Index).Member(TEXT("id")).String(Name);
         Names.Add(Name);
         // A signal nothing gauges still needs a range to sweep, and 0 to 1 is the honest default:
-        // it is what a fraction means when nothing says otherwise.
+        // it is what a fraction means when nothing says otherwise. Ranges is indexed by position in
+        // the document, alongside Names, not by the numeric id a connector assigns.
         Ranges.Add(FVector2D(0.0, 1.0));
     }
     TArray<bool> RangeSeen;
@@ -46,8 +47,11 @@ bool FDashBindingTable::Build(const FDashPackage& Package, const TMap<FString, F
         FString SignalName;
         Bindings.Member(ComponentId).Member(TEXT("signal")).String(SignalName);
 
-        const int32 Signal = Names.IndexOfByKey(SignalName);
-        if (Signal == INDEX_NONE)
+        const int32 Declared = Names.IndexOfByKey(SignalName);
+        // The numeric id the samples will carry, which is not always the position in the document.
+        const uint32* Mapped = NameToId.Find(SignalName);
+        const int32 Signal = Mapped ? static_cast<int32>(*Mapped) : Declared;
+        if (Declared == INDEX_NONE)
         {
             OutError = { TEXT("E_UNRESOLVED_SIGNAL"), 9,
                 FString::Printf(TEXT("/dashboard/bindings/%s/signal"), *ComponentId),
@@ -71,11 +75,11 @@ bool FDashBindingTable::Build(const FDashPackage& Package, const TMap<FString, F
             if (Node.Properties.Member(TEXT("minimum")).Number(Minimum) &&
                 Node.Properties.Member(TEXT("maximum")).Number(Maximum) && Maximum > Minimum)
             {
-                if (!RangeSeen[Signal]) { Ranges[Signal] = FVector2D(Minimum, Maximum); RangeSeen[Signal] = true; }
+                if (!RangeSeen[Declared]) { Ranges[Declared] = FVector2D(Minimum, Maximum); RangeSeen[Declared] = true; }
                 else
                 {
-                    Ranges[Signal].X = FMath::Min(Ranges[Signal].X, Minimum);
-                    Ranges[Signal].Y = FMath::Max(Ranges[Signal].Y, Maximum);
+                    Ranges[Declared].X = FMath::Min(Ranges[Declared].X, Minimum);
+                    Ranges[Declared].Y = FMath::Max(Ranges[Declared].Y, Maximum);
                 }
             }
             break;

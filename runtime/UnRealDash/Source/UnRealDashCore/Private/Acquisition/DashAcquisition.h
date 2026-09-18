@@ -4,7 +4,11 @@
 #include "HAL/Runnable.h"
 #include "HAL/RunnableThread.h"
 #include "SignalCore/AcquisitionEvents.h"
+#include "SignalCore/BinaryTelemetryConnector.h"
 #include "SignalCore/MemoryConnector.h"
+#include "SignalCore/Reconnect.h"
+#include "SignalCore/TcpTransport.h"
+#include "dashboard_spec/DefinitionPackBuilder.h"
 #include <atomic>
 #include <vector>
 
@@ -33,6 +37,20 @@ struct FDashAcquisition::FImpl final : FRunnable {
     TUniquePtr<signal_core::ReplayTransport> Transport;
     signal_core::FieldSession Session;
     signal_core::FieldDecoder Decoder;
+    // The binary telemetry path. Null on the recording path, and the two never both exist: a
+    // pipeline takes one transport.
+    TUniquePtr<dashboard_spec::DefinitionPackBuilder> PackBuilder;
+    TUniquePtr<signal_core::TcpTransport> Tcp;
+    TUniquePtr<signal_core::BinaryTelemetryV1Connector> Telemetry;
+    std::vector<std::uint32_t> Identifiers;
+    signal_core::ConnectionSupervisor Supervisor;
+    TMap<FString, uint32> NameToId;
+    bool bHasConnected = false;
+    // Counted here rather than read off the pipeline. AcquisitionPipeline::Reconnect is the only
+    // thing that increments its own counter, and the connector finishes a pending connect through
+    // Start instead, so the pipeline's count misses exactly the reconnections that matter. This
+    // counts a link coming back, which is what the criterion is about.
+    std::uint64_t Reconnections = 0;
     signal_core::SiMapping Mapping;
     signal_core::NullAcquisitionEventSink Sink;
     TUniquePtr<signal_core::SampleQueue> Display;
@@ -46,6 +64,11 @@ struct FDashAcquisition::FImpl final : FRunnable {
     FString Error;
     uint64 Frame = 0;
     FImpl(const FString& Text, uint32 ExpectedSamplesPerFrame, const TArray<FAcquisitionThresholdRule>& Definitions);
+    explicit FImpl(const FDashTcpOptions& Options);
+    // Drives the reconnect schedule. Pump does not retry on its own: its read loop is gated on
+    // health_.connected, so a disconnected transport is never polled, and Connect is the only
+    // place the connection generation advances. See SignalCore/Reconnect.h.
+    void ServiceConnection();
     uint32 Run() override;
     void PublishHealth();
     void Stop() override { bStop.store(true, std::memory_order_release); }

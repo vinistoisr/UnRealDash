@@ -19,6 +19,13 @@ public:
     // everything downstream of it is the real pipeline, so a signal here goes stale because a
     // deadline passed rather than because something decided to say so.
     FString StartScenario(double DurationSeconds);
+    // PLAN 4.9's third connector: a receive-only binary-telemetry-v1 client. Signals and their
+    // numeric ids come from the package's definition pack, so the binding table has to be built
+    // after this rather than before, which is why it takes the package path again.
+    FString StartTcp(const FString& Host, uint16 Port);
+    // Health, for the gate to read reconnects and backoff out of the log.
+    UnRealDashCore::FConnectionHealth GetHealth() const;
+    bool HasAcquisition() const { return Acquisition.IsValid(); }
     // Read by the HUD to emit one machine-readable verdict line per run; the device half of the
     // PLAN 4.4 gate parses it out of logcat, where an accepted case otherwise logs nothing at all.
     bool WasAccepted() const { return Accepted; }
@@ -44,9 +51,13 @@ private:
     float Fraction = 0.f;
     UnRealDashCore::FWidgetTreeBuilder Builder;
     UnRealDashCore::FDashBindingTable Bindings;
+    // Filled before the tree is built when a connector numbers signals its own way; empty for the
+    // scenario source, which numbers them by document position.
+    TMap<FString, uint32> SignalIds;
     TUniquePtr<UnRealDashCore::FDashAcquisition> Acquisition;
     UnRealDashCore::FFrameSnapshot Snapshot;
     uint64 Ticks = 0;
+    float HealthSeconds = 0.f, ElapsedSeconds = 0.f;
     // Logged at the first tick and again at the six hundredth. An updater sets properties and never
     // adds a child, and this is what stands behind that rather than the code reading as though it
     // does. A capture cannot measure it: a screenshot records pixels, not a widget tree.

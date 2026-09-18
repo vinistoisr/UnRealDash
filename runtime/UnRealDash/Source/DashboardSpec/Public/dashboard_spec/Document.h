@@ -1,6 +1,7 @@
 #pragma once
 #include "dashboard_spec/Errors.h"
 #include "dashboard_spec/Export.h"
+#include <string>
 #include <string_view>
 namespace dashboard_spec {
 // Non-owning typed JSON access. Views live as long as the owning document.
@@ -44,6 +45,13 @@ class DS_EXPORT Document {
     // The signals document, when the bundle carries one. A package may ship signals.json beside
     // dashboard.json, and a binding's signal name resolves against it.
     PropertyView Signals() const;
+    // The definition pack, serialized back to JSON text.
+    //
+    // DefinitionPackBuilder takes text rather than a view, and the package reader parses every
+    // document it admits into one bundle, so the original bytes are gone by the time anyone wants
+    // them. Writing the member back out is cheaper than keeping a second copy of every document
+    // for the one case that needs it. Returns false when the package ships no definition pack.
+    bool DefinitionPackText(std::string &out) const;
 
   private:
     Storage *storage_;

@@ -25,8 +25,15 @@ public:
     // Unreachable through LoadPackage, because the semantic pass already rejects an unresolved
     // binding signal with E_UNRESOLVED_SIGNAL. Kept for the same reason chunks 11 and 12 kept their
     // unreachable errors: this is callable on a document the validator never saw.
+    // NameToId says what numeric id each declared signal has. The two connectors answer that
+    // differently and neither answer belongs here: the scenario source numbers signals by their
+    // position in the document, because it writes the recording from the same array, while a
+    // binary telemetry stream numbers them from the definition pack's fields. Passing it in keeps
+    // the join in one place while letting the source own the numbering it actually uses.
+    //
+    // An empty map means the default, position in the document's signals array.
     bool Build(const FDashPackage& Package, const TMap<FString, FComponentUpdater>& Updaters,
-        FDashLoadError& OutError);
+        const TMap<FString, uint32>& NameToId, FDashLoadError& OutError);
 
     // Applies one snapshot to every bound widget. The caller acquires the snapshot once and passes
     // it here; acquiring per binding could straddle a publication and show two components values

@@ -28,12 +28,31 @@ struct FConnectionHealth {
     int64 LastByteNanoseconds = 0;
     uint64 Reconnects = 0, Bytes = 0;
     FString LastError;
+    // PLAN 4.9 requires a connector to report its backoff state. Zero for the connectors that
+    // never retry, which is the honest reading for a scenario or a file: they have no schedule to
+    // be waiting on.
+    uint64 BackoffMilliseconds = 0, AttemptsSinceConnect = 0;
+};
+// A receive-only binary-telemetry-v1 client. Signals come from the definition pack's fields, so
+// their numeric ids are the pack's and not the document's ordering; FDashBindingTable is told the
+// mapping rather than assuming one.
+struct FDashTcpOptions {
+    FString Host = TEXT("127.0.0.1");
+    uint16 Port = 35000;
+    // The package's definition pack, as JSON text.
+    FString DefinitionPackText;
+    // Absolute path to the schema directory, for validating the pack.
+    FString SchemaDirectory;
 };
 // The recording and all borrowed pipeline storage are owned behind the engine seam.
 class UNREALDASHCORE_API FDashAcquisition {
   public:
     explicit FDashAcquisition(const FString& RecordingText, uint32 ExpectedSamplesPerFrame = 4,
                              const TArray<FAcquisitionThresholdRule>& Rules = {});
+    explicit FDashAcquisition(const FDashTcpOptions& Options);
+    // Signal name to the numeric id the pack gives it. Empty for the recording path, which numbers
+    // signals by document position.
+    const TMap<FString, uint32>& SignalIds() const;
     ~FDashAcquisition();
     FString Start();
     void Stop();

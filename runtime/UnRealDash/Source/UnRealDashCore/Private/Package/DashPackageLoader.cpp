@@ -82,6 +82,7 @@ FString ResolveSchemaDirectory()
     return IPlatformFile::GetPlatformPhysical().ConvertToAbsolutePathForExternalAppForRead(
         *FPaths::Combine(FPaths::ProjectDir(), TEXT("Schema")));
 }
+FString ResolveDashSchemaDirectory() { return ResolveSchemaDirectory(); }
 void InitializePackageLoader()
 {
     UE_LOG(LogTemp, Display, TEXT("Dashboard schema directory: %s"), *ResolveSchemaDirectory());
@@ -146,6 +147,12 @@ FDashValue FDashPackage::Bindings() const
 FDashValue FDashPackage::Signals() const
 {
     return Impl ? FPackageAccess::Value(Impl->Payload, Impl->Payload->Doc().Signals()) : FDashValue();
+}
+FString FDashPackage::DefinitionPackText() const
+{
+    std::string Text;
+    if (!Impl || !Impl->Payload->Doc().DefinitionPackText(Text)) return FString();
+    return EngineText(Text);
 }
 FDashValue FDashPackage::Pages() const
 {

@@ -67,6 +67,9 @@ public:
     // The package's signals document, if it ships one. A binding names a signal by string and the
     // registry works in numbers; this is the table that joins them.
     FDashValue Signals() const;
+    // The package's definition pack as JSON text, for DefinitionPackBuilder. Empty when the
+    // package ships none, which is every package that is not driven by a binary telemetry stream.
+    FString DefinitionPackText() const;
     TArray<FString> AssetNames() const;
     // Takes an asset reference exactly as the document writes it and normalizes it through the
     // package path rules before looking it up.
@@ -83,4 +86,7 @@ private:
 UNREALDASHCORE_API EDashProfile DefaultDashProfile();
 UNREALDASHCORE_API bool LoadPackage(const FString& Path, EDashProfile Profile, FDashPackage& Out, FDashLoadError& OutError);
 UNREALDASHCORE_API void InitializePackageLoader();
+// The absolute schema directory the loader validates against. Exposed so a connector can
+// validate a definition pack with the same schemas the document was validated with.
+UNREALDASHCORE_API FString ResolveDashSchemaDirectory();
 }

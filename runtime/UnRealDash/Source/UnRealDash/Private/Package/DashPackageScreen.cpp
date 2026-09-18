@@ -44,7 +44,7 @@ TSharedRef<SWidget> UDashPackageScreen::RebuildWidget()
         // The bindings are resolved once, here, not per frame. A string comparison against every
         // declared signal for every binding every frame is invisible on a workstation and a dropped
         // frame on a head unit.
-        if (Accepted) Accepted = Bindings.Build(Package, Builder.UpdatersById(), Error);
+        if (Accepted) Accepted = Bindings.Build(Package, Builder.UpdatersById(), SignalIds, Error);
         if (!Accepted) UE_LOG(LogUnRealDash, Error, TEXT("%s"), *Error.DisplayText());
     }
     WidgetTree->RootWidget = Accepted ? BuildDocumentRoot(Content) : BuildErrorRoot();
@@ -80,6 +80,28 @@ FString UDashPackageScreen::StartScenario(double DurationSeconds)
     Acquisition = MakeUnique<UnRealDashCore::FDashAcquisition>(Recording);
     return Acquisition->Start();
 }
+FString UDashPackageScreen::StartTcp(const FString& Host, uint16 Port)
+{
+    if (!Accepted) return TEXT("No package is loaded");
+    UnRealDashCore::FDashTcpOptions Options;
+    Options.Host = Host;
+    Options.Port = Port;
+    Options.DefinitionPackText = Package.DefinitionPackText();
+    Options.SchemaDirectory = UnRealDashCore::ResolveDashSchemaDirectory();
+    Acquisition = MakeUnique<UnRealDashCore::FDashAcquisition>(Options);
+
+    // The pack numbers the signals, so the bindings are resolved against its numbering rather than
+    // the document's ordering. This is the one case where the binding table has to be rebuilt after
+    // the tree, because until the pack is parsed nothing knows what the ids are.
+    SignalIds = Acquisition->SignalIds();
+    if (!Bindings.Build(Package, Builder.UpdatersById(), SignalIds, Error))
+        return Error.DisplayText();
+    return Acquisition->Start();
+}
+UnRealDashCore::FConnectionHealth UDashPackageScreen::GetHealth() const
+{
+    return Acquisition ? Acquisition->GetHealth() : UnRealDashCore::FConnectionHealth{};
+}
 void UDashPackageScreen::NativeTick(const FGeometry& Geometry, float DeltaTime)
 {
     Super::NativeTick(Geometry, DeltaTime);
@@ -90,6 +112,22 @@ void UDashPackageScreen::NativeTick(const FGeometry& Geometry, float DeltaTime)
     if (Acquisition->AcquireFrameSnapshot(Snapshot)) Bindings.Apply(Snapshot);
 
     ++Ticks;
+    // One health line a second. PLAN 4.9's criterion 6 is a sequence rather than a state, so a
+    // capture cannot show it: the relay is killed, every mapped signal goes stale, the relay comes
+    // back, and the connector reconnects with no player restart. The log is what carries that.
+    // Accumulated, not ticks multiplied by the current delta. That estimate went backwards
+    // between lines whenever a frame ran long, which made the log's own timeline untrustworthy.
+    ElapsedSeconds += DeltaTime;
+    HealthSeconds += DeltaTime;
+    if (HealthSeconds >= 1.0f)
+    {
+        HealthSeconds = 0.f;
+        const UnRealDashCore::FConnectionHealth Health = GetHealth();
+        UE_LOG(LogUnRealDash, Display,
+            TEXT("DashHealth t=%.1f connected=%s generation=%llu reconnects=%llu bytes=%llu backoff_ms=%llu attempts=%llu"),
+            ElapsedSeconds, Health.bConnected ? TEXT("true") : TEXT("false"), Health.Generation,
+            Health.Reconnects, Health.Bytes, Health.BackoffMilliseconds, Health.AttemptsSinceConnect);
+    }
     const int32 Widgets = WidgetTree ? WidgetTree->RootWidget ? CountWidgets(WidgetTree->RootWidget) : 0 : 0;
     if (Ticks == 1)
     {
@@ -231,6 +269,38 @@ void ADashPackageHUD::BeginPlay()
         }
         UE_LOG(LogUnRealDash, Display, TEXT("DashScenario seconds=%.3f"), Duration);
     }
+
+    // PLAN 4.9's connector selection. Only the tcp value is wired here; sim is the scenario switch
+    // above and replay is a file, both of which the rest of 4.9 folds in. An unknown value exits
+    // rather than falling back, so a mistyped connector cannot look like a working run.
+    FString Connector;
+    if (FParse::Value(FCommandLine::Get(), TEXT("connector="), Connector))
+    {
+        if (!Connector.Equals(TEXT("tcp"), ESearchCase::IgnoreCase))
+        {
+            UE_LOG(LogUnRealDash, Error, TEXT("Unknown -connector=%s; this build wires tcp"), *Connector);
+            FPlatformMisc::RequestExit(false);
+            return;
+        }
+        FString Host = TEXT("127.0.0.1");
+        FParse::Value(FCommandLine::Get(), TEXT("connector-host="), Host);
+        int32 Port = 35000;
+        FParse::Value(FCommandLine::Get(), TEXT("connector-port="), Port);
+        if (Port <= 0 || Port > 65535)
+        {
+            UE_LOG(LogUnRealDash, Error, TEXT("-connector-port must be 1 through 65535, got %d"), Port);
+            FPlatformMisc::RequestExit(false);
+            return;
+        }
+        const FString Failure = Screen->StartTcp(Host, static_cast<uint16>(Port));
+        if (!Failure.IsEmpty())
+        {
+            UE_LOG(LogUnRealDash, Error, TEXT("Connector failed: %s"), *Failure);
+            FPlatformMisc::RequestExit(false);
+            return;
+        }
+        UE_LOG(LogUnRealDash, Display, TEXT("DashConnector kind=tcp host=%s port=%d"), *Host, Port);
+    }
     // One machine-readable verdict per run. The device half of the PLAN 4.4 gate is driven by
     // launching once per fixture and reading logcat, and an accepted case otherwise produces no
     // output at all, which would make "it worked" indistinguishable from "it died early".
@@ -239,6 +309,15 @@ void ADashPackageHUD::BeginPlay()
         *Screen->LastError().CodeName, *Screen->LastError().Pointer, *Path,
         UnRealDashCore::SignalStateName(State));
     UE_LOG(LogUnRealDash, Display, TEXT("DashFraction value=%.4f"), Fraction);
+    // Gate-only, like the rest. A connector gate needs a run that outlives a relay being killed
+    // and restarted, and a capture cannot end it early or the sequence never happens.
+    FString QuitAfter;
+    if (FParse::Value(FCommandLine::Get(), TEXT("udash-quit-after="), QuitAfter) && QuitAfter.IsNumeric())
+    {
+        FTimerHandle Quit;
+        GetWorldTimerManager().SetTimer(Quit, FTimerDelegate::CreateLambda([]()
+            { FPlatformMisc::RequestExit(false); }), FCString::Atof(*QuitAfter), false);
+    }
     if (FParse::Value(FCommandLine::Get(), TEXT("udash-shot="), ShotPath))
     {
         FString At;

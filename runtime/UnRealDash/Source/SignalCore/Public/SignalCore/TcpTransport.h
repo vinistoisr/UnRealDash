@@ -37,6 +37,11 @@ class SIGNALCORE_API TcpTransport final : public ITransport {
     Status Connect() override;
     Status Disconnect() override;
     bool Connected() const override;
+    // A connect has been issued and has not finished. It must be polled, not restarted: the caller
+    // asking again through Connect finishes it, while going through a Disconnect first throws away
+    // a socket that was about to come up. The backoff schedule governs starting a new attempt, not
+    // finishing one already in flight.
+    bool Connecting() const { return state_ == State::connecting; }
 
     // Bytes this transport has written to the socket. It is here so a test can assert it, and it is
     // a constant zero: nothing increments it, because nothing writes.

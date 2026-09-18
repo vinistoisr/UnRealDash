@@ -1,4 +1,6 @@
 #include "Internal.h"
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 namespace dashboard_spec {
 PropertyView PropertyView::Member(std::string_view name) const {
     const auto *v = static_cast<const Value *>(value_);
@@ -69,4 +71,16 @@ PropertyView Document::Root() const { return Dashboard(*this); }
 // Signals sit beside the dashboard in the bundle rather than inside it, so this reads from the
 // document root rather than through Dashboard().
 PropertyView Document::Signals() const { return PropertyView(&Data().json).Member("signals"); }
+bool Document::DefinitionPackText(std::string &out) const {
+    out.clear();
+    const auto &json = Data().json;
+    if (!Has(json, "definition-pack"))
+        return false;
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    if (!At(json, "definition-pack").Accept(writer))
+        return false;
+    out.assign(buffer.GetString(), buffer.GetSize());
+    return true;
+}
 } // namespace dashboard_spec

@@ -414,5 +414,12 @@
     "archive_only": false,
     "profile": "desktop",
     "external": true
+  },
+  {
+    "name": "connector-stage0",
+    "code": "",
+    "archive_only": false,
+    "profile": "desktop",
+    "external": true
   }
 ]

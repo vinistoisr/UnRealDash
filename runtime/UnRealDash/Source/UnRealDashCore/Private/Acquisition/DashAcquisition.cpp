@@ -53,21 +53,133 @@ FDashAcquisition::FImpl::FImpl(const FString& Text, uint32 ExpectedSamplesPerFra
     Pipeline = MakeUnique<signal_core::AcquisitionPipeline>(LiveClock, *Registry, *Schedule,
         Rules, Previous, ReadBuffer, *Display, *Transport, Session, Decoder, Mapping, Sink);
 }
+FDashAcquisition::FImpl::FImpl(const FDashTcpOptions& Options) {
+    const std::string PackJson(TCHAR_TO_UTF8(*Options.DefinitionPackText));
+    if (PackJson.empty()) { Error = TEXT("The package ships no definition pack, which a binary telemetry connector needs"); return; }
+    const std::string SchemaDirectory(TCHAR_TO_UTF8(*Options.SchemaDirectory));
+    PackBuilder = MakeUnique<dashboard_spec::DefinitionPackBuilder>();
+    const dashboard_spec::Validator Validator({SchemaDirectory.data(), SchemaDirectory.size()});
+    const auto Built = PackBuilder->Build({PackJson.data(), PackJson.size()}, Validator);
+    if (!Built.Ok()) { Error = UTF8_TO_TCHAR(Built.message.View().data()); return; }
+    const auto& Pack = PackBuilder->Pack();
+
+    // Signals come from the pack's fields, which is where their numeric ids come from too. A
+    // document orders its signals however it likes; a telemetry stream numbers them, and the two
+    // are joined by name rather than by position.
+    for (const auto& PackFrame : Pack.frames) {
+        Identifiers.push_back(PackFrame.frame_id);
+        for (const auto& Field : PackFrame.fields) {
+            const auto Existing = std::find_if(Signals.begin(), Signals.end(),
+                [&](const auto& S) { return S.id == Field.signal; });
+            if (Existing != Signals.end()) continue;
+            signal_core::Signal Signal{};
+            Signal.id = Field.signal;
+            Signal.unit = Field.unit;
+            // Half a second, matching the scenario source. A per-signal deadline belongs in the
+            // signals document and reading it here would need a second join; PLAN 4.9's gate turns
+            // on staleness happening at all, not on its exact instant.
+            Signal.deadline = std::chrono::milliseconds(500);
+            Signal.discrete = false;
+            const auto Name = Field.name ? Field.name : "";
+            std::snprintf(Signal.name, sizeof(Signal.name), "%s", Name);
+            Signals.push_back(Signal);
+            NameToId.Add(UTF8_TO_TCHAR(Name), Field.signal);
+        }
+    }
+    if (Signals.empty()) { Error = TEXT("The definition pack declares no fields"); return; }
+
+    const auto Count = Signals.size();
+    for (auto& Buffer : Buffers) Buffer.resize(Count);
+    for (auto& Buffer : SnapshotLatches) Buffer.resize(0);
+    Expiries.resize(Count);
+    DisplayStorage.resize(std::max<std::size_t>(64, Count * 4));
+    Schedule = MakeUnique<signal_core::ExpirySchedule>(Expiries);
+    Exchange = MakeUnique<signal_core::SnapshotExchange>(
+        signal_core::SnapshotBuffer{Buffers[0], SnapshotLatches[0]},
+        signal_core::SnapshotBuffer{Buffers[1], SnapshotLatches[1]},
+        signal_core::SnapshotBuffer{Buffers[2], SnapshotLatches[2]});
+    Registry = MakeUnique<signal_core::SignalRegistry>(FrozenClock, Signals, *Schedule, *Exchange);
+    const auto Status = Registry->Initialize();
+    if (!Status.Ok()) { Error = UTF8_TO_TCHAR(Status.message); return; }
+
+    Tcp = MakeUnique<signal_core::TcpTransport>();
+    const std::string Host(TCHAR_TO_UTF8(*Options.Host));
+    const auto Configured = Tcp->Configure(Host.c_str(), Options.Port);
+    if (!Configured.Ok()) { Error = UTF8_TO_TCHAR(Configured.message); return; }
+    Telemetry = MakeUnique<signal_core::BinaryTelemetryV1Connector>(Pack, LiveClock, Identifiers);
+    Display = MakeUnique<signal_core::SampleQueue>(DisplayStorage);
+    Pipeline = MakeUnique<signal_core::AcquisitionPipeline>(LiveClock, *Registry, *Schedule,
+        Rules, Previous, ReadBuffer, *Display, *Tcp, Telemetry->Session(), Telemetry->Decoder(), Mapping, Sink);
+}
+void FDashAcquisition::FImpl::ServiceConnection() {
+    if (!Tcp || !Telemetry) return;
+    const signal_core::Time Now(PlatformClock.NowNanoseconds(PlatformClock.Context));
+    const bool bConnected = Pipeline->Health().connected;
+    if (bConnected) return;
+
+    // A connect already in flight is finished, not restarted, and it is polled every tick rather
+    // than on the backoff schedule. This is the bug that made the first working connector never
+    // reconnect: a non-blocking connect to loopback reports in progress, Reconnect closes the
+    // socket before calling Connect, so every scheduled attempt tore down a connection that was
+    // about to succeed and the link never came back. The schedule governs starting an attempt; it
+    // has nothing to say about completing one.
+    const bool bInFlight = Tcp->Connecting();
+    if (!bInFlight && Supervisor.Poll(Now, bConnected) != signal_core::ConnectionSupervisor::Action::reconnect)
+        return;
+
+    // Start never disconnects, so it is what finishes a pending connect as well as what opens the
+    // first one. Reconnect is only for getting a fresh socket after a real drop, and it is what
+    // increments the reconnects counter PLAN 4.9's criterion 6 reads.
+    const auto Status = (bHasConnected && !bInFlight) ? Pipeline->Reconnect() : Pipeline->Start();
+    const bool bNowConnected = Pipeline->Health().connected;
+    // A poll of a connect already in flight is not a new attempt, so it does not advance the
+    // schedule. Counting it would race the backoff down to nothing.
+    if (!bInFlight || bNowConnected) Supervisor.Attempted(Now, bNowConnected);
+    if (bNowConnected) {
+        if (bHasConnected) ++Reconnections;
+        bHasConnected = true;
+        // The generation is told to the decoder, never guessed by it. See the note on
+        // BinaryTelemetryV1Connector for why a self-incrementing Reset cannot stay in step across
+        // failed attempts, and failed attempts are the normal case for a non-blocking connect.
+        const auto Generation = Telemetry->SetGeneration(Pipeline->Health().generation);
+        if (!Generation.Ok()) Error = UTF8_TO_TCHAR(Generation.message);
+    } else if (!Status.Ok() && Status.code != signal_core::ErrorCode::need_more_data) {
+        // A refusal is expected while a relay is down and is not worth logging every five seconds.
+    }
+}
 void FDashAcquisition::FImpl::PublishHealth() {
     static_assert(std::is_trivially_copyable_v<signal_core::ConnectionHealth>);
-    const auto& Health = Pipeline->Health();
+    auto Health = Pipeline->Health();
+    if (Tcp) {
+        signal_core::ReportBackoff(Supervisor, Health);
+        Health.reconnects = Reconnections;
+    }
     std::memcpy(HealthExchange.WriterBuffer().latched.data(), &Health, sizeof(Health));
     HealthExchange.Publish();
 }
 uint32 FDashAcquisition::FImpl::Run() {
     bCaptureInstant = true; LiveClock.Now();
-    auto Status = Pipeline->Start();
+    signal_core::Status Status{};
+    if (!Tcp) {
+        // The recording path connects once, immediately, and a failure there is fatal.
+        Status = Pipeline->Start();
+        bStarted.store(Status.Ok(), std::memory_order_release);
+    } else {
+        // The telemetry path may start with nothing listening, which is not an error: the whole
+        // point of the backoff is that an absent relay is a state to wait in rather than a failure
+        // to report. The snapshot is published either way, so a reader sees unavailable signals.
+        bStarted.store(true, std::memory_order_release);
+    }
     PublishHealth();
-    bStarted.store(Status.Ok(), std::memory_order_release);
     while (Status.Ok() && !bStop.load(std::memory_order_acquire)) {
+        ServiceConnection();
         const auto Deadline = signal_core::Time(PlatformClock.NowNanoseconds(PlatformClock.Context)) + std::chrono::milliseconds(1);
         bCaptureInstant = true;
         Status = Pipeline->Pump(Deadline).status;
+        // A dead socket surfaces as an io_error from Pump. On the telemetry path that is a
+        // disconnect to be waited out, not a reason to stop acquiring: the supervisor will
+        // reconnect and every mapped signal goes stale at its deadline in the meantime.
+        if (Tcp && !Status.Ok() && Status.code == signal_core::ErrorCode::io_error) Status = {};
         PublishHealth();
         FPlatformProcess::SleepNoStats(0);
     }
@@ -79,6 +191,8 @@ uint32 FDashAcquisition::FImpl::Run() {
 FDashAcquisition::FDashAcquisition(const FString& Text, uint32 ExpectedSamplesPerFrame,
                                  const TArray<FAcquisitionThresholdRule>& Rules)
     : Impl(MakeUnique<FImpl>(Text, ExpectedSamplesPerFrame, Rules)) {}
+FDashAcquisition::FDashAcquisition(const FDashTcpOptions& Options) : Impl(MakeUnique<FImpl>(Options)) {}
+const TMap<FString, uint32>& FDashAcquisition::SignalIds() const { return Impl->NameToId; }
 FDashAcquisition::~FDashAcquisition() {
     Stop();
     if (Impl->Thread) Impl->Thread->WaitForCompletion();
@@ -126,6 +240,7 @@ FConnectionHealth FDashAcquisition::GetHealth() const {
     const auto Snapshot = Impl->HealthExchange.Acquire();
     std::memcpy(&Health, Snapshot.latched.data(), sizeof(Health));
     return {Health.generation, Health.connected, Health.last_byte_at.count(), Health.reconnects,
-            Health.bytes, FString(UTF8_TO_TCHAR(Health.last_error))};
+            Health.bytes, FString(UTF8_TO_TCHAR(Health.last_error)),
+            Health.backoff_ms, Health.attempts_since_connect};
 }
 }
