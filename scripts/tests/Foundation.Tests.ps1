@@ -19,7 +19,9 @@ BeforeAll {
     $pins = Get-Content (Join-Path $scripts 'pins.json') -Raw | ConvertFrom-Json
     $pwsh = Join-Path $PSHOME 'pwsh.exe'
     # These memberships come from PLAN.md 0.7, independently of pins.json.
-    $workstationRows = @('C: free space', 'Git LFS', 'cmake', 'ninja', 'Visual Studio', 'MSVC toolset', 'Windows SDK', 'Unreal Engine', 'SignalCore layering')
+    # 'Telemetry receive-only' is a PLAN 4.9 addition: Stage 0 telemetry never writes to its socket,
+    # and the TCP transport's source is checked for a send call beside the layering check.
+    $workstationRows = @('C: free space', 'Git LFS', 'cmake', 'ninja', 'Visual Studio', 'MSVC toolset', 'Windows SDK', 'Unreal Engine', 'SignalCore layering', 'Telemetry receive-only')
     $planRows = @{
         workstation = $workstationRows
         # Engine target-platform support is a separate optional download, so each target profile

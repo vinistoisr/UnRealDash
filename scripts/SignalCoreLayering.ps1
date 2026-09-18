@@ -29,3 +29,30 @@ function Get-DashboardSpecLayeringViolation([string]$SourceRoot) {
         }
     }
 }
+
+# PLAN 4.9: Stage 0 telemetry is receive-only, so the TCP transport must have no send path at all.
+#
+# This is a source check rather than only a test, because a test proves the paths it exercised and
+# says nothing about the ones it did not. The suite counts bytes arriving at a real server socket
+# across a full session; this says the capability is absent. Both, because either alone leaves a
+# way for a send to appear later without anything noticing.
+function Get-TcpTransportSendViolation {
+    param([string]$SourceRoot)
+    $file = Join-Path $SourceRoot 'SignalCore/Private/TcpTransport.cpp'
+    if (-not (Test-Path $file)) {
+        return @("TcpTransport.cpp is missing from $SourceRoot")
+    }
+    $violations = @()
+    $lineNumber = 0
+    foreach ($line in Get-Content $file) {
+        $lineNumber++
+        # The comment that explains the rule names the calls, so only code lines are considered.
+        $code = ($line -replace '//.*$', '')
+        foreach ($call in @('send', 'sendto', 'WSASend', 'write')) {
+            if ($code -match ("(^|[^A-Za-z0-9_]){0}\s*\(" -f $call)) {
+                $violations += "TcpTransport.cpp:${lineNumber}: receive-only transport calls $call"
+            }
+        }
+    }
+    return $violations
+}

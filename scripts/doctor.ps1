@@ -324,6 +324,11 @@ try {
         . (Join-Path $PSScriptRoot 'SignalCoreLayering.ps1')
         $violations = @(Get-SignalCoreLayeringViolation (Join-Path $PSScriptRoot '../runtime/UnRealDash/Source'))
         $violations += @(Get-DashboardSpecLayeringViolation (Join-Path $PSScriptRoot '../runtime/UnRealDash/Source'))
+        $sendViolations = @(Get-TcpTransportSendViolation (Join-Path $PSScriptRoot '../runtime/UnRealDash/Source'))
+        foreach ($violation in $sendViolations) { Write-Output $violation }
+        $sendStatus = 'PASS'
+        if ($sendViolations.Count) { $sendStatus = 'FAIL' }
+        $results += [pscustomobject]@{ Component = 'Telemetry receive-only'; Expected = 'no send call in TcpTransport.cpp'; Found = "$($sendViolations.Count) send calls"; Status = $sendStatus }
         foreach ($violation in $violations) { Write-Output $violation }
         $layeringStatus = 'PASS'
         if ($violations.Count) { $layeringStatus = 'FAIL' }
