@@ -379,5 +379,33 @@
     "external": true,
     "tree_code": "E_SCHEMA",
     "tree_pointer": "/components/curve/properties/kind"
+  },
+  {
+    "name": "dials-stage0",
+    "code": "",
+    "archive_only": false,
+    "profile": "desktop",
+    "external": true
+  },
+  {
+    "name": "dials-stage0-stretched",
+    "code": "",
+    "archive_only": false,
+    "profile": "desktop",
+    "external": true
+  },
+  {
+    "name": "dials-stage0-preserved",
+    "code": "",
+    "archive_only": false,
+    "profile": "desktop",
+    "external": true
+  },
+  {
+    "name": "dial-stretch-refused",
+    "code": "E_ASPECT_POLICY_FORBIDDEN",
+    "archive_only": false,
+    "profile": "desktop",
+    "external": true
   }
 ]

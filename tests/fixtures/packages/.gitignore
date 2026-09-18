@@ -44,3 +44,7 @@ header-before-budget/
 unix-device-entry/
 all-primitives-stage0/
 shape-ellipse-refused/
+dials-stage0/
+dials-stage0-stretched/
+dials-stage0-preserved/
+dial-stretch-refused/

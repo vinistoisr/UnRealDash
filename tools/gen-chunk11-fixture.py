@@ -81,7 +81,7 @@ INERT = missing(('hidden', 'state_stale'), ('hidden', 'state_unavailable'),
 
 
 def component(kind, rect, properties, parent=None, anchor='top_left', clipping=True,
-              aspect='preserve', scaling='uniform', missing_data=None):
+              aspect='preserve', scaling='uniform', missing_data=None, z_order=None):
     value = {
         'type': kind,
         'rect': {'x': rect[0], 'y': rect[1], 'width': rect[2], 'height': rect[3]},
@@ -94,6 +94,10 @@ def component(kind, rect, properties, parent=None, anchor='top_left', clipping=T
     }
     if parent is not None:
         value['parent'] = parent
+    if z_order is not None:
+        # Stacking among overlapping siblings. Optional, because most components do not overlap;
+        # omitted, they tie and stack by component id, which is deterministic but arbitrary.
+        value['z_order'] = z_order
     return value
 
 
