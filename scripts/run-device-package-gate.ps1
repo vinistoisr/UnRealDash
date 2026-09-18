@@ -120,8 +120,10 @@ foreach ($c in $cases) {
 $parityFail = 0
 foreach ($g in $results | Group-Object { ($_.Label -split ' \[')[0] }) {
     if ($g.Count -lt 2) { continue }
-    $a = $g.Group | Where-Object { $_.Label -like '*[archive]*' }
-    $d = $g.Group | Where-Object { $_.Label -like '*[directory]*' }
+    # Select-Object -First 1 because Where-Object yields an array, and comparing arrays prints
+    # System.Object[] instead of the verdict and never matches.
+    $a = @($g.Group | Where-Object { $_.Label -like '*`[archive`]*' }) | Select-Object -First 1
+    $d = @($g.Group | Where-Object { $_.Label -like '*`[directory`]*' }) | Select-Object -First 1
     if ($a -and $d -and (($a.Accepted -ne $d.Accepted) -or ($a.Code -ne $d.Code) -or ($a.Pointer -ne $d.Pointer))) {
         $parityFail++
         Write-Output ("PARITY  {0}: archive accept={1} code={2} pointer={3} | directory accept={4} code={5} pointer={6}" -f $g.Name, $a.Accepted, $a.Code, $a.Pointer, $d.Accepted, $d.Code, $d.Pointer)

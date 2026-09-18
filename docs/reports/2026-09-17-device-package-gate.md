@@ -87,26 +87,48 @@ only the delivery of the schema files into the package. The gate results recorde
 report were produced with the schemas pushed manually, and that caveat travels with them: they
 are evidence about the loader, not about packaging.
 
-## Options for the fix, none of them chosen yet
+## Answered: what deploy actually does
 
-0. First, cheaply, confirm whether `RunUAT ... -deploy` pushes them, since the manifest and the
-   automation source both suggest it should. That is one device run and it decides whether any of
-   the options below are needed at all. Even if it works, options 1 to 3 remain worth considering,
-   because a plain APK install must also work.
-1. Add the schemas to the APK through the UPL or `ExtraFilesToPackage` so they land in `assets/`
-   and are extracted into the `UnrealGame` tree at first run, next to where the resolver already
-   looks.
-2. Cook them as UFS and have the player extract them to a real path at startup before the
-   validator runs. This keeps one delivery mechanism but adds a startup copy.
-3. Compile them in. All five total about 51 KB. This removes the file dependency on every
-   platform at once and deletes a whole class of path-resolution bug, but it changes
-   `Validator`'s constructor, which currently takes a directory, so it is an API change and not a
-   packaging tweak. It also moves the schemas away from being data, which docs/ARCHITECTURE.md
-   prefers, so it needs a deliberate decision rather than a quiet one.
+`RunUAT ... -deploy` was run against the device. It **does** push the non-UFS files, all five
+schemas included, and it pushes them to:
 
-Option 3 is the most robust and the most invasive. The choice belongs with the owner.
+```
+/sdcard/UnrealGame/UnRealDash/UnRealDash/Schema/
+```
+
+The player reads from the app-specific external directory instead:
+
+```
+/storage/emulated/0/Android/data/com.unrealdash.player/files/UnrealGame/UnRealDash/...
+```
+
+because `bUseExternalFilesDir=True`, which the 4.0 smoke spike set deliberately: that tree needs no
+runtime permission and `adb push` and `adb pull` reach it without root.
+
+So nothing is broken in staging or in deploy. The two simply target different directories, and this
+project's configuration puts the app on the far side of that gap. Neither of the earlier diagnoses
+in this report was right: the mechanism is not wrong for Android, and the files are not undelivered
+because of the APK. They are delivered to a path the app does not read.
+
+`scripts/deploy-device-content.ps1` closes it, driven by `Manifest_NonUFSFiles_Android.txt` so it
+stays correct as the non-UFS set changes rather than hardcoding "the schemas". With it the app
+accepts `well-formed.udash`.
+
+None of the three invasive options is needed. Compiling the schemas in, which would have changed
+`Validator`'s constructor, is off the table.
+
+**Do not run `RunUAT -deploy` against this project.** It reinstalls the APK, which wipes the
+app-specific tree including pushed fixtures, and it leaves a staged copy at `/sdcard/UnrealGame`
+that changes how the engine resolves the relative `-project=` path, after which every launch fails
+with "Failed to open descriptor file". Both were hit during this session. Install the APK and run
+`deploy-device-content.ps1`.
 
 ## Status
 
-PLAN 4.4 criterion 8 is **not met**. The loader half is proven on device; the packaging half is
-not, and the chunk stays "built, not complete" until the schemas reach the device without help.
+PLAN 4.4 criterion 8 is **not met**, for a smaller reason than before.
+
+The delivery question is answered and solved by `deploy-device-content.ps1`. What remains is
+mechanical: the APK on the device was built at 16:47 and batch mode was added to the source at
+16:56, so the device build does not understand `-udash-batch`. The batch gate cannot run until
+Android is repackaged. That is one package and two launches, and it was a sequencing mistake on my
+part, not a defect in anything.
