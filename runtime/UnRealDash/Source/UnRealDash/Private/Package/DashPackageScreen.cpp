@@ -1,6 +1,8 @@
 #include "DashPackageScreen.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/ScaleBox.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
@@ -9,16 +11,21 @@
 #include "UnRealDashLog.h"
 #include "HAL/FileManager.h"
 #include "HAL/PlatformMisc.h"
+#include "Misc/Paths.h"
+#include "UnrealClient.h"
 
-void UDashPackageScreen::Open(const FString& Path, UnRealDashCore::EDashProfile InProfile)
+void UDashPackageScreen::Open(const FString& Path, UnRealDashCore::EDashProfile InProfile,
+    UnRealDashCore::EDashSignalState InState)
 {
     Profile = InProfile;
+    State = InState;
     if (Path.IsEmpty())
     {
         Error = { TEXT("E_SCHEMA"), 7, TEXT(""), TEXT("No package supplied. Launch with -udash=<path>."), Path };
         Accepted = false;
     }
     else Accepted = UnRealDashCore::LoadPackage(Path, Profile, Package, Error);
+    if (Accepted) Accepted = Theme.Load(Package, Error);
     if (!Accepted) UE_LOG(LogUnRealDash, Error, TEXT("%s"), *Error.DisplayText());
 }
 TSharedRef<SWidget> UDashPackageScreen::RebuildWidget()
@@ -28,26 +35,63 @@ TSharedRef<SWidget> UDashPackageScreen::RebuildWidget()
     if (Accepted)
     {
         UnRealDashCore::FComponentRegistry Registry;
-        UnRealDashCore::RegisterPlaceholderBuilders(Registry, *WidgetTree);
-        Accepted = Builder.Build(Package, Profile, Registry, Content, Error);
+        UnRealDashCore::RegisterStage0Builders(Registry, *WidgetTree);
+        Accepted = Builder.Build(Package, Profile, Registry, Theme, State, Content, Error);
         if (!Accepted) UE_LOG(LogUnRealDash, Error, TEXT("%s"), *Error.DisplayText());
     }
-    if (!Accepted)
-    {
-        auto* Text = WidgetTree->ConstructWidget<UTextBlock>();
-        Text->SetText(FText::FromString(Error.DisplayText()));
-        Text->SetColorAndOpacity(FSlateColor(FLinearColor::White));
-        auto Font = Text->GetFont();
-        Font.Size = 26;
-        Text->SetFont(Font);
-        Text->SetWrapTextAt(1100.f);
-        Text->SetAutoWrapText(true);
-        Content = Text;
-    }
+    WidgetTree->RootWidget = Accepted ? BuildDocumentRoot(Content) : BuildErrorRoot();
+    return Super::RebuildWidget();
+}
+// Document units map one to one onto pixels whenever the capture resolution matches the document's
+// reference viewport. That mapping is what the PLAN 4.5 screenshot gate's arithmetic rests on: a
+// component declared 320 by 180 has to cover 57,600 pixels of a 1280 by 720 frame, or the mutation
+// check can move fewer pixels than the pass threshold and pass the gate it exists to break.
+//
+// So nothing here adds padding, insets or a second scale. The one scale is the reference viewport
+// to the real viewport, and the root component's `scaling` chooses how it behaves when the two
+// differ. At equal sizes every option gives exactly 1.0.
+UWidget* UDashPackageScreen::BuildDocumentRoot(UWidget* Content)
+{
+    const FIntPoint Viewport = Package.ReferenceViewport();
+    FString Scaling;
+    for (const auto& Node : Package.Components())
+        if (Node.ParentId.IsEmpty()) { Node.Node.Member(TEXT("scaling")).String(Scaling); break; }
+
+    auto* Size = WidgetTree->ConstructWidget<USizeBox>();
+    Size->SetWidthOverride(static_cast<float>(Viewport.X));
+    Size->SetHeightOverride(static_cast<float>(Viewport.Y));
+    Size->SetContent(Content);
+
+    auto* Scale = WidgetTree->ConstructWidget<UScaleBox>();
+    Scale->SetStretch(Scaling == TEXT("stretch") ? EStretch::Fill
+        : Scaling == TEXT("none") ? EStretch::None : EStretch::ScaleToFit);
+    Scale->SetStretchDirection(EStretchDirection::Both);
+    Scale->SetContent(Size);
+
+    // Opaque black behind the document, so any letterboxed area is a constant colour rather than
+    // whatever the renderer last left there. A capture gate cannot tolerate an undefined margin.
+    auto* Background = WidgetTree->ConstructWidget<UBorder>();
+    Background->SetBrushColor(FLinearColor::Black);
+    Background->SetPadding(FMargin(0.f));
+    Background->SetContent(Scale);
+    return Background;
+}
+UWidget* UDashPackageScreen::BuildErrorRoot()
+{
+    // The error path keeps its readable padded layout. There is no document geometry to honour
+    // here, and a rejection screen is read by a person rather than by a comparator.
+    auto* Text = WidgetTree->ConstructWidget<UTextBlock>();
+    Text->SetText(FText::FromString(Error.DisplayText()));
+    Text->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+    auto Font = Text->GetFont();
+    Font.Size = 26;
+    Text->SetFont(Font);
+    Text->SetWrapTextAt(1100.f);
+    Text->SetAutoWrapText(true);
     auto* Background = WidgetTree->ConstructWidget<UBorder>();
     Background->SetBrushColor(FLinearColor(0.02f, 0.025f, 0.03f, 1.f));
     Background->SetPadding(FMargin(24.f));
-    Background->SetContent(Content);
+    Background->SetContent(Text);
     auto* Width = WidgetTree->ConstructWidget<USizeBox>();
     Width->SetWidthOverride(1160.f);
     Width->SetContent(Background);
@@ -55,8 +99,7 @@ TSharedRef<SWidget> UDashPackageScreen::RebuildWidget()
     Scale->SetStretch(EStretch::ScaleToFit);
     Scale->SetStretchDirection(EStretchDirection::DownOnly);
     Scale->SetContent(Width);
-    WidgetTree->RootWidget = Scale;
-    return Super::RebuildWidget();
+    return Scale;
 }
 void ADashPackageHUD::BeginPlay()
 {
@@ -73,23 +116,56 @@ void ADashPackageHUD::BeginPlay()
         RunBatch(BatchDirectory);
         return;
     }
-    Screen->Open(Path, UnRealDashCore::DefaultDashProfile());
+    // Gate-only, like -udash-batch= and the smoke commandlet's -stress switch, and deliberately not
+    // part of the runtime command-line surface PLAN 4.7 owns. Criterion 4 of PLAN 4.5 needs three
+    // captures of one frozen document under three missing-data states, and a frozen document has no
+    // way to reach age_unknown or stale on its own: it binds constants, and the capture conditions
+    // forbid a running scenario. Values stay frozen; only the presented state changes.
+    UnRealDashCore::EDashSignalState State = UnRealDashCore::EDashSignalState::Valid;
+    FString StateName;
+    if (FParse::Value(FCommandLine::Get(), TEXT("udash-state="), StateName) &&
+        !UnRealDashCore::ParseSignalState(StateName, State))
+    {
+        // A mistyped state must not quietly capture the valid frame and report green.
+        UE_LOG(LogUnRealDash, Error, TEXT("Unknown -udash-state=%s"), *StateName);
+        FPlatformMisc::RequestExit(false);
+        return;
+    }
+    Screen->Open(Path, UnRealDashCore::DefaultDashProfile(), State);
     Screen->AddToViewport();
     // One machine-readable verdict per run. The device half of the PLAN 4.4 gate is driven by
     // launching once per fixture and reading logcat, and an accepted case otherwise produces no
     // output at all, which would make "it worked" indistinguishable from "it died early".
-    UE_LOG(LogUnRealDash, Display, TEXT("DashVerdict accepted=%s code=%s pointer=%s path=%s"),
+    UE_LOG(LogUnRealDash, Display, TEXT("DashVerdict accepted=%s code=%s pointer=%s path=%s state=%s"),
         Screen->WasAccepted() ? TEXT("true") : TEXT("false"),
-        *Screen->LastError().CodeName, *Screen->LastError().Pointer, *Path);
+        *Screen->LastError().CodeName, *Screen->LastError().Pointer, *Path,
+        UnRealDashCore::SignalStateName(State));
+    if (FParse::Value(FCommandLine::Get(), TEXT("udash-shot="), ShotPath)) ScheduleShot();
+}
+// Gate-only capture. bShowUI is true and must stay true: everything this project draws is UI, and
+// a capture taken with false writes a black image, so a gate comparing two of them would pass for
+// every fixture forever. That was found on the device on 2026-09-17 and is recorded in
+// docs/reports/2026-09-17-device-package-gate.md.
+void ADashPackageHUD::ScheduleShot()
+{
+    ShotFramesRemaining = 8;
+    GetWorldTimerManager().SetTimer(ShotTimer, this, &ADashPackageHUD::TickShot, 0.05f, true);
+}
+void ADashPackageHUD::TickShot()
+{
+    if (--ShotFramesRemaining > 0) return;
+    GetWorldTimerManager().ClearTimer(ShotTimer);
+    FScreenshotRequest::RequestScreenshot(ShotPath, true, false);
+    UE_LOG(LogUnRealDash, Display, TEXT("DashShot path=%s"), *ShotPath);
+    // One more beat so the request is serviced before the process leaves.
+    GetWorldTimerManager().SetTimer(ShotTimer, FTimerDelegate::CreateLambda([]()
+        { FPlatformMisc::RequestExit(false); }), 1.0f, false);
 }
 // Gate-only batch mode. Launching the packaged player once per fixture costs about 85 seconds of
 // cold start on the device, so the 69 runs of the PLAN 4.4 device gate take an hour and a half and
 // will not fit in any window the owner is likely to have the phone plugged in. This loads every
 // fixture in one run and emits the same DashVerdict line per case, so the runner parses identical
 // output either way.
-//
-// Like the smoke commandlet's -stress switch, this is a gate switch and is deliberately not part
-// of the runtime command-line surface that PLAN 4.7 owns.
 void ADashPackageHUD::RunBatch(const FString& Directory)
 {
     // The profile is a launch argument, not something read per fixture, because cases.json is test
