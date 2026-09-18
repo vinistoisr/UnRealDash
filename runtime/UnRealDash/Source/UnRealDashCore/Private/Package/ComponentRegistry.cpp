@@ -1,38 +1,62 @@
 #include "UnRealDashCore/ComponentRegistry.h"
+#include "Primitives/Layout.h"
 #include "Blueprint/WidgetTree.h"
-#include "Components/Border.h"
 #include "Components/PanelWidget.h"
-#include "Components/TextBlock.h"
-#include "Components/VerticalBox.h"
 
 namespace UnRealDashCore
 {
-void FComponentRegistry::Register(const FString& Type, FComponentBuilder Builder)
+void FComponentRegistry::Register(const FString& Type, FComponentBuilder Builder, FComponentAdopter Adopter)
 {
-    Builders.Add(Type, MoveTemp(Builder));
+    Builders.Add(Type, FEntry{ MoveTemp(Builder), Adopter ? MoveTemp(Adopter) : FComponentAdopter(&AdoptIntoPanel) });
 }
 UWidget* FComponentRegistry::Build(const FComponentContext& Context, FDashLoadError& OutError) const
 {
-    const auto* Builder = Builders.Find(Context.Component.Type);
-    if (!Builder)
+    const FEntry* Entry = Builders.Find(Context.Component.Type);
+    if (!Entry)
     {
         OutError = { TEXT("E_SCHEMA"), 7, Context.Component.Pointer,
             FString::Printf(TEXT("Unknown component type: %s"), *Context.Component.Type), Context.Package.Path() };
         return nullptr;
     }
-    UWidget* Widget = (*Builder)(Context, OutError);
+    UWidget* Widget = Entry->Builder(Context, OutError);
     if (!Widget && OutError.CodeName.IsEmpty())
         OutError = { TEXT("E_SCHEMA"), 7, Context.Component.Pointer,
             FString::Printf(TEXT("Builder failed for type: %s"), *Context.Component.Type), Context.Package.Path() };
     return Widget;
 }
+bool FComponentRegistry::Adopt(const FAdoptContext& Context, FDashLoadError& OutError) const
+{
+    const FEntry* Entry = Builders.Find(Context.ParentComponent.Type);
+    if (!Entry)
+    {
+        OutError = { TEXT("E_SCHEMA"), 7, Context.ParentComponent.Pointer,
+            FString::Printf(TEXT("Unknown component type: %s"), *Context.ParentComponent.Type), Context.Package.Path() };
+        return false;
+    }
+    return Entry->Adopter(Context, OutError);
+}
+bool AdoptIntoPanel(const FAdoptContext& Context, FDashLoadError& OutError)
+{
+    UPanelWidget* Panel = Cast<UPanelWidget>(Context.Parent);
+    UPanelSlot* Slot = Panel ? Panel->AddChild(Context.Child) : nullptr;
+    if (!Slot)
+    {
+        OutError = { TEXT("E_SCHEMA"), 7, Context.ChildComponent.Pointer,
+            TEXT("Parent cannot contain this component"), Context.Package.Path() };
+        return false;
+    }
+    return ApplyLayout(Context.ChildComponent, Slot, Context.Package, OutError);
+}
 bool FWidgetTreeBuilder::Build(const FDashPackage& Package, EDashProfile Profile, const FComponentRegistry& Registry,
-    UWidget*& OutRoot, FDashLoadError& OutError)
+    const FDashTheme& Theme, EDashSignalState State, UWidget*& OutRoot, FDashLoadError& OutError)
 {
     Widgets.Reset();
     OutRoot = nullptr;
     OutError = {};
     const auto Nodes = Package.Components();
+    // Parent lookup by id, so an adopter can name the parent component rather than only its widget.
+    TMap<FString, const FDashComponent*> ById;
+    for (const auto& Node : Nodes) ById.Add(Node.Id, &Node);
     UWidget* Root = nullptr;
     while (Widgets.Num() < Nodes.Num())
     {
@@ -47,18 +71,21 @@ bool FWidgetTreeBuilder::Build(const FDashPackage& Package, EDashProfile Profile
                 if (!Found) continue;
                 Parent = *Found;
             }
-            UWidget* Built = Registry.Build({Node, Package, Profile, Parent}, OutError);
+            UWidget* Built = Registry.Build({Node, Package, Profile, Parent, Theme, State}, OutError);
             if (!Built) { Widgets.Reset(); return false; }
             Built->SetToolTipText(FText::FromString(Node.Id));
             if (Parent)
             {
-                UPanelWidget* Panel = Cast<UPanelWidget>(Parent);
-                if (!Panel || !Panel->AddChild(Built))
+                const FDashComponent* const* ParentNode = ById.Find(Node.ParentId);
+                if (!ParentNode)
                 {
-                    OutError = { TEXT("E_SCHEMA"), 7, Node.Pointer, TEXT("Parent cannot contain this component"), Package.Path() };
+                    OutError = { TEXT("E_UNRESOLVED_PARENT"), 12, Node.Pointer,
+                        TEXT("Parent component is not in the document"), Package.Path() };
                     Widgets.Reset();
                     return false;
                 }
+                if (!Registry.Adopt({Parent, **ParentNode, Built, Node, Package}, OutError))
+                { Widgets.Reset(); return false; }
             }
             else
             {
@@ -87,29 +114,5 @@ bool FWidgetTreeBuilder::Build(const FDashPackage& Package, EDashProfile Profile
     }
     OutRoot = Root;
     return true;
-}
-void RegisterPlaceholderBuilders(FComponentRegistry& Registry, UWidgetTree& Tree)
-{
-    // One placeholder implementation, explicitly registered for the schema's type vocabulary.
-    const FComponentBuilder Placeholder = [&Tree](const FComponentContext& Context, FDashLoadError&) -> UWidget*
-    {
-        auto* Box = Tree.ConstructWidget<UVerticalBox>();
-        auto* Border = Tree.ConstructWidget<UBorder>();
-        auto* Label = Tree.ConstructWidget<UTextBlock>();
-        Label->SetText(FText::FromString(Context.Component.Type + TEXT(" : ") + Context.Component.Id));
-        Label->SetColorAndOpacity(FSlateColor(FLinearColor::White));
-        auto Font = Label->GetFont();
-        Font.Size = 24;
-        Label->SetFont(Font);
-        Label->SetAutoWrapText(true);
-        Border->SetBrushColor(FLinearColor(0.08f, 0.12f, 0.17f, 1.f));
-        Border->SetPadding(FMargin(12.f));
-        Border->SetContent(Label);
-        Box->AddChild(Border);
-        return Box;
-    };
-    for (const TCHAR* Type : { TEXT("readout"), TEXT("image"), TEXT("shape"), TEXT("analog_dial"),
-        TEXT("bar_gauge"), TEXT("indicator"), TEXT("history_graph"), TEXT("container"), TEXT("page_switch") })
-        Registry.Register(Type, Placeholder);
 }
 }

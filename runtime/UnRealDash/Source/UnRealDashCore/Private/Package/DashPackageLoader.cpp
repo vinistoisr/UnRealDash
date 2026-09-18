@@ -127,19 +127,46 @@ FDashValue FDashPackage::Theme() const
 {
     return Impl ? FPackageAccess::Value(Impl->Payload, Impl->Payload->Doc().Theme()) : FDashValue();
 }
+FIntPoint FDashPackage::ReferenceViewport() const
+{
+    // The schema requires reference_viewport with integer width and height of at least 1, so a
+    // loaded package always has one. The zero return is unreachable through LoadPackage and exists
+    // so a default-constructed FDashPackage does not read through a null payload.
+    if (!Impl) return FIntPoint::ZeroValue;
+    const auto Root = Impl->Payload->Doc().Root();
+    double Width = 0, Height = 0;
+    Root.Member("reference_viewport").Member("width").Number(Width);
+    Root.Member("reference_viewport").Member("height").Number(Height);
+    return FIntPoint(static_cast<int32>(Width), static_cast<int32>(Height));
+}
+FDashValue FDashPackage::Bindings() const
+{
+    return Impl ? FPackageAccess::Value(Impl->Payload, Impl->Payload->Doc().Root().Member("bindings")) : FDashValue();
+}
+FDashValue FDashPackage::Pages() const
+{
+    return Impl ? FPackageAccess::Value(Impl->Payload, Impl->Payload->Doc().Root().Member("pages")) : FDashValue();
+}
 TArray<FString> FDashPackage::AssetNames() const
 {
     TArray<FString> Result;
     if (Impl) for (auto Name : Impl->Payload->AssetNames()) Result.Add(EngineText(Name));
     return Result;
 }
-bool FDashPackage::Asset(const FString& Name, TConstArrayView<uint8>& Out, FDashLoadError& OutError) const
+bool FDashPackage::Asset(const FString& Reference, TConstArrayView<uint8>& Out, FDashLoadError& OutError) const
 {
     Out = {};
-    if (!Impl) { OutError = { TEXT("E_PKG_ASSET_NOT_IN_PACKAGE"), 44, TEXT(""), Name, TEXT("") }; return false; }
-    const FTCHARToUTF8 Utf8(*Name);
+    if (!Impl) { OutError = { TEXT("E_PKG_ASSET_NOT_IN_PACKAGE"), 44, TEXT(""), Reference, TEXT("") }; return false; }
+    const FTCHARToUTF8 Utf8(*Reference);
+    // The document's spelling is resolved to the name the entries were admitted under before it is
+    // looked up. A document may write "assets//shared.png" or "assets/./shared.png" for the entry
+    // stored as "assets/shared.png", and the normalization rules are the package path gate, so
+    // they stay in the library rather than being restated here.
+    std::string Normalized;
+    const auto Resolved = Impl->Payload->ResolveAssetName({Utf8.Get(), static_cast<size_t>(Utf8.Length())}, Normalized);
+    if (!Resolved.Ok()) { TranslateError(Resolved, Impl->InputPath, OutError); return false; }
     std::span<const std::uint8_t> Bytes;
-    const auto Error = Impl->Payload->Asset({Utf8.Get(), static_cast<size_t>(Utf8.Length())}, Bytes);
+    const auto Error = Impl->Payload->Asset(Normalized, Bytes);
     if (!Error.Ok()) { TranslateError(Error, Impl->InputPath, OutError); return false; }
     Out = TConstArrayView<uint8>(Bytes.data(), static_cast<int32>(Bytes.size()));
     OutError = {};

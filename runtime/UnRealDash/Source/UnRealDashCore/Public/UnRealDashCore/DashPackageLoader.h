@@ -56,8 +56,18 @@ public:
     ~FDashPackage();
     TConstArrayView<FDashComponent> Components() const;
     FDashValue Theme() const;
+    // Document units. Component rects are expressed in these, so a document whose reference
+    // viewport matches the capture resolution maps one document unit to one pixel. The
+    // screenshot gate's pixel arithmetic depends on that mapping.
+    FIntPoint ReferenceViewport() const;
+    // Keyed by component id. Each entry carries property, signal and an optional format.
+    FDashValue Bindings() const;
+    // Keyed by page name, each an array of component ids.
+    FDashValue Pages() const;
     TArray<FString> AssetNames() const;
-    bool Asset(const FString& NormalizedName, TConstArrayView<uint8>& Out, FDashLoadError& OutError) const;
+    // Takes an asset reference exactly as the document writes it and normalizes it through the
+    // package path rules before looking it up.
+    bool Asset(const FString& Reference, TConstArrayView<uint8>& Out, FDashLoadError& OutError) const;
     FString Path() const;
 private:
     struct FImpl;
