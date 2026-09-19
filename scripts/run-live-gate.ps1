@@ -38,7 +38,7 @@ if (-not (Test-Path $Package)) { Write-Host "No fixture at $Package. Run tools/g
 function Invoke-Capture([string]$Output, [string]$At, [string]$Seconds) {
     if (Test-Path $Output) { Remove-Item $Output -Force }
     $arguments = @('-windowed', '-ResX=1280', '-ResY=720', '-nosplash', '-unattended',
-        "-udash=$Package", "-udash-scenario=$Seconds", "-udash-shot=$Output", "-udash-shot-at=$At",
+        "-udash=$Package", "-udash-sweep=$Seconds", "-screenshot=$Output", "-udash-shot-at=$At",
         "-ExecCmds=$exec")
     $process = Start-Process -FilePath $Player -ArgumentList $arguments -PassThru -Wait
     if ($process.ExitCode -ne 0) { Fail "capture at $At s exited $($process.ExitCode)"; return $false }

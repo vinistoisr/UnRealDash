@@ -64,7 +64,31 @@ ignores the extra verdicts rather than counting them as coverage. The game modul
 expectations.
 
 Both switches are gate switches, like the smoke commandlet's `-stress`, and are deliberately not
-part of the runtime command-line surface PLAN 4.7 owns.
+part of the runtime command-line surface PLAN 4.7 owns. They are still declared to the resolver,
+alongside `-udash-state=`, `-udash-fraction=`, `-udash-shot-at=` and `-udash-sweep=`, so a typo in
+one is rejected rather than ignored.
+
+## The documented command-line surface
+
+PLAN 4.7's surface, resolved by `DashPlayerConfig.cpp`. Every flag is also a `player.json` key of
+the same name without the leading dash, read from the player's own `Saved` directory, and the
+command line wins field by field. A Shipping Android build receives no command line at all, so the
+file alone has to be sufficient.
+
+```
+-udash=<path>              -connector=<sim|replay|tcp>   -scenario=<name>
+-replay-file=<file>        -replay-loop                  -connector-host=  -connector-port=
+-screenshot=<path>         -quit-after=<seconds>         -profile=<mobile|desktop>
+-freeze-scenario-time      -ack-warnings-at=<t>          -reveal-delay-ms=<n>   -rhi=<vulkan|gles>
+```
+
+The last three are accepted and validated but consume nothing yet; the resolver logs which task
+will consume each. `-replay-file=` is not `-replay=` because the engine owns that one and hangs the
+player with it; see `docs/build/chunk-16-command-line.md` revision 3.
+
+```powershell
+pwsh -NoProfile -File scripts/capture-metrics.ps1 -Smoke
+```
 
 Note that the schema files do not currently reach the device; see
 `docs/reports/2026-09-17-device-package-gate.md`. Until that is fixed the five files in

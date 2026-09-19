@@ -70,7 +70,7 @@ try {
 
     $arguments = @('-windowed', '-ResX=1280', '-ResY=720', '-nosplash', '-unattended',
         "-udash=$Package", '-connector=tcp', '-connector-host=127.0.0.1', "-connector-port=$Port",
-        "-udash-quit-after=$runFor")
+        "-quit-after=$runFor")
     # Not $player: PowerShell variable names are case insensitive, so that is the same variable as the
     # [string]$Player parameter, and assigning a Process to it coerces it straight back to a string.
     # The symptom was WaitForExit failing on a String twenty seconds later.

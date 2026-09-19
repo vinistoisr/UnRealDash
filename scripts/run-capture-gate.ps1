@@ -66,7 +66,7 @@ function Invoke-Capture([string]$PackagePath, [string]$State, [string]$Output) {
     if (Test-Path $Output) { Remove-Item $Output -Force }
     $arguments = @(
         '-windowed', '-ResX=1280', '-ResY=720', '-nosplash', '-unattended',
-        "-udash=$PackagePath", "-udash-state=$State", "-udash-shot=$Output",
+        "-udash=$PackagePath", "-udash-state=$State", "-screenshot=$Output",
         "-ExecCmds=$exec"
     )
     $process = Start-Process -FilePath $Player -ArgumentList $arguments -PassThru -Wait

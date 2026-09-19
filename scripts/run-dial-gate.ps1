@@ -43,7 +43,7 @@ if (-not (Test-Path $Player)) { Write-Host "No packaged player at $Player"; exit
 function Invoke-Capture([string]$Package, [int]$Height, [string]$Fraction, [string]$Output) {
     if (Test-Path $Output) { Remove-Item $Output -Force }
     $arguments = @('-windowed', '-ResX=1280', "-ResY=$Height", '-nosplash', '-unattended',
-        "-udash=$Package", "-udash-fraction=$Fraction", "-udash-shot=$Output", "-ExecCmds=$exec")
+        "-udash=$Package", "-udash-fraction=$Fraction", "-screenshot=$Output", "-ExecCmds=$exec")
     $process = Start-Process -FilePath $Player -ArgumentList $arguments -PassThru -Wait
     if ($process.ExitCode -ne 0) { Fail "capture at ${Height}p exited $($process.ExitCode)"; return $false }
     if (-not (Test-Path $Output)) { Fail "capture at ${Height}p produced no file"; return $false }
