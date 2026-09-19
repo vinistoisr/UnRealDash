@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "package_id": "unrealdash.control-dashboard",
+  "revision": 1,
+  "runtime_compatibility": "stage0",
+  "assets": {
+    "assets/dial-face.png": {
+      "width": 240,
+      "height": 240,
+      "format": "rgba8",
+      "bytes": 1490
+    }
+  }
+}

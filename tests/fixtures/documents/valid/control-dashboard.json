@@ -1,0 +1,2183 @@
+{
+  "dashboard": {
+    "reference_viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "components": {
+      "root": {
+        "type": "container",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {},
+        "z_order": 0
+      },
+      "background": {
+        "type": "shape",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 720
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "kind": "rectangle",
+          "colour": {
+            "token": "background"
+          }
+        },
+        "parent": "root",
+        "z_order": -10
+      },
+      "title": {
+        "type": "readout",
+        "rect": {
+          "x": 24,
+          "y": 12,
+          "width": 360,
+          "height": 80
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "CONTROL / TOURING",
+          "colour": {
+            "token": "text"
+          }
+        },
+        "parent": "root",
+        "z_order": 3
+      },
+      "ignition_on_lamp": {
+        "type": "indicator",
+        "rect": {
+          "x": 632,
+          "y": 20,
+          "width": 20,
+          "height": 48
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "dash",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "icon",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "icon",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "colour": {
+            "token": "healthy"
+          }
+        },
+        "parent": "root",
+        "z_order": 2
+      },
+      "ignition_on_label": {
+        "type": "readout",
+        "rect": {
+          "x": 656,
+          "y": 16,
+          "width": 128,
+          "height": 72
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "IGNITION",
+          "colour": {
+            "token": "muted"
+          }
+        },
+        "parent": "root",
+        "z_order": 3
+      },
+      "abs_ready_lamp": {
+        "type": "indicator",
+        "rect": {
+          "x": 788,
+          "y": 20,
+          "width": 20,
+          "height": 48
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "dash",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "icon",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "icon",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "colour": {
+            "token": "healthy"
+          }
+        },
+        "parent": "root",
+        "z_order": 2
+      },
+      "abs_ready_label": {
+        "type": "readout",
+        "rect": {
+          "x": 812,
+          "y": 16,
+          "width": 128,
+          "height": 72
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "ABS",
+          "colour": {
+            "token": "muted"
+          }
+        },
+        "parent": "root",
+        "z_order": 3
+      },
+      "traction_ready_lamp": {
+        "type": "indicator",
+        "rect": {
+          "x": 944,
+          "y": 20,
+          "width": 20,
+          "height": 48
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "dash",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "icon",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "icon",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "colour": {
+            "token": "healthy"
+          }
+        },
+        "parent": "root",
+        "z_order": 2
+      },
+      "traction_ready_label": {
+        "type": "readout",
+        "rect": {
+          "x": 968,
+          "y": 16,
+          "width": 128,
+          "height": 72
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "TRACTION",
+          "colour": {
+            "token": "muted"
+          }
+        },
+        "parent": "root",
+        "z_order": 3
+      },
+      "cruise_enabled_lamp": {
+        "type": "indicator",
+        "rect": {
+          "x": 1100,
+          "y": 20,
+          "width": 20,
+          "height": 48
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "dash",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "icon",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "icon",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "colour": {
+            "token": "healthy"
+          }
+        },
+        "parent": "root",
+        "z_order": 2
+      },
+      "cruise_enabled_label": {
+        "type": "readout",
+        "rect": {
+          "x": 1124,
+          "y": 16,
+          "width": 128,
+          "height": 72
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "CRUISE",
+          "colour": {
+            "token": "muted"
+          }
+        },
+        "parent": "root",
+        "z_order": 3
+      },
+      "speed_panel": {
+        "type": "shape",
+        "rect": {
+          "x": 24,
+          "y": 92,
+          "width": 288,
+          "height": 436
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "kind": "rectangle",
+          "colour": {
+            "token": "panel"
+          }
+        },
+        "parent": "root",
+        "z_order": 0
+      },
+      "speed_title": {
+        "type": "readout",
+        "rect": {
+          "x": 28,
+          "y": 100,
+          "width": 280,
+          "height": 80
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "ROAD SPEED / km/h",
+          "colour": {
+            "token": "muted"
+          }
+        },
+        "parent": "root",
+        "z_order": 3
+      },
+      "speed_face": {
+        "type": "image",
+        "rect": {
+          "x": 48,
+          "y": 164,
+          "width": 240,
+          "height": 240
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "asset": "assets/dial-face.png"
+        },
+        "parent": "root",
+        "z_order": 1
+      },
+      "speed_dial": {
+        "type": "analog_dial",
+        "rect": {
+          "x": 48,
+          "y": 164,
+          "width": 240,
+          "height": 240
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "dash",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "icon",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "icon",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "minimum": 0,
+          "maximum": 240,
+          "colour": {
+            "token": "speed"
+          }
+        },
+        "parent": "root",
+        "z_order": 2
+      },
+      "speed_range": {
+        "type": "readout",
+        "rect": {
+          "x": 44,
+          "y": 426,
+          "width": 248,
+          "height": 80
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "0                 240",
+          "colour": {
+            "token": "muted"
+          }
+        },
+        "parent": "root",
+        "z_order": 3
+      },
+      "engine_panel": {
+        "type": "shape",
+        "rect": {
+          "x": 328,
+          "y": 92,
+          "width": 288,
+          "height": 436
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "kind": "rectangle",
+          "colour": {
+            "token": "panel"
+          }
+        },
+        "parent": "root",
+        "z_order": 0
+      },
+      "engine_title": {
+        "type": "readout",
+        "rect": {
+          "x": 332,
+          "y": 100,
+          "width": 280,
+          "height": 80
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "ENGINE / rpm",
+          "colour": {
+            "token": "muted"
+          }
+        },
+        "parent": "root",
+        "z_order": 3
+      },
+      "engine_face": {
+        "type": "image",
+        "rect": {
+          "x": 352,
+          "y": 164,
+          "width": 240,
+          "height": 240
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "asset": "assets/dial-face.png"
+        },
+        "parent": "root",
+        "z_order": 1
+      },
+      "engine_dial": {
+        "type": "analog_dial",
+        "rect": {
+          "x": 352,
+          "y": 164,
+          "width": 240,
+          "height": 240
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "dash",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "icon",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "icon",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "minimum": 0,
+          "maximum": 8000,
+          "colour": {
+            "token": "engine"
+          }
+        },
+        "parent": "root",
+        "z_order": 2
+      },
+      "engine_range": {
+        "type": "readout",
+        "rect": {
+          "x": 348,
+          "y": 426,
+          "width": 248,
+          "height": 80
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "0                 8000",
+          "colour": {
+            "token": "muted"
+          }
+        },
+        "parent": "root",
+        "z_order": 3
+      },
+      "systems_panel": {
+        "type": "shape",
+        "rect": {
+          "x": 632,
+          "y": 92,
+          "width": 624,
+          "height": 436
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "kind": "rectangle",
+          "colour": {
+            "token": "panel"
+          }
+        },
+        "parent": "root",
+        "z_order": 0
+      },
+      "coolant_temperature_label": {
+        "type": "readout",
+        "rect": {
+          "x": 656,
+          "y": 104,
+          "width": 576,
+          "height": 72
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "COOLANT / degC     40 - 120",
+          "colour": {
+            "token": "muted"
+          }
+        },
+        "parent": "root",
+        "z_order": 3
+      },
+      "coolant_temperature_track": {
+        "type": "shape",
+        "rect": {
+          "x": 656,
+          "y": 148,
+          "width": 576,
+          "height": 24
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "kind": "rectangle",
+          "colour": {
+            "token": "track"
+          }
+        },
+        "parent": "root",
+        "z_order": 1
+      },
+      "coolant_temperature_bar": {
+        "type": "bar_gauge",
+        "rect": {
+          "x": 656,
+          "y": 148,
+          "width": 576,
+          "height": 24
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "dash",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "icon",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "icon",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "minimum": 40,
+          "maximum": 120,
+          "circular": false,
+          "colour": {
+            "token": "speed"
+          }
+        },
+        "parent": "root",
+        "z_order": 2
+      },
+      "oil_pressure_label": {
+        "type": "readout",
+        "rect": {
+          "x": 656,
+          "y": 190,
+          "width": 576,
+          "height": 72
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "OIL PRESSURE / bar     0 - 8",
+          "colour": {
+            "token": "muted"
+          }
+        },
+        "parent": "root",
+        "z_order": 3
+      },
+      "oil_pressure_track": {
+        "type": "shape",
+        "rect": {
+          "x": 656,
+          "y": 234,
+          "width": 576,
+          "height": 24
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "kind": "rectangle",
+          "colour": {
+            "token": "track"
+          }
+        },
+        "parent": "root",
+        "z_order": 1
+      },
+      "oil_pressure_bar": {
+        "type": "bar_gauge",
+        "rect": {
+          "x": 656,
+          "y": 234,
+          "width": 576,
+          "height": 24
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "dash",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "icon",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "icon",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "minimum": 0,
+          "maximum": 8,
+          "circular": false,
+          "colour": {
+            "token": "engine"
+          }
+        },
+        "parent": "root",
+        "z_order": 2
+      },
+      "fuel_level_label": {
+        "type": "readout",
+        "rect": {
+          "x": 656,
+          "y": 276,
+          "width": 576,
+          "height": 72
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "FUEL / fraction     0 - 1",
+          "colour": {
+            "token": "muted"
+          }
+        },
+        "parent": "root",
+        "z_order": 3
+      },
+      "fuel_level_track": {
+        "type": "shape",
+        "rect": {
+          "x": 656,
+          "y": 320,
+          "width": 576,
+          "height": 24
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "kind": "rectangle",
+          "colour": {
+            "token": "track"
+          }
+        },
+        "parent": "root",
+        "z_order": 1
+      },
+      "fuel_level_bar": {
+        "type": "bar_gauge",
+        "rect": {
+          "x": 656,
+          "y": 320,
+          "width": 576,
+          "height": 24
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "dash",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "icon",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "icon",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "minimum": 0,
+          "maximum": 1,
+          "circular": false,
+          "colour": {
+            "token": "healthy"
+          }
+        },
+        "parent": "root",
+        "z_order": 2
+      },
+      "history_label": {
+        "type": "readout",
+        "rect": {
+          "x": 656,
+          "y": 360,
+          "width": 576,
+          "height": 72
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "ENGINE TREND / auto scale",
+          "colour": {
+            "token": "muted"
+          }
+        },
+        "parent": "root",
+        "z_order": 3
+      },
+      "engine_history": {
+        "type": "history_graph",
+        "rect": {
+          "x": 656,
+          "y": 404,
+          "width": 576,
+          "height": 100
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "dash",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "icon",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "icon",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "history_samples": 128,
+          "colour": {
+            "token": "engine"
+          }
+        },
+        "parent": "root",
+        "z_order": 2
+      },
+      "value_1_panel": {
+        "type": "shape",
+        "rect": {
+          "x": 24,
+          "y": 544,
+          "width": 192,
+          "height": 160
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "kind": "rectangle",
+          "colour": {
+            "token": "panel"
+          }
+        },
+        "parent": "root",
+        "z_order": 0
+      },
+      "value_1_label": {
+        "type": "readout",
+        "rect": {
+          "x": 28,
+          "y": 552,
+          "width": 184,
+          "height": 72
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "km/h",
+          "colour": {
+            "token": "muted"
+          }
+        },
+        "parent": "root",
+        "z_order": 3
+      },
+      "value_1": {
+        "type": "readout",
+        "rect": {
+          "x": 28,
+          "y": 604,
+          "width": 184,
+          "height": 100
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "dash",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "icon",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "icon",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "0",
+          "colour": {
+            "token": "text"
+          }
+        },
+        "parent": "root",
+        "z_order": 2
+      },
+      "value_2_panel": {
+        "type": "shape",
+        "rect": {
+          "x": 232,
+          "y": 544,
+          "width": 192,
+          "height": 160
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "kind": "rectangle",
+          "colour": {
+            "token": "panel"
+          }
+        },
+        "parent": "root",
+        "z_order": 0
+      },
+      "value_2_label": {
+        "type": "readout",
+        "rect": {
+          "x": 236,
+          "y": 552,
+          "width": 184,
+          "height": 72
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "rpm",
+          "colour": {
+            "token": "muted"
+          }
+        },
+        "parent": "root",
+        "z_order": 3
+      },
+      "value_2": {
+        "type": "readout",
+        "rect": {
+          "x": 236,
+          "y": 604,
+          "width": 184,
+          "height": 100
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "dash",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "icon",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "icon",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "0",
+          "colour": {
+            "token": "text"
+          }
+        },
+        "parent": "root",
+        "z_order": 2
+      },
+      "value_3_panel": {
+        "type": "shape",
+        "rect": {
+          "x": 440,
+          "y": 544,
+          "width": 192,
+          "height": 160
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "kind": "rectangle",
+          "colour": {
+            "token": "panel"
+          }
+        },
+        "parent": "root",
+        "z_order": 0
+      },
+      "value_3_label": {
+        "type": "readout",
+        "rect": {
+          "x": 444,
+          "y": 552,
+          "width": 184,
+          "height": 72
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "coolant / degC",
+          "colour": {
+            "token": "muted"
+          }
+        },
+        "parent": "root",
+        "z_order": 3
+      },
+      "value_3": {
+        "type": "readout",
+        "rect": {
+          "x": 444,
+          "y": 604,
+          "width": 184,
+          "height": 100
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "dash",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "icon",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "icon",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "0",
+          "colour": {
+            "token": "text"
+          }
+        },
+        "parent": "root",
+        "z_order": 2
+      },
+      "value_4_panel": {
+        "type": "shape",
+        "rect": {
+          "x": 648,
+          "y": 544,
+          "width": 192,
+          "height": 160
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "kind": "rectangle",
+          "colour": {
+            "token": "panel"
+          }
+        },
+        "parent": "root",
+        "z_order": 0
+      },
+      "value_4_label": {
+        "type": "readout",
+        "rect": {
+          "x": 652,
+          "y": 552,
+          "width": 184,
+          "height": 72
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "oil / bar",
+          "colour": {
+            "token": "muted"
+          }
+        },
+        "parent": "root",
+        "z_order": 3
+      },
+      "value_4": {
+        "type": "readout",
+        "rect": {
+          "x": 652,
+          "y": 604,
+          "width": 184,
+          "height": 100
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "dash",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "icon",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "icon",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "0",
+          "colour": {
+            "token": "text"
+          }
+        },
+        "parent": "root",
+        "z_order": 2
+      },
+      "value_5_panel": {
+        "type": "shape",
+        "rect": {
+          "x": 856,
+          "y": 544,
+          "width": 192,
+          "height": 160
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "kind": "rectangle",
+          "colour": {
+            "token": "panel"
+          }
+        },
+        "parent": "root",
+        "z_order": 0
+      },
+      "value_5_label": {
+        "type": "readout",
+        "rect": {
+          "x": 860,
+          "y": 552,
+          "width": 184,
+          "height": 72
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "fuel / fraction",
+          "colour": {
+            "token": "muted"
+          }
+        },
+        "parent": "root",
+        "z_order": 3
+      },
+      "value_5": {
+        "type": "readout",
+        "rect": {
+          "x": 860,
+          "y": 604,
+          "width": 184,
+          "height": 100
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "dash",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "icon",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "icon",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "0",
+          "colour": {
+            "token": "text"
+          }
+        },
+        "parent": "root",
+        "z_order": 2
+      },
+      "value_6_panel": {
+        "type": "shape",
+        "rect": {
+          "x": 1064,
+          "y": 544,
+          "width": 192,
+          "height": 160
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "kind": "rectangle",
+          "colour": {
+            "token": "panel"
+          }
+        },
+        "parent": "root",
+        "z_order": 0
+      },
+      "value_6_label": {
+        "type": "readout",
+        "rect": {
+          "x": 1068,
+          "y": 552,
+          "width": 184,
+          "height": 72
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "hidden",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "hidden",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "hidden",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "load / fraction",
+          "colour": {
+            "token": "muted"
+          }
+        },
+        "parent": "root",
+        "z_order": 3
+      },
+      "value_6": {
+        "type": "readout",
+        "rect": {
+          "x": 1068,
+          "y": 604,
+          "width": 184,
+          "height": 100
+        },
+        "anchor": "top_left",
+        "scaling": "uniform",
+        "clipping": true,
+        "aspect_policy": "preserve",
+        "missing_data": {
+          "stale": {
+            "presentation": "dash",
+            "token": "state_stale"
+          },
+          "unavailable": {
+            "presentation": "hidden",
+            "token": "state_unavailable"
+          },
+          "invalid": {
+            "presentation": "icon",
+            "token": "state_invalid"
+          },
+          "age_unknown": {
+            "presentation": "icon",
+            "token": "state_age_unknown"
+          }
+        },
+        "properties": {
+          "text": "0",
+          "colour": {
+            "token": "text"
+          }
+        },
+        "parent": "root",
+        "z_order": 2
+      }
+    },
+    "theme": {
+      "day": {
+        "background": "#101820",
+        "panel": "#192630",
+        "track": "#344650",
+        "text": "#eef3f4",
+        "muted": "#a3b5bf",
+        "speed": "#64c7ce",
+        "engine": "#efb66c",
+        "healthy": "#7dc59b",
+        "state_stale": "#d99948",
+        "state_unavailable": "#77818c",
+        "state_invalid": "#db6870",
+        "state_age_unknown": "#84a9dc"
+      },
+      "night": {
+        "background": "#090e13",
+        "panel": "#0f161c",
+        "track": "#1f2a30",
+        "text": "#8e9192",
+        "muted": "#616c72",
+        "speed": "#3c777b",
+        "engine": "#8f6d40",
+        "healthy": "#4b765d",
+        "state_stale": "#825b2b",
+        "state_unavailable": "#474d54",
+        "state_invalid": "#833e43",
+        "state_age_unknown": "#4f6584"
+      }
+    },
+    "bindings": {
+      "ignition_on_lamp": {
+        "property": "value",
+        "signal": "ignition_on"
+      },
+      "abs_ready_lamp": {
+        "property": "value",
+        "signal": "abs_ready"
+      },
+      "traction_ready_lamp": {
+        "property": "value",
+        "signal": "traction_ready"
+      },
+      "cruise_enabled_lamp": {
+        "property": "value",
+        "signal": "cruise_enabled"
+      },
+      "speed_dial": {
+        "property": "value",
+        "signal": "vehicle_speed"
+      },
+      "engine_dial": {
+        "property": "value",
+        "signal": "engine_speed"
+      },
+      "coolant_temperature_bar": {
+        "property": "value",
+        "signal": "coolant_temperature"
+      },
+      "oil_pressure_bar": {
+        "property": "value",
+        "signal": "oil_pressure"
+      },
+      "fuel_level_bar": {
+        "property": "value",
+        "signal": "fuel_level"
+      },
+      "engine_history": {
+        "property": "value",
+        "signal": "engine_speed"
+      },
+      "value_1": {
+        "property": "value",
+        "signal": "vehicle_speed",
+        "format": ".0f"
+      },
+      "value_2": {
+        "property": "value",
+        "signal": "engine_speed",
+        "format": ".0f"
+      },
+      "value_3": {
+        "property": "value",
+        "signal": "coolant_temperature",
+        "format": ".1f"
+      },
+      "value_4": {
+        "property": "value",
+        "signal": "oil_pressure",
+        "format": ".2f"
+      },
+      "value_5": {
+        "property": "value",
+        "signal": "fuel_level",
+        "format": ".2f"
+      },
+      "value_6": {
+        "property": "value",
+        "signal": "engine_load",
+        "format": ".2f"
+      }
+    },
+    "rules": {},
+    "pages": {}
+  },
+  "signals": {
+    "signals": [
+      {
+        "id": "vehicle_speed",
+        "type": "number",
+        "unit": "km/h",
+        "freshness_deadline_ms": 200,
+        "discrete": false
+      },
+      {
+        "id": "engine_speed",
+        "type": "number",
+        "unit": "rpm",
+        "freshness_deadline_ms": 200,
+        "discrete": false
+      },
+      {
+        "id": "coolant_temperature",
+        "type": "number",
+        "unit": "degC",
+        "freshness_deadline_ms": 1000,
+        "discrete": false
+      },
+      {
+        "id": "oil_pressure",
+        "type": "number",
+        "unit": "bar",
+        "freshness_deadline_ms": 250,
+        "discrete": false
+      },
+      {
+        "id": "fuel_level",
+        "type": "number",
+        "unit": "dimensionless",
+        "freshness_deadline_ms": 2000,
+        "discrete": false
+      },
+      {
+        "id": "engine_load",
+        "type": "number",
+        "unit": "dimensionless",
+        "freshness_deadline_ms": 250,
+        "discrete": false
+      },
+      {
+        "id": "ignition_on",
+        "type": "boolean",
+        "unit": "dimensionless",
+        "freshness_deadline_ms": 500,
+        "discrete": true
+      },
+      {
+        "id": "abs_ready",
+        "type": "boolean",
+        "unit": "dimensionless",
+        "freshness_deadline_ms": 500,
+        "discrete": true
+      },
+      {
+        "id": "traction_ready",
+        "type": "boolean",
+        "unit": "dimensionless",
+        "freshness_deadline_ms": 500,
+        "discrete": true
+      },
+      {
+        "id": "cruise_enabled",
+        "type": "boolean",
+        "unit": "dimensionless",
+        "freshness_deadline_ms": 500,
+        "discrete": true
+      }
+    ]
+  },
+  "manifest": {
+    "schema_version": 1,
+    "package_id": "unrealdash.control-dashboard",
+    "revision": 1,
+    "runtime_compatibility": "stage0",
+    "assets": {
+      "assets/dial-face.png": {
+        "width": 240,
+        "height": 240,
+        "format": "rgba8",
+        "bytes": 1490
+      }
+    }
+  }
+}

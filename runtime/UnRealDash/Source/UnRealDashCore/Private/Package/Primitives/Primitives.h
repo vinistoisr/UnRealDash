@@ -131,7 +131,11 @@ struct FMissingDataPresenter
     FString Presentation[StateCount];
     FLinearColor StateColour[StateCount];
 
-    void Apply(EDashSignalState State) const;
+    // Live is the reading to show when this state still shows one. Without it, Apply restores the
+    // text captured at build time, which for a BOUND readout meant every frame overwrote the value
+    // that had just been written, so the readout could never move. Found by PLAN 4.10's example
+    // document, the first with a bound readout whose motion is measured.
+    void Apply(EDashSignalState State, const FText* Live = nullptr) const;
 };
 
 // Builds the band and the badge and resolves every state's token, so a theme error surfaces at load

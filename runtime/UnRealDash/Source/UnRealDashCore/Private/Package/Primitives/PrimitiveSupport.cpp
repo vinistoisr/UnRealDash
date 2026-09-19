@@ -128,7 +128,7 @@ int32 IndexOf(EDashSignalState State)
 }
 }
 
-void FMissingDataPresenter::Apply(EDashSignalState State) const
+void FMissingDataPresenter::Apply(EDashSignalState State, const FText* Live) const
 {
     const int32 Index = IndexOf(State);
 
@@ -141,7 +141,10 @@ void FMissingDataPresenter::Apply(EDashSignalState State) const
     }
     if (ValueText)
     {
-        ValueText->SetText(ValidText);
+        // The live reading where there is one, so a state presentation is applied ON TOP of the
+        // current value rather than instead of it. dash still replaces it below, which is what
+        // dash means.
+        ValueText->SetText(Live ? *Live : ValidText);
         ValueText->SetColorAndOpacity(FSlateColor(ValidColour));
     }
     if (Badge) Badge->SetVisibility(ESlateVisibility::Collapsed);

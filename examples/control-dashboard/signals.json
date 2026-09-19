@@ -1,0 +1,74 @@
+{
+  "signals": [
+    {
+      "id": "vehicle_speed",
+      "type": "number",
+      "unit": "km/h",
+      "freshness_deadline_ms": 200,
+      "discrete": false
+    },
+    {
+      "id": "engine_speed",
+      "type": "number",
+      "unit": "rpm",
+      "freshness_deadline_ms": 200,
+      "discrete": false
+    },
+    {
+      "id": "coolant_temperature",
+      "type": "number",
+      "unit": "degC",
+      "freshness_deadline_ms": 1000,
+      "discrete": false
+    },
+    {
+      "id": "oil_pressure",
+      "type": "number",
+      "unit": "bar",
+      "freshness_deadline_ms": 250,
+      "discrete": false
+    },
+    {
+      "id": "fuel_level",
+      "type": "number",
+      "unit": "dimensionless",
+      "freshness_deadline_ms": 2000,
+      "discrete": false
+    },
+    {
+      "id": "engine_load",
+      "type": "number",
+      "unit": "dimensionless",
+      "freshness_deadline_ms": 250,
+      "discrete": false
+    },
+    {
+      "id": "ignition_on",
+      "type": "boolean",
+      "unit": "dimensionless",
+      "freshness_deadline_ms": 500,
+      "discrete": true
+    },
+    {
+      "id": "abs_ready",
+      "type": "boolean",
+      "unit": "dimensionless",
+      "freshness_deadline_ms": 500,
+      "discrete": true
+    },
+    {
+      "id": "traction_ready",
+      "type": "boolean",
+      "unit": "dimensionless",
+      "freshness_deadline_ms": 500,
+      "discrete": true
+    },
+    {
+      "id": "cruise_enabled",
+      "type": "boolean",
+      "unit": "dimensionless",
+      "freshness_deadline_ms": 500,
+      "discrete": true
+    }
+  ]
+}

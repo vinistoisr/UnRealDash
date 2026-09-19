@@ -105,9 +105,15 @@ FBuiltComponent BuildReadout(const FComponentContext& Context, FDashLoadError& O
     // time, so a per-frame update does not re-read the document.
     return {Panel, [Value, Presenter, Format](const FDashSignalValue& Reading)
     {
+        // One call, carrying the reading. Setting the text and then applying the state overwrote
+        // the reading with the document's build-time text every frame, so a bound readout never
+        // moved; applying the state and then setting the text would undo a dash.
         if (Reading.bHasValue)
-            Presenter.ValueText->SetText(FText::FromString(FormatValue(Reading.Value, Format)));
-        Presenter.Apply(Reading.State);
+        {
+            const FText Live = FText::FromString(FormatValue(Reading.Value, Format));
+            Presenter.Apply(Reading.State, &Live);
+        }
+        else Presenter.Apply(Reading.State);
     }};
 }
 }
