@@ -1,4 +1,6 @@
 #include "UnRealDashCore/DashScenario.h"
+#include "SignalCore/Scenarios.h"
+#include <string>
 
 namespace UnRealDashCore
 {
@@ -65,5 +67,35 @@ FString BuildScenarioRecording(const TArray<FString>& Names, const TArray<FVecto
         }
     }
     return Text;
+}
+}
+
+namespace UnRealDashCore
+{
+FString GenerateNamedScenario(const FString& Name, uint64 Seed, double DurationSeconds,
+    int32 IntervalMilliseconds, FString& OutError)
+{
+    OutError.Reset();
+    const std::string Text(TCHAR_TO_UTF8(*Name));
+    const auto Parsed = signal_core::ParseScenario({Text.data(), Text.size()});
+    if (!Parsed.Ok()) { OutError = UTF8_TO_TCHAR(Parsed.GetStatus().message); return FString(); }
+    if (DurationSeconds <= 0.0 || IntervalMilliseconds <= 0)
+    { OutError = TEXT("Scenario duration and interval must both be positive"); return FString(); }
+
+    signal_core::ScenarioOptions Options{};
+    Options.scenario = *Parsed.Get();
+    Options.seed = Seed;
+    Options.duration = std::chrono::milliseconds(static_cast<int64>(DurationSeconds * 1000.0));
+    Options.interval = std::chrono::milliseconds(IntervalMilliseconds);
+    // The freshness deadline the scenario writes into its signals. Half a second, matching every
+    // other source here, so a stale reading means the same thing whichever connector produced it.
+    Options.deadline = std::chrono::milliseconds(500);
+
+    std::string Recording;
+    const signal_core::TextSink Sink{&Recording, [](void* Context, std::string_view Chunk)
+        { static_cast<std::string*>(Context)->append(Chunk); return signal_core::Status{}; }};
+    const auto Status = signal_core::GenerateScenario(Options, Sink);
+    if (!Status.Ok()) { OutError = UTF8_TO_TCHAR(Status.message); return FString(); }
+    return FString(UTF8_TO_TCHAR(Recording.c_str()));
 }
 }

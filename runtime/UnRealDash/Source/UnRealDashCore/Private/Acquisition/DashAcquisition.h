@@ -7,6 +7,7 @@
 #include "SignalCore/BinaryTelemetryConnector.h"
 #include "SignalCore/MemoryConnector.h"
 #include "SignalCore/Reconnect.h"
+#include "SignalCore/FileTransport.h"
 #include "SignalCore/TcpTransport.h"
 #include "dashboard_spec/DefinitionPackBuilder.h"
 #include <atomic>
@@ -17,6 +18,8 @@ struct FDashAcquisition::FImpl final : FRunnable {
     FMonotonicClock PlatformClock = MakePlatformClock();
     signal_core::Time Instant{};
     bool bCaptureInstant = true;
+    // When set, the instant stops advancing and the scenario holds. See FreezeScenarioTime.
+    std::atomic<bool> bFrozen{false};
     signal_core::Clock LiveClock{this, [](void* Context) {
         auto& Self = *static_cast<FImpl*>(Context);
         const auto Now = signal_core::Time(Self.PlatformClock.NowNanoseconds(Self.PlatformClock.Context));
@@ -41,6 +44,7 @@ struct FDashAcquisition::FImpl final : FRunnable {
     // pipeline takes one transport.
     TUniquePtr<dashboard_spec::DefinitionPackBuilder> PackBuilder;
     TUniquePtr<signal_core::TcpTransport> Tcp;
+    TUniquePtr<signal_core::FileTransport> File;
     TUniquePtr<signal_core::BinaryTelemetryV1Connector> Telemetry;
     std::vector<std::uint32_t> Identifiers;
     signal_core::ConnectionSupervisor Supervisor;

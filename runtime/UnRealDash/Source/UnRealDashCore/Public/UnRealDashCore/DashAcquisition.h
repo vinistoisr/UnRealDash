@@ -43,6 +43,10 @@ struct FDashTcpOptions {
     FString DefinitionPackText;
     // Absolute path to the schema directory, for validating the pack.
     FString SchemaDirectory;
+    // A file of recorded bytes instead of a socket. Same framer, same decoder, same mapping, so a
+    // bug that only shows up in one of them cannot hide in the other. Empty means TCP.
+    FString ReplayPath;
+    bool bReplayLoop = false;
 };
 // The recording and all borrowed pipeline storage are owned behind the engine seam.
 class UNREALDASHCORE_API FDashAcquisition {
@@ -53,6 +57,9 @@ class UNREALDASHCORE_API FDashAcquisition {
     // Signal name to the numeric id the pack gives it. Empty for the recording path, which numbers
     // signals by document position.
     const TMap<FString, uint32>& SignalIds() const;
+    // Stops advancing the instant the registry and the replay pace against, so a scenario holds
+    // and a capture lands at a known point of it. PLAN 4.7's -freeze-scenario-time.
+    void FreezeScenarioTime();
     ~FDashAcquisition();
     FString Start();
     void Stop();

@@ -29,6 +29,10 @@ FDashAcquisition::FImpl::FImpl(const FString& Text, uint32 ExpectedSamplesPerFra
         signal_core::SnapshotBuffer{Buffers[1], SnapshotLatches[1]}, signal_core::SnapshotBuffer{Buffers[2], SnapshotLatches[2]});
     ReplayExchange = MakeUnique<signal_core::SnapshotExchange>(signal_core::SnapshotBuffer{ReplayBuffers[0], {}},
         signal_core::SnapshotBuffer{ReplayBuffers[1], {}}, signal_core::SnapshotBuffer{ReplayBuffers[2], {}});
+    // The recording names its own signals, so a binding resolves against its numbering rather
+    // than the document's ordering. Same rule as the definition pack path; both are told.
+    for (const auto& Signal : Recording.Get()->signals)
+        NameToId.Add(UTF8_TO_TCHAR(Signal.name), Signal.id);
     Registry = MakeUnique<signal_core::SignalRegistry>(FrozenClock, Recording.Get()->signals, *Schedule, *Exchange);
     ReplayRegistry = MakeUnique<signal_core::SignalRegistry>(FrozenClock, Recording.Get()->signals, *ReplaySchedule, *ReplayExchange);
     auto Status = Registry->Initialize();
@@ -102,17 +106,30 @@ FDashAcquisition::FImpl::FImpl(const FDashTcpOptions& Options) {
     const auto Status = Registry->Initialize();
     if (!Status.Ok()) { Error = UTF8_TO_TCHAR(Status.message); return; }
 
-    Tcp = MakeUnique<signal_core::TcpTransport>();
-    const std::string Host(TCHAR_TO_UTF8(*Options.Host));
-    const auto Configured = Tcp->Configure(Host.c_str(), Options.Port);
-    if (!Configured.Ok()) { Error = UTF8_TO_TCHAR(Configured.message); return; }
+    signal_core::ITransport* Chosen = nullptr;
+    if (Options.ReplayPath.IsEmpty()) {
+        Tcp = MakeUnique<signal_core::TcpTransport>();
+        const std::string Host(TCHAR_TO_UTF8(*Options.Host));
+        const auto Configured = Tcp->Configure(Host.c_str(), Options.Port);
+        if (!Configured.Ok()) { Error = UTF8_TO_TCHAR(Configured.message); return; }
+        Chosen = Tcp.Get();
+    } else {
+        // Same framer, same decoder, same mapping as the socket. Only the source of the bytes
+        // differs, which is the point of putting a file behind ITransport rather than behind
+        // Recording: a file replay that skipped the parser would test a different program.
+        File = MakeUnique<signal_core::FileTransport>();
+        const std::string Path(TCHAR_TO_UTF8(*Options.ReplayPath));
+        const auto Configured = File->Configure(Path.c_str(), Options.bReplayLoop);
+        if (!Configured.Ok()) { Error = UTF8_TO_TCHAR(Configured.message); return; }
+        Chosen = File.Get();
+    }
     Telemetry = MakeUnique<signal_core::BinaryTelemetryV1Connector>(Pack, LiveClock, Identifiers);
     Display = MakeUnique<signal_core::SampleQueue>(DisplayStorage);
     Pipeline = MakeUnique<signal_core::AcquisitionPipeline>(LiveClock, *Registry, *Schedule,
-        Rules, Previous, ReadBuffer, *Display, *Tcp, Telemetry->Session(), Telemetry->Decoder(), Mapping, Sink);
+        Rules, Previous, ReadBuffer, *Display, *Chosen, Telemetry->Session(), Telemetry->Decoder(), Mapping, Sink);
 }
 void FDashAcquisition::FImpl::ServiceConnection() {
-    if (!Tcp || !Telemetry) return;
+    if (!Tcp || !Telemetry) return;  // A file that has ended has ended; only a socket retries.
     const signal_core::Time Now(PlatformClock.NowNanoseconds(PlatformClock.Context));
     const bool bConnected = Pipeline->Health().connected;
     if (bConnected) return;
@@ -161,7 +178,7 @@ uint32 FDashAcquisition::FImpl::Run() {
     bCaptureInstant = true; LiveClock.Now();
     signal_core::Status Status{};
     if (!Tcp) {
-        // The recording path connects once, immediately, and a failure there is fatal.
+        // The recording and file paths connect once, immediately, and a failure there is fatal.
         Status = Pipeline->Start();
         bStarted.store(Status.Ok(), std::memory_order_release);
     } else {
@@ -174,12 +191,18 @@ uint32 FDashAcquisition::FImpl::Run() {
     while (Status.Ok() && !bStop.load(std::memory_order_acquire)) {
         ServiceConnection();
         const auto Deadline = signal_core::Time(PlatformClock.NowNanoseconds(PlatformClock.Context)) + std::chrono::milliseconds(1);
-        bCaptureInstant = true;
+        // Frozen means the instant stops advancing, so the registry never expires anything and the
+        // replay finds no sample due: the scenario holds where it was. The render loop is
+        // unaffected, because Pump's deadline comes from the platform clock directly.
+        bCaptureInstant = !bFrozen.load(std::memory_order_acquire);
         Status = Pipeline->Pump(Deadline).status;
         // A dead socket surfaces as an io_error from Pump. On the telemetry path that is a
         // disconnect to be waited out, not a reason to stop acquiring: the supervisor will
         // reconnect and every mapped signal goes stale at its deadline in the meantime.
         if (Tcp && !Status.Ok() && Status.code == signal_core::ErrorCode::io_error) Status = {};
+        // A replay that reaches its end stops the loop rather than spinning on a closed file, and
+        // the snapshot already published leaves every signal to go stale at its own deadline.
+        if (File && !Status.Ok() && Status.code == signal_core::ErrorCode::io_error) break;
         PublishHealth();
         FPlatformProcess::SleepNoStats(0);
     }
@@ -193,6 +216,7 @@ FDashAcquisition::FDashAcquisition(const FString& Text, uint32 ExpectedSamplesPe
     : Impl(MakeUnique<FImpl>(Text, ExpectedSamplesPerFrame, Rules)) {}
 FDashAcquisition::FDashAcquisition(const FDashTcpOptions& Options) : Impl(MakeUnique<FImpl>(Options)) {}
 const TMap<FString, uint32>& FDashAcquisition::SignalIds() const { return Impl->NameToId; }
+void FDashAcquisition::FreezeScenarioTime() { Impl->bFrozen.store(true, std::memory_order_release); }
 FDashAcquisition::~FDashAcquisition() {
     Stop();
     if (Impl->Thread) Impl->Thread->WaitForCompletion();

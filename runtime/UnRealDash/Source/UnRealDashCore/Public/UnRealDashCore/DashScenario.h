@@ -34,4 +34,13 @@ struct FDashScenarioOptions
 // function's.
 UNREALDASHCORE_API FString BuildScenarioRecording(const TArray<FString>& Names,
     const TArray<FVector2D>& Ranges, const FDashScenarioOptions& Options, FString& OutError);
+
+// A named signal-core scenario, written out as a recording. PLAN 4.7's -scenario=<name> means one
+// of these, not a waveform this project made up: idle, acceleration, high_temperature,
+// missing_signal, disconnect, reconnect and stale_heartbeat, carrying speed and temperature.
+//
+// Its signals are the scenario's, so a document binding to them has to name them. That is the same
+// join every connector needs and it is reported as an unresolved binding when it is wrong.
+UNREALDASHCORE_API FString GenerateNamedScenario(const FString& Name, uint64 Seed,
+    double DurationSeconds, int32 IntervalMilliseconds, FString& OutError);
 }
