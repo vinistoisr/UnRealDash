@@ -34,6 +34,7 @@ set(signal_sources
     "${CMAKE_CURRENT_SOURCE_DIR}/../../runtime/UnRealDash/Source/SignalCore/Private/BinaryTelemetryConnector.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../runtime/UnRealDash/Source/SignalCore/Private/TcpTransport.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../runtime/UnRealDash/Source/SignalCore/Private/FileTransport.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../runtime/UnRealDash/Source/SignalCore/Private/EventLog.cpp"
 )
 file(GLOB disk_sources "${CMAKE_CURRENT_SOURCE_DIR}/../../runtime/UnRealDash/Source/SignalCore/Private/*.cpp")
 foreach(source IN LISTS signal_sources)
