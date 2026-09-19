@@ -15,6 +15,12 @@ struct Signal {
     bool discrete{};
 };
 struct Sample {
+    // PLAN 4.8's sample identity. Assigned by AcquisitionPipeline immediately before Apply
+    // accepts the sample, from a counter that starts at 1 and never repeats within a run. Zero
+    // means it never went through the pipeline, so a row carrying one is visible rather than
+    // plausible. seq cannot serve: it is the source's sequence and repeats across signals and
+    // across reconnects.
+    std::uint64_t id{};
     Value value{std::numeric_limits<double>::quiet_NaN()};
     Unit unit{};
     std::uint64_t source{};

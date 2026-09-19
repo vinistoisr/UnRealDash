@@ -5,11 +5,13 @@
 namespace signal_core {
 enum class AcquisitionEventKind : std::uint8_t { acquire, submit, rule_transition };
 template <std::size_t Signals> struct AcquisitionEvent {
-    std::uint32_t schema_version{1};
+    std::uint32_t schema_version{2};
     AcquisitionEventKind kind{};
     std::uint64_t frame{};
     Time at{};
-    std::array<SignalId, Signals> present{};
+    // Sample ids since PLAN 4.8, not signal ids. The acquisition row has to say WHICH sample a
+    // frame held, or nothing downstream can tell an acquired sample from a superseded one.
+    std::array<std::uint64_t, Signals> present{};
     std::size_t present_count{};
     std::uint32_t rule{};
     bool current{}, latched{};
@@ -46,7 +48,8 @@ template <std::size_t Capacity, std::size_t Signals>
 class RingAcquisitionEventSink final : public IAcquisitionEventSink {
   public:
     using Event = AcquisitionEvent<Signals>;
-    void OnAcquire(std::uint64_t frame, Time at, std::span<const SignalId> present) override {
+    void OnReceive(SignalId, const Sample &) override {}
+    void OnAcquire(std::uint64_t frame, Time at, std::span<const std::uint64_t> present) override {
         if (present.size() > Signals) {
             ++oversize_;
             return;

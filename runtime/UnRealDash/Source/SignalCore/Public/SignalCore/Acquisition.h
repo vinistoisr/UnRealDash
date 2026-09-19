@@ -6,12 +6,18 @@
 namespace signal_core {
 struct IAcquisitionEventSink {
     virtual ~IAcquisitionEventSink() = default;
-    virtual void OnAcquire(std::uint64_t frame, Time at, std::span<const SignalId> present) = 0;
+    // PLAN 4.8's receive row, one per published sample, at the moment Apply accepts it. The
+    // sample carries its own id by then, so nothing downstream has to re-derive identity.
+    virtual void OnReceive(SignalId signal, const Sample &sample) = 0;
+    // Sample ids, not signal ids: 4.8's acquisition row lists "the sample ids present in that
+    // snapshot", which is what lets a later pass tell an acquired sample from a superseded one.
+    virtual void OnAcquire(std::uint64_t frame, Time at, std::span<const std::uint64_t> samples) = 0;
     virtual void OnSubmit(std::uint64_t frame, Time at) = 0;
     virtual void OnRuleTransition(std::uint32_t rule, Time at, bool current, bool latched) = 0;
 };
 struct NullAcquisitionEventSink final : IAcquisitionEventSink {
-    void OnAcquire(std::uint64_t, Time, std::span<const SignalId>) override {}
+    void OnReceive(SignalId, const Sample &) override {}
+    void OnAcquire(std::uint64_t, Time, std::span<const std::uint64_t>) override {}
     void OnSubmit(std::uint64_t, Time) override {}
     void OnRuleTransition(std::uint32_t, Time, bool, bool) override {}
 };
@@ -65,5 +71,7 @@ class SIGNALCORE_API AcquisitionPipeline {
     ConnectionHealth health_{};
     Status configuration_{};
     std::uint64_t published_{}, display_drops_{}, mapping_drops_{}, applied_{}, evaluations_{}, transitions_{};
+    // Starts at 1 so that zero stays the "never went through here" value.
+    std::uint64_t next_sample_id_{1};
 };
 } // namespace signal_core

@@ -164,6 +164,10 @@ PumpResult AcquisitionPipeline::Pump(Time deadline) {
                         Fail(Error(ErrorCode::invalid_configuration, "sample claims an unconnected generation"));
                         break;
                     }
+                    // Before Apply, because the registry stores the sample and everything
+                    // downstream reads its copy. An id assigned after would leave the stored
+                    // sample anonymous.
+                    mapped.sample.id = next_sample_id_;
                     status = registry_.Apply(mapped.signal, mapped.sample);
                     if (status.code == ErrorCode::old_generation)
                         continue;
@@ -171,6 +175,10 @@ PumpResult AcquisitionPipeline::Pump(Time deadline) {
                         Fail(status);
                         break;
                     }
+                    // Consumed only on success, so a rejected sample burns no id and the
+                    // sequence has no gaps for a reader to mistake for lost rows.
+                    ++next_sample_id_;
+                    sink_.OnReceive(mapped.signal, mapped.sample);
                     ++applied_;
                     ++result.samples_applied;
                     registry_.Expire();

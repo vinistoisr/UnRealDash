@@ -18,6 +18,10 @@ struct FFrameSnapshot {
     // has to remember.
     TArray<uint32> SignalIds;
     TArray<uint32> Present;
+    // PLAN 4.8's acquisition row lists the SAMPLE ids a frame held. Aligned with Samples, like
+    // SignalIds and unlike the compacted Present, so a consumer can tell which sample a row is
+    // about without an index arithmetic rule someone has to remember.
+    TArray<uint64> SampleIds;
     uint64 FrameIndex = 0;
     int64 AcquisitionNanoseconds = 0;
     uint64 Generation = 0;

@@ -234,10 +234,16 @@ bool FDashAcquisition::AcquireFrameSnapshot(FFrameSnapshot& Out) {
     Out.Samples.SetNum(static_cast<int32>(Snapshot.samples.size()));
     Out.SignalIds.SetNum(static_cast<int32>(Snapshot.samples.size()));
     Out.Present.SetNum(static_cast<int32>(Snapshot.samples.size()));
+    Out.SampleIds.SetNum(static_cast<int32>(Snapshot.samples.size()));
     int32 Present = 0;
+    // The sample ids actually held this frame, which is what the acquisition row carries. A
+    // signal with no sample yet has id zero and is not one of them.
+    TArray<uint64, TInlineAllocator<64>> Held;
     for (std::size_t Index = 0; Index < Snapshot.samples.size(); ++Index) {
         Out.Samples[static_cast<int32>(Index)] = ToEngineSample(Snapshot.samples[Index].sample);
         Out.SignalIds[static_cast<int32>(Index)] = Snapshot.samples[Index].signal;
+        Out.SampleIds[static_cast<int32>(Index)] = Snapshot.samples[Index].sample.id;
+        if (Snapshot.samples[Index].sample.id != 0) Held.Add(Snapshot.samples[Index].sample.id);
         if (Snapshot.samples[Index].received) Out.Present[Present++] = Snapshot.samples[Index].signal;
     }
     Out.Present.SetNum(Present, EAllowShrinking::No);
@@ -245,7 +251,7 @@ bool FDashAcquisition::AcquireFrameSnapshot(FFrameSnapshot& Out) {
     Out.Generation = Snapshot.generation;
     Out.AcquisitionNanoseconds = Impl->PlatformClock.NowNanoseconds(Impl->PlatformClock.Context);
     Impl->Sink.OnAcquire(Out.FrameIndex, signal_core::Time(Out.AcquisitionNanoseconds),
-        {Out.Present.GetData(), static_cast<std::size_t>(Present)});
+        {Held.GetData(), static_cast<std::size_t>(Held.Num())});
     signal_core::SignalSample Ignored{};
     while (Impl->Display->Pop(Ignored)) {}
     return true;

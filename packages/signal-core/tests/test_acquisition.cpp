@@ -284,7 +284,9 @@ TEST_CASE("4.3 replay transport preserves gaps and feeds the pipeline through fr
 }
 TEST_CASE("4.3 event ring copies present ids and counts overflow separately per caller") {
     RingAcquisitionEventSink<1, 2> sink;
-    std::array<SignalId, 2> ids{3, 9};
+    // Sample ids since PLAN 4.8, not signal ids: the acquisition row has to say which SAMPLE a
+    // frame held, not merely which signal.
+    std::array<std::uint64_t, 2> ids{3, 9};
     sink.OnAcquire(1, 5ns, ids);
     ids[0] = 99;
     sink.OnSubmit(1, 6ns);
@@ -295,7 +297,7 @@ TEST_CASE("4.3 event ring copies present ids and counts overflow separately per 
     CHECK(event.present_count == 2);
     REQUIRE(sink.PopAcquisition(event));
     CHECK(event.rule == 7);
-    CHECK(event.schema_version == 1);
+    CHECK(event.schema_version == 2);
     CHECK(sink.Drops() == 1);
 }
 TEST_CASE("4.3 event sink accepts concurrent game and acquisition producers") {
@@ -305,7 +307,7 @@ TEST_CASE("4.3 event sink accepts concurrent game and acquisition producers") {
         ++ready;
         while (ready.load() != 2)
             std::this_thread::yield();
-        const std::array<SignalId, 1> ids{1};
+        const std::array<std::uint64_t, 1> ids{1};
         for (std::uint64_t i = 0; i < 128; ++i) {
             sink.OnAcquire(i, 1ns, ids);
             sink.OnSubmit(i, 2ns);
@@ -425,4 +427,105 @@ TEST_CASE("4.3 consumer stalled two simulated seconds preserves producer progres
     CHECK(stalled.stall_iterations == 400);
     // Scripted tolerance is zero. Completion while the reader waits proves progress.
     CHECK(stalled.stall_iterations == control.stall_iterations);
+}
+
+namespace {
+// Records every receive the pipeline reports, which is PLAN 4.8's receive row before anything
+// formats it. Nothing else in these tests observes identity, so this is the only place that can
+// show an id is assigned once and never reused.
+struct RecordingSink final : IAcquisitionEventSink {
+    struct Received {
+        SignalId signal{};
+        std::uint64_t id{};
+        std::uint64_t seq{};
+        Quality quality{};
+    };
+    std::vector<Received> received;
+    void OnReceive(SignalId signal, const Sample &sample) override {
+        received.push_back({signal, sample.id, sample.seq, sample.quality});
+    }
+    void OnAcquire(std::uint64_t, Time, std::span<const std::uint64_t>) override {}
+    void OnSubmit(std::uint64_t, Time) override {}
+    void OnRuleTransition(std::uint32_t, Time, bool, bool) override {}
+};
+
+struct IdentityRig : RuleFixture {
+    Input input;
+    FieldSession session;
+    FieldDecoder decoder;
+    SiMapping mapping;
+    RecordingSink sink;
+    std::array<SignalSample, 8> display_storage{};
+    SampleQueue display{display_storage};
+    std::array<std::uint8_t, 1024> read{};
+    std::array<RuleResult, 1> previous{};
+    AcquisitionPipeline pipeline{clock.Get(), registry, schedule, {&rule, 1}, previous, read,
+                                 display,     input,    session,  decoder,    mapping,  sink};
+    IdentityRig() {
+        Load();
+        REQUIRE(pipeline.Start().Ok());
+    }
+    DecodedField Field(double value, std::uint64_t seq, std::uint64_t generation = 1) {
+        return {1, Make(value, clock.time, seq, generation)};
+    }
+    // Input reads from a span the caller owns, so each feed replaces the buffer and rewinds it.
+    std::vector<DecodedField> pending;
+    void Feed(double value, std::uint64_t seq, std::uint64_t generation = 1) {
+        pending.assign(1, Field(value, seq, generation));
+        input.fields = pending;
+        input.offset = 0;
+    }
+};
+} // namespace
+
+TEST_CASE("4.8 every applied sample gets one id, in order, starting at 1") {
+    IdentityRig f;
+    for (std::uint64_t seq = 1; seq <= 4; ++seq) {
+        f.Feed(static_cast<double>(seq) * 10, seq);
+        REQUIRE(f.pipeline.Pump(1s).samples_applied == 1);
+    }
+    REQUIRE(f.sink.received.size() == 4);
+    for (std::size_t i = 0; i < f.sink.received.size(); ++i) {
+        CHECK(f.sink.received[i].id == i + 1);
+        CHECK(f.sink.received[i].signal == 1);
+    }
+    // One receive row per applied sample, which is the denominator the lifecycle partition sums
+    // to. Anything else and the partition is checked against a number it produced itself.
+    CHECK(f.pipeline.SamplesApplied() == f.sink.received.size());
+    // The registry stores the id, so the snapshot and every row downstream can name the sample.
+    CHECK(f.registry.Samples()[0].sample.id == 4);
+}
+
+TEST_CASE("4.8 a sample the registry refuses burns no id") {
+    IdentityRig f;
+    f.Feed(10, 1);
+    REQUIRE(f.pipeline.Pump(1s).samples_applied == 1);
+    CHECK(f.sink.received.back().id == 1);
+
+    // An old generation is rejected by Apply and never reaches a receive row. If it consumed an
+    // id anyway the sequence would have a hole, and a hole is indistinguishable from a row the
+    // ring dropped.
+    f.Feed(20, 2, 0);
+    f.pipeline.Pump(1s);
+    CHECK(f.sink.received.size() == 1);
+
+    f.Feed(30, 3);
+    REQUIRE(f.pipeline.Pump(1s).samples_applied == 1);
+    CHECK(f.sink.received.back().id == 2);
+    CHECK(f.pipeline.SamplesApplied() == 2);
+}
+
+TEST_CASE("4.8 an id is never reused across a reconnect") {
+    IdentityRig f;
+    f.Feed(10, 1);
+    REQUIRE(f.pipeline.Pump(1s).samples_applied == 1);
+    const std::uint64_t before = f.sink.received.back().id;
+
+    REQUIRE(f.pipeline.Reconnect().Ok());
+    f.Feed(20, 1, f.pipeline.Health().generation);
+    f.pipeline.Pump(1s);
+    REQUIRE(f.sink.received.size() == 2);
+    // seq restarts at 1 on a new connection, which is exactly why seq cannot be the identity.
+    CHECK(f.sink.received[1].seq == 1);
+    CHECK(f.sink.received[1].id > before);
 }
