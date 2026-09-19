@@ -67,7 +67,11 @@ class UNREALDASHCORE_API FDashAcquisition {
     ~FDashAcquisition();
     FString Start();
     void Stop();
-    bool AcquireFrameSnapshot(FFrameSnapshot& Out);
+    // FrameIndex is the CALLER's frame numbering, and every 4.8 row keyed by frame uses it. The
+    // acquisition side used to number frames itself, which put the acquire and submit rows in a
+    // different numbering from the per-frame and present rows and silently matched a frame's
+    // present row to a different frame's rendered set.
+    bool AcquireFrameSnapshot(FFrameSnapshot& Out, uint64 FrameIndex);
     void RecordSubmit(uint64 FrameIndex);
     void RequestAcknowledge(uint32 RuleId);
     // PLAN 4.8. Null detaches, which is what Close does before the log goes away under the
@@ -75,6 +79,11 @@ class UNREALDASHCORE_API FDashAcquisition {
     void SetEventLog(class FDashEventLog* Log);
     // The pipeline's own count of samples Apply accepted, which is PLAN 4.8's published count.
     uint64 SamplesApplied() const;
+    // PLAN 4.8: an orderly shutdown writes a cancelled status row with reason run_end for every
+    // still-armed expiry, so a reader can tell "the run ended" from "the process was killed",
+    // which is the difference between a resolved expiry and an unresolved one. Stops the thread
+    // first, because the schedule belongs to it.
+    void EndRun();
     FConnectionHealth GetHealth() const;
   private:
     struct FImpl;

@@ -17,6 +17,8 @@ struct FSignalSample {
     ESignalQuality Quality = ESignalQuality::Unavailable;
     ESignalAge AgeEvidence = ESignalAge::Unknown;
     uint64 Generation = 0;
+    // PLAN 4.8's expiry identifier: which firing this sample is displaying, or zero.
+    uint64 Expiry = 0;
 };
 UNREALDASHCORE_API FString ToString(ESignalQuality Quality);
 UNREALDASHCORE_API FString ToString(ESignalAge Evidence);

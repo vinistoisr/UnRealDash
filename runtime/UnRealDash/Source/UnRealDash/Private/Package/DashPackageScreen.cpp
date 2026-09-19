@@ -186,17 +186,27 @@ void UDashPackageScreen::NativeTick(const FGeometry& Geometry, float DeltaTime)
     // Acquired once per tick and passed down. Acquiring per binding could straddle a publication
     // and hand two components values from different ones, which is exactly what the triple buffer
     // exists to prevent.
-    if (Acquisition->AcquireFrameSnapshot(Snapshot))
+    // GFrameCounter, so the acquire, submit, per-frame and present rows all key on one numbering
+    // and the render thread's GFrameCounterRenderThread stamps the same frames.
+    if (Acquisition->AcquireFrameSnapshot(Snapshot, static_cast<uint64>(GFrameCounter)))
     {
+        // Held after the acquire and before anything is applied, so the frame carries a snapshot
+        // that is deliberately older than the clock by the time it reaches the screen. That is
+        // what makes a frame present a stale reading after the signal has already recovered,
+        // which is the only way PLAN's delayed-presentation observation can occur on demand.
+        if (HoldFrameMilliseconds > 0.f) FPlatformProcess::Sleep(HoldFrameMilliseconds / 1000.f);
         // The bindings report what they put on screen, which the event log stashes against this
         // frame until the render thread says when the frame presented. That is PLAN 4.8's present
         // row, and the bindings are the only thing that knows which signals a visible component
         // actually drives.
         Bindings.Apply(Snapshot, &Rendered);
-        EventLog.WriteRendered(Snapshot.FrameIndex, Rendered);
+        // Suppressing the submit suppresses the presentation record too. A frame the game thread
+        // never finished with is a frame that never reached the screen, which is what PLAN's
+        // clause is about; suppressing only the row would leave the samples presented.
+        if (!bSuppressSubmit) EventLog.WriteRendered(Snapshot.FrameIndex, Rendered);
         // The submit row. Recorded here rather than at a real submit callback because this is
         // where the game thread is done with the snapshot it acquired; the report says so.
-        Acquisition->RecordSubmit(Snapshot.FrameIndex);
+        if (!bSuppressSubmit) Acquisition->RecordSubmit(Snapshot.FrameIndex);
     }
 
     ++Ticks;
@@ -432,6 +442,42 @@ void ADashPackageHUD::BeginPlay()
         UE_LOG(LogUnRealDash, Error, TEXT("Connector failed: %s"), *Failure);
         RejectRun(2);
         return;
+    }
+
+    // Gate-only forcing. Read after the connector has started so a suppressed submit applies
+    // from the first frame that has anything to submit.
+    if (FParse::Param(FCommandLine::Get(), TEXT("udash-suppress-submit")))
+    {
+        Screen->ForceSuppressSubmit();
+        UE_LOG(LogUnRealDash, Display, TEXT("DashForcing suppress-submit"));
+    }
+    FString HoldText;
+    if (FParse::Value(FCommandLine::Get(), TEXT("udash-hold-frame-ms="), HoldText))
+    {
+        if (!HoldText.IsNumeric() || FCString::Atof(*HoldText) < 0.f)
+        {
+            UE_LOG(LogUnRealDash, Error, TEXT("-udash-hold-frame-ms must be a non-negative number, got %s"), *HoldText);
+            RejectRun(2);
+            return;
+        }
+        Screen->ForceHoldFrame(FCString::Atof(*HoldText));
+        UE_LOG(LogUnRealDash, Display, TEXT("DashForcing hold-frame-ms=%s"), *HoldText);
+    }
+    FString KillText;
+    if (FParse::Value(FCommandLine::Get(), TEXT("udash-kill-at="), KillText))
+    {
+        if (!KillText.IsNumeric() || FCString::Atof(*KillText) <= 0.f)
+        {
+            UE_LOG(LogUnRealDash, Error, TEXT("-udash-kill-at must be a positive number of seconds, got %s"), *KillText);
+            RejectRun(2);
+            return;
+        }
+        // A hard exit with no EndPlay, so nothing writes run_end cancellations and the armed
+        // expiries in flight are left unresolved, which is the state PLAN wants counted.
+        FTimerHandle Kill;
+        GetWorldTimerManager().SetTimer(Kill, FTimerDelegate::CreateLambda([]()
+            { FPlatformMisc::RequestExitWithStatus(true, 9); }), FCString::Atof(*KillText), false);
+        UE_LOG(LogUnRealDash, Display, TEXT("DashForcing kill-at=%s"), *KillText);
     }
 
     if (Config.QuitAfterSeconds > 0)

@@ -18,7 +18,13 @@ from pathlib import Path
 IMPLICIT = {"type"}
 # Timestamp columns, checked for presence, positivity and monotonicity per record type. Named
 # rather than inferred from a prefix, so a column added later is a deliberate decision.
-TIMESTAMPS = {"t", "t_start", "t_present", "t_recv", "t_acquire", "t_submit", "t_armed", "t_fired"}
+TIMESTAMPS = {"t", "t_start", "t_present", "t_recv", "t_acquire", "t_submit", "t_armed"}
+# t_fired is null on a cancellation, so it cannot be in the always-present set. The classifier
+# checks it where it must exist instead.
+NULLABLE_TIMESTAMPS = {"t_fired"}
+# Mirrors signal_core::Quality and CancelReason.
+STALE = 1
+CANCEL_REASONS = {0: "re-armed", 1: "generation", 2: "run_end"}
 
 
 def fail(problems: list[str], message: str) -> None:
@@ -45,7 +51,7 @@ def classify(receives, receive_order, acquires, submitted, presents, problems, q
     # A signal bound to a visible component appears in every present row; one that is not appears
     # in none. That is the only way to tell "never reached the screen" from "nothing draws it".
     bound_signals: set[int] = set()
-    for frame, entries in presents.items():
+    for frame, (entries, _when) in presents.items():
         for entry in entries:
             bound_signals.add(entry["signal"])
             if entry["sample"] is not None:
@@ -70,10 +76,14 @@ def classify(receives, receive_order, acquires, submitted, presents, problems, q
             states[sample] = "presented"
         elif sample in held:
             states[sample] = "acquired-not-displayed"
-            if signal not in bound_signals:
-                reason = "bound to no visible component"
-            elif not any(frame in submitted for frame in held[sample]):
+            # No submit row first. It is a fact the rows state outright, while "bound to no
+            # visible component" is INFERRED from a signal appearing in no present row, and a run
+            # with no present rows at all makes every signal look unbound. A suppressed-submit
+            # run is exactly that run.
+            if not any(frame in submitted for frame in held[sample]):
                 reason = "no submit row"
+            elif signal not in bound_signals:
+                reason = "bound to no visible component"
             else:
                 reason = "submitted, the run ended before it presented"
             reasons[reason] = reasons.get(reason, 0) + 1
@@ -117,6 +127,112 @@ def classify(receives, receive_order, acquires, submitted, presents, problems, q
             print(f"    acquired-not-displayed: {reason}: {count}")
         print(f"  receive-to-present observations {observations}, "
               f"{repeated} of them displayed across more than one frame")
+
+
+def expiries(receives, armed, statuses, presents, problems, quiet) -> None:
+    """PLAN 4.8's expiry rows and expiry-to-present latency.
+
+    The start endpoint is a `fired` status row and nothing else. A cancelled expiry yields no
+    observation, so a deadline moved by a later arrival cannot produce a fictitious interval. The
+    end endpoint is matched on the expiry identifier rather than on the signal, or a later
+    episode's frame would close an earlier expiry.
+    """
+    if not armed and not statuses:
+        if not quiet:
+            print("expiries  none armed in this run")
+        return
+
+    # Exactly one status row per arming, which is a property of ExpirySchedule and is checked
+    # here against a real run rather than trusted.
+    unresolved = []
+    for serial, row in armed.items():
+        rows = statuses.get(serial, [])
+        if len(rows) > 1:
+            problems.append(f"expiry {serial} has {len(rows)} status rows, not one")
+        elif not rows:
+            # After a hard kill this is expected: the arming was flushed and its status was not.
+            unresolved.append(serial)
+    for serial in statuses:
+        if serial not in armed:
+            problems.append(f"expiry {serial} has a status row and no armed row")
+
+    # PLAN's own clause: an armed expiry names a signal with a receive row and a deadline later
+    # than that row's receive timestamp.
+    by_signal: dict[int, list[int]] = {}
+    for sample, row in receives.items():
+        by_signal.setdefault(row["signal"], []).append(sample)
+    for serial, row in armed.items():
+        # Rule expiries name a rule, not a signal, and are never latency endpoints.
+        if row["kind"] != 0:
+            continue
+        if row["signal"] not in by_signal:
+            problems.append(f"expiry {serial} names signal {row['signal']}, which has no receive row")
+            continue
+        source = receives.get(row["sample"])
+        if source is None:
+            problems.append(f"expiry {serial} was armed by sample {row['sample']}, which has no receive row")
+        elif row["t_armed"] <= source["t_recv"]:
+            problems.append(f"expiry {serial} has a deadline at or before its sample's receive time")
+
+    # The FIRST frame that displays a firing is the end endpoint, so the scan is in frame order
+    # and the first hit per expiry wins.
+    shown: dict[int, tuple[int, int]] = {}
+    for frame in sorted(presents.keys()):
+        entries, when = presents[frame]
+        for entry in entries:
+            serial = entry.get("expiry")
+            if serial and entry.get("quality") == STALE and serial not in shown:
+                shown[serial] = (frame, when)
+
+    observations = []
+    not_displayed = 0
+    fired = 0
+    cancelled_by_reason: dict[str, int] = {}
+    for serial, rows in statuses.items():
+        row = rows[0]
+        if row["status"] == "cancelled":
+            reason = CANCEL_REASONS.get(row.get("reason"), str(row.get("reason")))
+            cancelled_by_reason[reason] = cancelled_by_reason.get(reason, 0) + 1
+            if serial in shown:
+                problems.append(f"expiry {serial} was cancelled and a present row displays it")
+            continue
+        if row["status"] != "fired":
+            problems.append(f"expiry {serial} has status {row['status']!r}")
+            continue
+        if armed.get(serial, {}).get("kind") != 0:
+            # Rule expiries fire and are never latency endpoints.
+            continue
+        fired += 1
+        if row.get("t_fired") is None:
+            problems.append(f"expiry {serial} fired with no timestamp")
+            continue
+        seen = shown.get(serial)
+        if seen is None:
+            # Decided over the whole trace with no cutoff at the next valid sample: a frame that
+            # acquired the stale snapshot before recovery still presents it afterwards, and that
+            # delayed presentation is exactly the latency being measured.
+            not_displayed += 1
+            continue
+        frame, when = seen
+        latency = (when - row["t_fired"]) / 1e6
+        if latency < 0:
+            problems.append(f"expiry {serial} was displayed before it fired")
+        observations.append(latency)
+
+    if not quiet:
+        print("expiries")
+        print(f"  armed                    {len(armed):>8}")
+        print(f"  fired                    {fired:>8}")
+        for reason, count in sorted(cancelled_by_reason.items()):
+            print(f"  cancelled, {reason:<14}{count:>8}")
+        print(f"  unresolved               {len(unresolved):>8}")
+        print(f"  displayed firings        {len(observations):>8}")
+        print(f"  fired-not-displayed      {not_displayed:>8}")
+        if observations:
+            ordered = sorted(observations)
+            index = min(len(ordered) - 1, int(round(0.95 * (len(ordered) - 1))))
+            print(f"  expiry-to-present        median {ordered[len(ordered) // 2]:.2f} ms, "
+                  f"p95 {ordered[index]:.2f} ms")
 
 
 def main() -> int:
@@ -176,6 +292,8 @@ def main() -> int:
     acquires: dict[int, list[int]] = {}
     submitted: set[int] = set()
     presents: dict[int, list[dict]] = {}
+    armed: dict[int, dict] = {}
+    statuses: dict[int, list[dict]] = {}
 
     for number, line in enumerate(lines, start=1):
         if not line.strip():
@@ -234,7 +352,11 @@ def main() -> int:
             elif kind == "submit":
                 submitted.add(record["frame"])
             elif kind == "present":
-                presents[record["frame"]] = record["signals"]
+                presents[record["frame"]] = (record["signals"], record["t_present"])
+            elif kind == "expiry_armed":
+                armed[record["expiry"]] = record
+            elif kind == "expiry_status":
+                statuses.setdefault(record["expiry"], []).append(record)
 
         for column in schema[kind]:
             if column not in TIMESTAMPS:
@@ -282,6 +404,7 @@ def main() -> int:
 
     if arguments.lifecycle:
         classify(receives, receive_order, acquires, submitted, presents, problems, arguments.quiet)
+        expiries(receives, armed, statuses, presents, problems, arguments.quiet)
 
     elapsed = 0.0
     for kind, (first, last) in spans.items():

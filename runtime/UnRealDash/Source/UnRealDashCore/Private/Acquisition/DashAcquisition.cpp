@@ -228,7 +228,14 @@ FString FDashAcquisition::Start() {
     return Impl->Thread ? FString() : FString(TEXT("Acquisition thread creation failed"));
 }
 void FDashAcquisition::Stop() { Impl->Stop(); }
-bool FDashAcquisition::AcquireFrameSnapshot(FFrameSnapshot& Out) {
+void FDashAcquisition::EndRun() {
+    // The thread owns the schedule, so it has to be gone before this touches it. Joining here
+    // rather than racing a Clear against a Pump.
+    Impl->Stop();
+    if (Impl->Thread) Impl->Thread->WaitForCompletion();
+    if (Impl->Schedule) Impl->Schedule->Clear(signal_core::CancelReason::run_end, 0);
+}
+bool FDashAcquisition::AcquireFrameSnapshot(FFrameSnapshot& Out, uint64 FrameIndex) {
     if (!Impl->bStarted.load(std::memory_order_acquire)) return false;
     const auto Snapshot = Impl->Exchange->Acquire();
     Out.Samples.SetNum(static_cast<int32>(Snapshot.samples.size()));
@@ -249,7 +256,7 @@ bool FDashAcquisition::AcquireFrameSnapshot(FFrameSnapshot& Out) {
         if (Snapshot.samples[Index].received) Out.Present[Present++] = Snapshot.samples[Index].signal;
     }
     Out.Present.SetNum(Present, EAllowShrinking::No);
-    Out.FrameIndex = Impl->Frame++;
+    Out.FrameIndex = FrameIndex;
     Out.Generation = Snapshot.generation;
     Out.AcquisitionNanoseconds = Impl->PlatformClock.NowNanoseconds(Impl->PlatformClock.Context);
     Impl->Sink.OnAcquire(Out.FrameIndex, signal_core::Time(Out.AcquisitionNanoseconds),
@@ -266,6 +273,8 @@ uint64 FDashAcquisition::SamplesApplied() const {
 }
 void FDashAcquisition::SetEventLog(FDashEventLog* Log) {
     Impl->Sink.Log.store(Log, std::memory_order_release);
+    Impl->ExpiryEvents.Log.store(Log, std::memory_order_release);
+    Impl->Schedule->SetSink(Log ? &Impl->ExpiryEvents : nullptr);
 }
 void FDashAcquisition::RequestAcknowledge(uint32 RuleId) {
     if (Impl->Pipeline) {

@@ -27,9 +27,13 @@ public:
     FString OpenEventLog(const UnRealDashCore::FDashEventLogOptions& Options) { return EventLog.Open(Options); }
     void CloseEventLog()
     {
-        // Detached first. The acquisition thread writes receive rows through this pointer and the
-        // log is about to stop existing under it.
-        if (Acquisition) Acquisition->SetEventLog(nullptr);
+        // EndRun before the detach: it writes the run_end cancellations, and detaching first
+        // would drop exactly the rows that distinguish an orderly exit from a kill.
+        if (Acquisition)
+        {
+            Acquisition->EndRun();
+            Acquisition->SetEventLog(nullptr);
+        }
         EventLog.Close();
     }
     UnRealDashCore::FDashEventLogCounts EventLogCounts() const { return EventLog.Counts(); }
@@ -78,6 +82,17 @@ private:
     UnRealDashCore::FDashEventLog EventLog;
     // Reused every frame so the present row costs no allocation on the frame path.
     TArray<UnRealDashCore::FDashRenderedSignal> Rendered;
+public:
+    // Gate-only forcing, chunk 19. PLAN 4.8's lifecycle and latency clauses need runs in which
+    // the two sides are held apart, and no documented flag should be able to do this.
+    void ForceSuppressSubmit() { bSuppressSubmit = true; }
+    void ForceHoldFrame(float Milliseconds) { HoldFrameMilliseconds = Milliseconds; }
+private:
+    bool bSuppressSubmit = false;
+    // Slept on the game thread between acquiring a snapshot and applying it. One mechanism
+    // rather than two: a delayed present and a pause across a submit are the same thing, a
+    // widened gap between what a frame holds and when it reaches the screen.
+    float HoldFrameMilliseconds = 0.f;
     // Filled before the tree is built when a connector numbers signals its own way; empty for the
     // scenario source, which numbers them by document position.
     TMap<FString, uint32> SignalIds;

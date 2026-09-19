@@ -107,6 +107,7 @@ struct FDashEventLogImpl : public FRunnable
     std::atomic<uint64> Samples{0};
     std::atomic<uint64> Dropped{0};
     std::atomic<uint64> Receives{0}, Acquires{0}, Submits{0}, PresentRows{0};
+    std::atomic<uint64> Armed{0}, Statuses{0};
 
     // Game thread only.
     struct FPendingFrame
@@ -114,12 +115,20 @@ struct FDashEventLogImpl : public FRunnable
         uint64 Frame = 0;
         int64 StartNanoseconds = 0;
         int64 FrameNanoseconds = 0;
+        // What the bindings rendered for this frame, waiting for its present timestamp. Held on
+        // the pending entry rather than in a second map keyed by the same frame: with the two
+        // separate, the join could find the frame and miss the rendered set, which is exactly
+        // what happened under -udash-hold-frame-ms and cost every present row in the run.
+        bool bRendered = false;
+        TArray<FDashRenderedSignal> Rendered;
     };
     TArray<FPendingFrame> Pending;
     int64 MissedThresholdNanoseconds = 0;
-    // What the bindings rendered, per frame, waiting for that frame's present timestamp. Game
-    // thread only, like Pending, and drained by the same join.
-    TMap<uint64, TArray<FDashRenderedSignal>> Rendered;
+
+    FPendingFrame* Find(uint64 Frame)
+    {
+        return Pending.FindByPredicate([Frame](const FPendingFrame& Candidate) { return Candidate.Frame == Frame; });
+    }
 
     int64 Now() const { return PlatformClock.NowNanoseconds(PlatformClock.Context); }
 
@@ -254,6 +263,14 @@ FString FDashEventLog::Open(const FDashEventLogOptions& Options)
             .Key("present").BeginArray()
                 .String("frame").String("t_present").String("signals")
             .EndArray()
+            .Key("expiry_armed").BeginArray()
+                .String("expiry").String("kind").String("signal").String("sample")
+                .String("generation").String("t_armed").String("becomes")
+            .EndArray()
+            .Key("expiry_status").BeginArray()
+                .String("expiry").String("kind").String("status").String("t_fired")
+                .String("reason").String("by")
+            .EndArray()
             .EndObject()
             .End();
         if (!Candidate->Log.Write(Row).Ok()) return TEXT("the event log schema record did not write");
@@ -269,7 +286,7 @@ FString FDashEventLog::Open(const FDashEventLogOptions& Options)
             .Key("height").Integer(Options.Resolution.Y)
             .Key("clock").String("monotonic_nanoseconds")
             .Key("target_fps").Number(Options.TargetFrameRate)
-            .Key("present_source").String("end_of_render_thread_frame")
+            .Key("present_source").String("first end_of_render_thread_frame after the frame's game tick, paired in order")
             .Key("missed_frame_rule").String("frame_ns > 1.5 * (1e9 / target_fps)")
             .Key("frame_memory_source").String("most_recent_sampled_row, not a per-frame syscall")
             .Key("temperature_source").String("not measured: no in-process source on this platform, see PLAN 6.5")
@@ -308,23 +325,26 @@ void FDashEventLog::Tick(float DeltaSeconds)
     const int64 Now = Impl->Now();
     const int64 FrameNanoseconds = static_cast<int64>(static_cast<double>(DeltaSeconds) * 1e9);
 
-    FDashEventLogImpl::FPendingFrame Frame;
-    Frame.Frame = GFrameCounter;
-    Frame.StartNanoseconds = Now - FrameNanoseconds;
-    Frame.FrameNanoseconds = FrameNanoseconds;
-    Impl->Pending.Add(Frame);
-
-    // Join whatever the render thread has finished since the last tick. A frame with no present
-    // stamp is not written yet, because writing it with a guessed timestamp would put a number
-    // into 6.5's latency figures that nothing measured.
+    // Join whatever the render thread has finished since the last tick.
+    //
+    // Paired in order, not by frame index. GFrameCounterRenderThread has already advanced by the
+    // time OnEndFrameRT fires, so a stamp carries the number of the frame the render thread is
+    // moving on to rather than the one it just finished. Matching on it paired every frame row
+    // with the wrong frame's rendered set, which went unnoticed until -udash-hold-frame-ms made
+    // the two numberings stop overlapping and every present row disappeared.
+    //
+    // What a present timestamp means here is therefore: the first end-of-render-thread-frame
+    // after this frame's game tick. The header says so. The stamp's own frame number is kept
+    // only as evidence, never as the key.
     FPresentStamp Stamp;
     while (Impl->Presents.Pop(Stamp))
     {
-        const int32 Index = Impl->Pending.IndexOfByPredicate(
-            [&Stamp](const FDashEventLogImpl::FPendingFrame& Candidate) { return Candidate.Frame == Stamp.Frame; });
-        if (Index == INDEX_NONE) continue;
-        const FDashEventLogImpl::FPendingFrame Done = Impl->Pending[Index];
-        Impl->Pending.RemoveAt(Index);
+        // The oldest frame still waiting, and only if the stamp is not older than it. A stamp
+        // that predates the frame cannot be its completion.
+        if (Impl->Pending.Num() == 0) continue;
+        const FDashEventLogImpl::FPendingFrame Done = Impl->Pending[0];
+        if (Stamp.Nanoseconds < Done.StartNanoseconds) continue;
+        Impl->Pending.RemoveAt(0);
 
         char Storage[kRowBytes];
         signal_core::RowBuilder Row(std::span<char>(Storage, kRowBytes));
@@ -343,7 +363,7 @@ void FDashEventLog::Tick(float DeltaSeconds)
         // The present row, from the same join and the same timestamp. A second capture would let
         // the two rows disagree about when this frame reached the screen, which is chunk 17
         // revision 2 A.
-        if (const TArray<FDashRenderedSignal>* Shown = Impl->Rendered.Find(Done.Frame))
+        if (Done.bRendered)
         {
             char Wide[kWideRowBytes];
             signal_core::RowBuilder Present(std::span<char>(Wide, kWideRowBytes));
@@ -351,7 +371,7 @@ void FDashEventLog::Tick(float DeltaSeconds)
                 .Key("frame").Unsigned(Done.Frame)
                 .Key("t_present").Integer(Stamp.Nanoseconds)
                 .Key("signals").BeginArray();
-            for (const FDashRenderedSignal& Entry : *Shown)
+            for (const FDashRenderedSignal& Entry : Done.Rendered)
             {
                 Present.BeginObject().Key("signal").Unsigned(Entry.Signal);
                 // Null rather than omitted: a bound signal with no sample renders the
@@ -359,17 +379,24 @@ void FDashEventLog::Tick(float DeltaSeconds)
                 Present.Key("sample");
                 if (Entry.SampleId != 0) Present.Unsigned(Entry.SampleId); else Present.Null();
                 Present.Key("quality").Unsigned(Entry.Quality)
-                    // Chunk 19 fills the expiry; the Stage 0 path never interpolates.
-                    .Key("expiry").Null()
-                    .Key("derived_from").Null()
+                    .Key("expiry");
+                if (Entry.Expiry != 0) Present.Unsigned(Entry.Expiry); else Present.Null();
+                Present.Key("derived_from").Null()
                     .EndObject();
             }
             Present.EndArray().End();
             if (Impl->WideRows.Push(Present.View())) Impl->PresentRows.fetch_add(1, std::memory_order_relaxed);
             else Impl->Dropped.fetch_add(1, std::memory_order_relaxed);
-            Impl->Rendered.Remove(Done.Frame);
         }
     }
+
+    // Added AFTER the join, not before. This frame's rendered set is stashed later in the same
+    // tick, so joining it now would pair it with a stamp while it still had nothing to present.
+    FDashEventLogImpl::FPendingFrame Frame;
+    Frame.Frame = GFrameCounter;
+    Frame.StartNanoseconds = Now - FrameNanoseconds;
+    Frame.FrameNanoseconds = FrameNanoseconds;
+    Impl->Pending.Add(Frame);
 
     // A frame whose present stamp never arrives would otherwise accumulate for the life of the
     // run. Two seconds at 60 fps is far beyond any real pipeline depth.
@@ -377,7 +404,6 @@ void FDashEventLog::Tick(float DeltaSeconds)
     if (Impl->Pending.Num() > kMaxPending)
     {
         const int32 Excess = Impl->Pending.Num() - kMaxPending;
-        for (int32 Index = 0; Index < Excess; ++Index) Impl->Rendered.Remove(Impl->Pending[Index].Frame);
         Impl->Dropped.fetch_add(static_cast<uint64>(Excess), std::memory_order_relaxed);
         Impl->Pending.RemoveAt(0, Excess);
     }
@@ -451,9 +477,73 @@ void FDashEventLog::WriteRendered(uint64 Frame, TArrayView<const FDashRenderedSi
     if (!Impl.IsValid()) return;
     // Stashed, not written. The present row needs this frame's present timestamp, which the
     // render thread has not produced yet.
-    TArray<FDashRenderedSignal>& Slot = Impl->Rendered.FindOrAdd(Frame);
-    Slot.Reset(Rendered.Num());
-    Slot.Append(Rendered.GetData(), Rendered.Num());
+    FDashEventLogImpl::FPendingFrame* Slot = Impl->Find(Frame);
+    if (!Slot)
+    {
+        // The frame row's own data arrives from Tick, which runs first every frame. A missing
+        // entry here means the join already consumed it, so the present row has nowhere to go
+        // and is counted rather than lost quietly.
+        Impl->Dropped.fetch_add(1, std::memory_order_relaxed);
+        return;
+    }
+    Slot->bRendered = true;
+    Slot->Rendered.Reset(Rendered.Num());
+    Slot->Rendered.Append(Rendered.GetData(), Rendered.Num());
+}
+
+void FDashEventLog::WriteExpiryArmed(uint8 Kind, uint32 Id, uint64 Serial, uint64 Sample, uint64 Generation,
+    int64 DeadlineNanoseconds, uint8 Becomes)
+{
+    if (!Impl.IsValid()) return;
+    char Storage[kRowBytes];
+    signal_core::RowBuilder Row(std::span<char>(Storage, kRowBytes));
+    Row.Begin("expiry_armed")
+        .Key("expiry").Unsigned(Serial)
+        .Key("kind").Unsigned(Kind)
+        .Key("signal").Unsigned(Id)
+        .Key("sample").Unsigned(Sample)
+        .Key("generation").Unsigned(Generation)
+        .Key("t_armed").Integer(DeadlineNanoseconds)
+        .Key("becomes").Unsigned(Becomes)
+        .End();
+    if (Impl->ReceiveRows.Push(Row.View())) Impl->Armed.fetch_add(1, std::memory_order_relaxed);
+    else Impl->Dropped.fetch_add(1, std::memory_order_relaxed);
+}
+
+void FDashEventLog::WriteExpiryFired(uint8 Kind, uint64 Serial, int64 Nanoseconds)
+{
+    if (!Impl.IsValid()) return;
+    char Storage[kRowBytes];
+    signal_core::RowBuilder Row(std::span<char>(Storage, kRowBytes));
+    Row.Begin("expiry_status")
+        .Key("expiry").Unsigned(Serial)
+        .Key("kind").Unsigned(Kind)
+        .Key("status").String("fired")
+        .Key("t_fired").Integer(Nanoseconds)
+        .Key("reason").Null()
+        .Key("by").Null()
+        .End();
+    if (Impl->ReceiveRows.Push(Row.View())) Impl->Statuses.fetch_add(1, std::memory_order_relaxed);
+    else Impl->Dropped.fetch_add(1, std::memory_order_relaxed);
+}
+
+void FDashEventLog::WriteExpiryCancelled(uint8 Kind, uint64 Serial, uint8 Reason, uint64 By)
+{
+    if (!Impl.IsValid()) return;
+    char Storage[kRowBytes];
+    signal_core::RowBuilder Row(std::span<char>(Storage, kRowBytes));
+    Row.Begin("expiry_status")
+        .Key("expiry").Unsigned(Serial)
+        .Key("kind").Unsigned(Kind)
+        .Key("status").String("cancelled")
+        // t_fired is null for a cancellation: nothing fired, and a timestamp here would be a
+        // start endpoint for an observation that must never exist.
+        .Key("t_fired").Null()
+        .Key("reason").Unsigned(Reason)
+        .Key("by").Unsigned(By)
+        .End();
+    if (Impl->ReceiveRows.Push(Row.View())) Impl->Statuses.fetch_add(1, std::memory_order_relaxed);
+    else Impl->Dropped.fetch_add(1, std::memory_order_relaxed);
 }
 
 FDashEventLogCounts FDashEventLog::Counts() const
@@ -471,6 +561,8 @@ FDashEventLogCounts FDashEventLog::Counts() const
     Counts.Acquires = Impl->Acquires.load(std::memory_order_relaxed);
     Counts.Submits = Impl->Submits.load(std::memory_order_relaxed);
     Counts.Presents = Impl->PresentRows.load(std::memory_order_relaxed);
+    Counts.ExpiriesArmed = Impl->Armed.load(std::memory_order_relaxed);
+    Counts.ExpiryStatuses = Impl->Statuses.load(std::memory_order_relaxed);
     return Counts;
 }
 

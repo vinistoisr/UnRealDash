@@ -91,6 +91,32 @@ struct FDashAcquisition::FImpl final : FRunnable {
         void OnRuleTransition(std::uint32_t, signal_core::Time, bool, bool) override {}
     };
     FForwardingSink Sink;
+
+    // PLAN 4.8's expiry rows, from the same acquisition thread and through the same ring. The
+    // schedule is the one seam that sees every arm, cancel and fire, which is why this hangs off
+    // it rather than off the registry or the pipeline.
+    struct FExpirySink final : signal_core::IExpiryEventSink
+    {
+        std::atomic<FDashEventLog*> Log{nullptr};
+        void OnArmed(const signal_core::Expiry& Expiry) override
+        {
+            if (FDashEventLog* Target = Log.load(std::memory_order_acquire))
+                Target->WriteExpiryArmed(static_cast<uint8>(Expiry.kind), Expiry.id, Expiry.serial,
+                    Expiry.sample, Expiry.generation, Expiry.time.count(), Expiry.becomes);
+        }
+        void OnFired(const signal_core::Expiry& Expiry, signal_core::Time At) override
+        {
+            if (FDashEventLog* Target = Log.load(std::memory_order_acquire))
+                Target->WriteExpiryFired(static_cast<uint8>(Expiry.kind), Expiry.serial, At.count());
+        }
+        void OnCancelled(const signal_core::Expiry& Expiry, signal_core::CancelReason Reason, std::uint64_t By) override
+        {
+            if (FDashEventLog* Target = Log.load(std::memory_order_acquire))
+                Target->WriteExpiryCancelled(static_cast<uint8>(Expiry.kind), Expiry.serial,
+                    static_cast<uint8>(Reason), By);
+        }
+    };
+    FExpirySink ExpiryEvents;
     TUniquePtr<signal_core::SampleQueue> Display;
     std::array<uint8, 4096> ReadBuffer{};
     TUniquePtr<signal_core::AcquisitionPipeline> Pipeline;
@@ -100,7 +126,6 @@ struct FDashAcquisition::FImpl final : FRunnable {
     std::atomic<bool> bStop{false}, bStarted{false};
     TUniquePtr<FRunnableThread> Thread;
     FString Error;
-    uint64 Frame = 0;
     FImpl(const FString& Text, uint32 ExpectedSamplesPerFrame, const TArray<FAcquisitionThresholdRule>& Definitions);
     explicit FImpl(const FDashTcpOptions& Options);
     // Drives the reconnect schedule. Pump does not retry on its own: its read loop is gated on

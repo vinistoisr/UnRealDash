@@ -34,6 +34,10 @@ struct FDashRenderedSignal
     uint64 SampleId = 0;
     // valid, stale, unavailable or invalid, as rendered rather than as stored.
     uint8 Quality = 0;
+    // Which expiry firing this reading is displaying, or zero. The end endpoint of PLAN 4.8's
+    // expiry-to-present latency is matched on this rather than on the signal, or a later
+    // episode's frame could close an earlier expiry.
+    uint64 Expiry = 0;
 };
 
 struct FDashEventLogCounts
@@ -49,6 +53,8 @@ struct FDashEventLogCounts
     uint64 Acquires = 0;
     uint64 Submits = 0;
     uint64 Presents = 0;
+    uint64 ExpiriesArmed = 0;
+    uint64 ExpiryStatuses = 0;
 };
 
 class UNREALDASHCORE_API FDashEventLog
@@ -83,6 +89,13 @@ public:
     // and it is written inside the same join the per-frame row already uses. One join, one
     // present timestamp, so the two rows cannot disagree about when a frame reached the screen.
     void WriteRendered(uint64 Frame, TArrayView<const FDashRenderedSignal> Rendered);
+
+    // PLAN 4.8's armed-expiry and rule-expiry rows, and their one status row each. Called from
+    // the acquisition thread, through the same ring the receive rows use.
+    void WriteExpiryArmed(uint8 Kind, uint32 Id, uint64 Serial, uint64 Sample, uint64 Generation,
+        int64 DeadlineNanoseconds, uint8 Becomes);
+    void WriteExpiryFired(uint8 Kind, uint64 Serial, int64 Nanoseconds);
+    void WriteExpiryCancelled(uint8 Kind, uint64 Serial, uint8 Reason, uint64 By);
 
     FDashEventLogCounts Counts() const;
 

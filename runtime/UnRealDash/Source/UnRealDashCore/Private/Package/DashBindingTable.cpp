@@ -100,6 +100,7 @@ void FDashBindingTable::Apply(const FFrameSnapshot& Snapshot, TArray<FDashRender
         const int32 Slot = Snapshot.SignalIds.IndexOfByKey(Entry.Signal);
         FDashSignalValue Reading;
         uint64 SampleId = 0;
+        uint64 Expiry = 0;
         uint8 Quality = static_cast<uint8>(ESignalQuality::Unavailable);
         if (Slot != INDEX_NONE && Snapshot.Samples.IsValidIndex(Slot))
         {
@@ -112,12 +113,16 @@ void FDashBindingTable::Apply(const FFrameSnapshot& Snapshot, TArray<FDashRender
             Reading.Value = Reading.bHasValue ? Sample.Value : 0.0;
             SampleId = Sample.Id;
             Quality = static_cast<uint8>(Sample.Quality);
+            // Only a stale reading is displaying a firing. A valid one carries whatever serial
+            // its last staleness left behind, and reporting that would attribute an observation
+            // to an expiry the screen is no longer showing.
+            Expiry = Sample.Quality == ESignalQuality::Stale ? Sample.Expiry : 0;
         }
         Entry.Updater(Reading);
         // Recorded after the updater ran, so the row says what was rendered rather than what was
         // about to be. A bound signal with no sample keeps its entry, with a zero id: it renders
         // the missing-data presentation, which is a real thing on screen.
-        if (OutRendered) OutRendered->Add({Entry.Signal, SampleId, Quality});
+        if (OutRendered) OutRendered->Add({Entry.Signal, SampleId, Quality, Expiry});
     }
 }
 }
