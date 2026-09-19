@@ -25,6 +25,7 @@ public:
     FString StartScenario(double DurationSeconds);
     // PLAN 4.8. Empty on success; a failure is reported and the run continues.
     FString OpenEventLog(const UnRealDashCore::FDashEventLogOptions& Options) { return EventLog.Open(Options); }
+    void EnableOverlay();
     void CloseEventLog()
     {
         // EndRun before the detach: it writes the run_end cancellations, and detaching first
@@ -34,6 +35,7 @@ public:
             Acquisition->EndRun();
             Acquisition->SetEventLog(nullptr);
         }
+        if (DebugOverlay) RemoveOverlay();
         EventLog.Close();
     }
     UnRealDashCore::FDashEventLogCounts EventLogCounts() const { return EventLog.Counts(); }
@@ -64,6 +66,8 @@ protected:
     virtual void NativeTick(const FGeometry& Geometry, float DeltaTime) override;
 private:
     UWidget* BuildDocumentRoot(UWidget* Content);
+    void RemoveOverlay();
+    UPROPERTY(Transient) TObjectPtr<class UDashDebugOverlay> DebugOverlay;
     // Walks the built tree. Used only for the two logged counts, so its cost lands on two frames
     // out of six hundred rather than on every one.
     static int32 CountWidgets(UWidget* Root);

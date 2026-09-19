@@ -24,6 +24,7 @@ const TCHAR* const Documented[] = {
 const TCHAR* const Hidden[] = {
     TEXT("udash-state"), TEXT("udash-fraction"), TEXT("udash-shot-at"), TEXT("udash-sweep"),
     TEXT("udash-batch"), TEXT("udash-profile"),
+    TEXT("udash-overlay"), TEXT("udash-launch-counter"), TEXT("udash-launch-evidence"),
     // Chunk 19's forcing switches. PLAN 4.8's gate needs runs in which the acquisition side and
     // the presentation side are deliberately out of step, and nothing else can produce them.
     TEXT("udash-suppress-submit"), TEXT("udash-hold-frame-ms"), TEXT("udash-kill-at"),

@@ -164,7 +164,8 @@ TArray<FString> FDashPackage::AssetNames() const
     if (Impl) for (auto Name : Impl->Payload->AssetNames()) Result.Add(EngineText(Name));
     return Result;
 }
-bool FDashPackage::Asset(const FString& Reference, TConstArrayView<uint8>& Out, FDashLoadError& OutError) const
+bool FDashPackage::Asset(const FString& Reference, TConstArrayView<uint8>& Out, FDashLoadError& OutError,
+    FString* ResolvedName) const
 {
     Out = {};
     if (!Impl) { OutError = { TEXT("E_PKG_ASSET_NOT_IN_PACKAGE"), 44, TEXT(""), Reference, TEXT("") }; return false; }
@@ -179,6 +180,7 @@ bool FDashPackage::Asset(const FString& Reference, TConstArrayView<uint8>& Out, 
     std::span<const std::uint8_t> Bytes;
     const auto Error = Impl->Payload->Asset(Normalized, Bytes);
     if (!Error.Ok()) { TranslateError(Error, Impl->InputPath, OutError); return false; }
+    if (ResolvedName) *ResolvedName = EngineText(Normalized);
     Out = TConstArrayView<uint8>(Bytes.data(), static_cast<int32>(Bytes.size()));
     OutError = {};
     return true;

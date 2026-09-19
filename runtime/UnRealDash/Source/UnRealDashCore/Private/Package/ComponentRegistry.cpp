@@ -49,13 +49,14 @@ bool AdoptIntoPanel(const FAdoptContext& Context, FDashLoadError& OutError)
 }
 bool FWidgetTreeBuilder::Build(const FDashPackage& Package, EDashProfile Profile, const FComponentRegistry& Registry,
     const FDashTheme& Theme, EDashSignalState State, float Fraction, UWidget*& OutRoot,
-    FDashLoadError& OutError)
+    FDashLoadError& OutError, FDashEventLog* EventLog)
 {
     Widgets.Reset();
     Updaters.Reset();
     OutRoot = nullptr;
     OutError = {};
     const auto Nodes = Package.Components();
+    TMap<FString, UTexture2D*> ImageTextures;
     // Parent lookup by id, so an adopter can name the parent component rather than only its widget.
     TMap<FString, const FDashComponent*> ById;
     for (const auto& Node : Nodes) ById.Add(Node.Id, &Node);
@@ -73,7 +74,7 @@ bool FWidgetTreeBuilder::Build(const FDashPackage& Package, EDashProfile Profile
                 if (!Found) continue;
                 Parent = *Found;
             }
-            const FBuiltComponent Component = Registry.Build({Node, Package, Profile, Parent, Theme, State, Fraction}, OutError);
+            const FBuiltComponent Component = Registry.Build({Node, Package, Profile, Parent, Theme, State, Fraction, EventLog, &ImageTextures}, OutError);
             UWidget* Built = Component.Widget;
             if (!Built) { Widgets.Reset(); Updaters.Reset(); return false; }
             Built->SetToolTipText(FText::FromString(Node.Id));

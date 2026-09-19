@@ -4,18 +4,25 @@
 namespace UnRealDashCore
 {
 
-// PLAN 4.8's event log, engine side. The writer, the schema and the flush cadence live in
-// signal-core; this owns the two things that cannot: reading the platform's counters, and knowing
-// when a frame started and when the render thread finished with it.
-//
-// No signal_core name appears in this header, so the game module can drive the log without
-// reaching past UnRealDashCore, which is the one module allowed to call signal-core.
+// PLAN 4.8's engine seam. The append and flush primitives live below this module; the schemas,
+// platform counters and render join stay here because they describe engine-owned events.
+// Lower-layer types stay behind the pimpl so the game module can drive the log without them.
+struct FDashDeclaredRule
+{
+    uint32 Id = 0;
+    FString Name;
+};
+
 struct FDashEventLogOptions
 {
     // Where the log goes. The player logs the absolute path so a gate does not have to guess it.
     FString Path;
     FString BuildId;
     FString Rhi;
+    uint64 LaunchCounter = 0;
+    // The launcher writes its return counter after Start-Process, so it cannot be a launch argument.
+    FString LaunchEvidencePath;
+    TArray<FDashDeclaredRule> DeclaredRules;
     FIntPoint Resolution = FIntPoint(0, 0);
     // Only used to decide what counts as a missed frame. The rule goes in the header so a reader
     // never has to guess what "missed frames: 4" was measured against.
@@ -97,6 +104,10 @@ public:
     void WriteExpiryFired(uint8 Kind, uint64 Serial, int64 Nanoseconds);
     void WriteExpiryCancelled(uint8 Kind, uint64 Serial, uint8 Reason, uint64 By);
 
+    // Called after UpdateResource on the game thread; completion is stamped on the render thread.
+    void QueueAssetImport(const FString& Asset, uint64 Bytes, FIntPoint Pixels,
+        int64 DecodeStart, int64 DecodeEnd, int64 UploadStart);
+    void SampledMemory(uint64& Resident, uint64& Texture) const;
     FDashEventLogCounts Counts() const;
 
 private:

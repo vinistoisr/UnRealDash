@@ -3,6 +3,7 @@
 #include "UnRealDashCore/DashPackageLoader.h"
 #include "UnRealDashCore/DashTheme.h"
 class UWidget;
+class UTexture2D;
 class UWidgetTree;
 namespace UnRealDashCore
 {
@@ -21,6 +22,8 @@ struct FComponentContext
     // chunk 11 added State: the connectors that supply real values are PLAN 4.9, and a dial cannot
     // be captured at a known deflection before one exists. It is a gate input, never data.
     float Fraction = 0.f;
+    class FDashEventLog* EventLog = nullptr;
+    TMap<FString, UTexture2D*>* ImageTextures = nullptr;
 };
 // One signal's current reading, as a primitive needs to see it. The state is the four missing-data
 // states plus Valid, so a primitive never has to look at Quality and AgeEvidence itself.
@@ -87,7 +90,7 @@ class UNREALDASHCORE_API FWidgetTreeBuilder
 public:
     bool Build(const FDashPackage& Package, EDashProfile Profile, const FComponentRegistry& Registry,
         const FDashTheme& Theme, EDashSignalState State, float Fraction, UWidget*& OutRoot,
-        FDashLoadError& OutError);
+        FDashLoadError& OutError, class FDashEventLog* EventLog = nullptr);
     // Exact document IDs remain attached to their widgets, independent of traversal order.
     const TMap<FString, UWidget*>& WidgetsById() const { return Widgets; }
     // Only the components that bind a signal appear here. Keyed the same way, populated in the

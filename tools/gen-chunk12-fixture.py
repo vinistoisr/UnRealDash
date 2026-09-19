@@ -85,11 +85,10 @@ MEASURED = {'face': DAY['face'], 'needle': DAY['needle'], 'arc': DAY['arc'],
             'bar': DAY['bar'], 'trace': DAY['trace']}
 
 
-def face_png():
-    """A flat square in the face colour. Flat, because this is measured by colour and any gradient
-    or border would put part of the face outside the tolerance and shrink the measured box."""
-    red, green, blue = (int(DAY['face'][i:i + 2], 16) for i in (1, 3, 5))
-    size = 60
+def flat_png(colour, size):
+    """A flat square in one colour. Flat, because these fixtures are measured by colour and any
+    gradient or border would put part of the shape outside the tolerance."""
+    red, green, blue = (int(colour[i:i + 2], 16) for i in (1, 3, 5))
     import struct
     import zlib
     rows = bytearray()
@@ -104,6 +103,11 @@ def face_png():
     header = struct.pack('>IIBBBBB', size, size, 8, 6, 0, 0, 0)
     return (b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', header)
             + chunk(b'IDAT', zlib.compress(bytes(rows), 9)) + chunk(b'IEND', b''))
+
+
+
+def face_png():
+    return flat_png(DAY['face'], 60)
 
 
 def dashboard(face_policy='preserve', face_rect=None):
@@ -185,7 +189,7 @@ def signals():
     ]}
 
 
-def write_package(name, document, declared=None):
+def write_package(name, document, declared=None, extra_assets=None):
     # declared lets a later fixture add a signal this one does not know about. Chunk 18 needs one
     # that nothing binds, which is the only way to reach PLAN 4.8's acquired-not-displayed state
     # without forcing the acquisition and presentation sides out of step.
@@ -198,14 +202,22 @@ def write_package(name, document, declared=None):
     CHUNK11.write_json(directory / 'manifest.json', {
         'schema_version': 1, 'package_id': 'unrealdash.chunk12.' + name, 'revision': 1,
         'runtime_compatibility': 'stage0',
-        'assets': {'assets/face.png': {'width': 60, 'height': 60, 'format': 'rgba8',
-                                       'bytes': len(png)}},
+        'assets': dict({'assets/face.png': {'width': 60, 'height': 60, 'format': 'rgba8',
+                                            'bytes': len(png)}},
+                       **{n: {'width': 24, 'height': 24, 'format': 'rgba8', 'bytes': len(b)}
+                          for n, b in (extra_assets or {}).items()}),
     })
     asset = directory / 'assets/face.png'
     asset.parent.mkdir(parents=True, exist_ok=True)
     asset.write_bytes(png)
     outputs += [directory / 'dashboard.json', directory / 'signals.json',
                 directory / 'manifest.json', asset]
+    # A later fixture can add its own artwork without this one knowing the names.
+    for name_in_package, bytes_in_package in (extra_assets or {}).items():
+        path = directory / name_in_package
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(bytes_in_package)
+        outputs.append(path)
 
     archive = PACKAGES / (name + '.udash')
     with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as z:

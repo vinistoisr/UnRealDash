@@ -94,3 +94,43 @@ Note that the schema files do not currently reach the device; see
 `docs/reports/2026-09-17-device-package-gate.md`. Until that is fixed the five files in
 `packages/dashboard-spec/schema/` have to be pushed by hand, and any results collected that way
 are evidence about the loader rather than about packaging.
+
+## Chunk 20 launch and event-log diagnostics
+
+`capture-metrics.ps1 -Launch -Target windows -Player <exe> -Package <package>` launches a
+60-second sweep by default. `-Seconds` changes the duration; `-PlayerArguments` replaces the
+sweep arguments for another connector. It passes the launch-request QPC reading through
+`-udash-launch-counter` and atomically publishes the counter read after `Start-Process` returns
+in a unique JSON evidence file. The app records that difference in the header as
+`uncertainty.windows_launch_overhead_counter`; divide by the launch row's `counter_frequency`
+for seconds. The extra hidden `-udash-launch-evidence` switch identifies that file. A missing
+file or counter remains unmeasured, not zero elapsed time.
+
+The hidden `-udash-overlay` switch constructs the debug widget only when requested. Its frame
+window is 240 samples, its percentiles use nearest rank, and it refreshes its display four times
+per second. Memory comes from the sampler's latest values. Its ring never feeds an event writer.
+
+`validate-event-log.py <log> --survived-kill` requires at least 29 seconds separately in frame,
+sampled, receive, acquire, submit and present. `--all-types` requires every known and declared
+record type to occur. `--orderly` rejects unresolved expiries. `--launch-required` rejects
+missing launch endpoints or measured uncertainty, and reports the launch duration without
+gating it against a machine-dependent cold-start target. `--expect-assets=a.png,b.png` checks
+exactly one import for each listed package-relative name. These options do not launch a run.
+
+Rule expiries retain the existing expiry columns: kind 1 is hold_last, kind 2 is debounce, and
+`signal` carries the numeric rule id for those kinds. The header's `declared_rules` maps each
+numeric `id` to its document `name`. Supply `--document <dashboard.json>` when validating such
+rows so the classifier can check those names against the document's rules. Every rule arming
+must have exactly one status, even without `--lifecycle`. Stage 0 currently loads no threshold
+rules, so its declaration list and rule-expiry rows are empty; a synthetic proof must supply both
+the declaration mapping and document.
+
+Android sources and launch fields are implemented but have not been device-verified. Thermal
+status from the NDK is a severity rather than Celsius, so temperature uses the first readable
+CPU/GPU sysfs zone and names it in the header. Process start comes from `/proc/self/stat` field
+22 and `_SC_CLK_TCK`. A startup boot-clock offset maps the first presentation onto boot time
+without a file or OS call in the frame path; this assumes no suspend before first usable and
+is stated in the uncertainty text. The optional evidence JSON accepts `am_start_output`,
+`am_launch_state` and `observed_spread_ns`. Those auxiliary values must come from the device
+harness; this chunk does not run `am start -W`, and absent evidence stays null. The Windows
+launch mode rejects `-Target device` rather than claiming to capture that evidence.

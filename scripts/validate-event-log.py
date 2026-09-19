@@ -11,16 +11,35 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from pathlib import Path
 
 # Columns every record carries in addition to its declared ones.
 IMPLICIT = {"type"}
-# Timestamp columns, checked for presence, positivity and monotonicity per record type. Named
-# rather than inferred from a prefix, so a column added later is a deliberate decision.
-TIMESTAMPS = {"t", "t_start", "t_present", "t_recv", "t_acquire", "t_submit", "t_armed"}
-# t_fired is null on a cancellation, so it cannot be in the always-present set. The classifier
-# checks it where it must exist instead.
+# Known timestamp columns. Additional declared t_ columns receive the same checks so a new
+# record cannot quietly bypass positivity and monotonicity validation.
+TIMESTAMPS = {"t", "t_start", "t_present", "t_recv", "t_acquire", "t_submit", "t_armed",
+              "t_decode_start", "t_decode_end", "t_upload_start", "t_first_usable"}
+COLUMNS = {
+    "frame": "frame t_start frame_ns t_present missed resident_bytes texture_bytes",
+    "sampled": "t resident_bytes texture_bytes handles temperature_c",
+    "receive": "sample signal t_recv seq generation quality age_evidence",
+    "acquire": "frame t_acquire samples",
+    "submit": "frame t_submit",
+    "present": "frame t_present signals",
+    "expiry_armed": "expiry kind signal sample generation t_armed becomes",
+    "expiry_status": "expiry kind status t_fired reason by",
+    "asset_import": "asset bytes width height t_decode_start t_decode_end t_upload_start t_first_usable",
+    "first_usable": "frame t_present",
+    "launch": "launch_counter first_usable_counter counter_frequency process_start_ticks "
+              "process_ticks_per_second first_usable_boot_ns am_start_output am_launch_state",
+}
+PRIMARY = {"frame": "t_start", "sampled": "t", "receive": "t_recv", "acquire": "t_acquire",
+           "submit": "t_submit", "present": "t_present", "expiry_armed": "t_armed",
+           "expiry_status": "t_fired", "asset_import": "t_first_usable", "first_usable": "t_present"}
+
+# t_fired is null only on a cancellation; a firing must carry a positive monotonic endpoint.
 NULLABLE_TIMESTAMPS = {"t_fired"}
 # Mirrors signal_core::Quality and CancelReason.
 STALE = 1
@@ -235,6 +254,161 @@ def expiries(receives, armed, statuses, presents, problems, quiet) -> None:
                   f"p95 {ordered[index]:.2f} ms")
 
 
+def positive(value):
+    return (type(value) is int and 0 < value <= 2**64 - 1) or (type(value) is float and math.isfinite(value) and value > 0)
+
+
+def row_values(record, problems, number):
+    """Reject malformed join keys before they can turn a diagnostic into a Python exception."""
+    kind = record["type"]
+    invalid = []
+    for key in ("frame", "sample", "signal", "expiry", "seq", "generation", "quality", "age_evidence"):
+        if key in record and (type(record[key]) is not int or record[key] < 0):
+            invalid.append(key)
+    if kind == "acquire" and (not isinstance(record["samples"], list) or
+            any(type(x) is not int or x <= 0 for x in record["samples"])):
+        invalid.append("samples")
+    if kind == "present":
+        entries = record["signals"]
+        if not isinstance(entries, list):
+            invalid.append("signals")
+        else:
+            for entry in entries:
+                if (not isinstance(entry, dict) or
+                        set(entry) != {"signal", "sample", "quality", "expiry", "derived_from"} or
+                        type(entry["signal"]) is not int or entry["signal"] < 0 or
+                        type(entry["quality"]) is not int or entry["quality"] not in range(4) or
+                        any(entry[k] is not None and (type(entry[k]) is not int or entry[k] <= 0)
+                            for k in ("sample", "expiry", "derived_from"))):
+                    invalid.append("signals entry")
+    if kind in ("expiry_armed", "expiry_status"):
+        if type(record["kind"]) is not int or record["kind"] not in (0, 1, 2):
+            invalid.append("kind (expected freshness=0, hold_last=1 or debounce=2)")
+    if kind == "expiry_status":
+        if record["status"] not in ("fired", "cancelled"):
+            invalid.append("status")
+        if record["status"] == "cancelled" and record["t_fired"] is not None:
+            invalid.append("t_fired (must be null on cancellation)")
+    if invalid:
+        problems.append(f"line {number}: {kind} invalid {', '.join(invalid)}")
+    return not invalid
+
+
+def check_chunk20(rows, presents, armed, statuses, header, arguments, problems):
+    imports = rows.get("asset_import", [])
+    assets = set()
+    for row in imports:
+        name = row["asset"]
+        if not isinstance(name, str) or not name:
+            problems.append("asset import needs a package-relative identifier")
+            continue
+        if name in assets:
+            problems.append(f"asset {name!r} has more than one import row")
+        assets.add(name)
+        if name.startswith(("/", "\\")) or ".." in name.split("/") or ":" in name:
+            problems.append(f"asset {name!r} is not package-relative")
+        for column in ("bytes", "width", "height"):
+            if type(row[column]) is not int or row[column] <= 0:
+                problems.append(f"asset {name!r}: {column} must be a positive integer")
+        stamps = [row[c] for c in ("t_decode_start", "t_decode_end", "t_upload_start", "t_first_usable")]
+        if all(positive(t) for t in stamps) and not (stamps[0] <= stamps[1] <= stamps[2] < stamps[3]):
+            problems.append(f"asset {name!r}: decode, upload and completion are out of order")
+    if arguments.expect_assets:
+        wanted = set(arguments.expect_assets.split(","))
+        if wanted != assets:
+            problems.append(f"asset imports differ: missing {sorted(wanted-assets)}, extra {sorted(assets-wanted)}")
+
+    first = rows.get("first_usable", [])
+    launches = rows.get("launch", [])
+    valid = [(when, frame) for frame, (entries, when) in presents.items()
+             if positive(when) and any(entry["quality"] == 0 for entry in entries)]
+    if "first_usable" in arguments.declared_types and valid and len(first) != 1:
+        problems.append(f"expected one first_usable record, got {len(first)}")
+    if len(first) > 1 or (first and not valid):
+        problems.append("first_usable must identify exactly the earliest valid presentation")
+    if first and valid:
+        when, frame = min(valid)
+        if first[0]["frame"] != frame or first[0]["t_present"] != when:
+            problems.append("first_usable does not name the earliest present row with rendered quality 0")
+    if len(launches) != len(first):
+        problems.append("launch and first_usable records must occur together, once")
+    uncertainty = header.get("uncertainty", {})
+    if not isinstance(uncertainty, dict):
+        uncertainty = {}
+    for launch in launches:
+        for column in ("first_usable_counter", "counter_frequency"):
+            if type(launch[column]) is not int or launch[column] <= 0:
+                problems.append(f"launch.{column} must be a positive counter value")
+        for column in ("launch_counter", "process_start_ticks", "process_ticks_per_second", "first_usable_boot_ns"):
+            if launch[column] is not None and (type(launch[column]) is not int or launch[column] <= 0):
+                problems.append(f"launch.{column} must be positive when measured")
+        start, end, frequency = (launch[k] for k in ("launch_counter", "first_usable_counter", "counter_frequency"))
+        if all(positive(v) for v in (start, end, frequency)):
+            seconds = (end - start) / frequency
+            if seconds <= 0:
+                problems.append("launch-to-first-usable must be positive")
+            if not arguments.quiet:
+                print(f"launch   {seconds:.6f}s from launch request; under 30s: {seconds < 30}")
+        elif arguments.launch_required and "windows" in str(header.get("platform", "")).lower():
+            problems.append("Windows launch measurement has no launcher counter")
+        if "windows" in str(header.get("platform", "")).lower():
+            if not uncertainty.get("windows"):
+                problems.append("header has no Windows launch uncertainty text")
+            if arguments.launch_required and not positive(uncertainty.get("windows_launch_overhead_counter")):
+                problems.append("Windows launch uncertainty was not measured")
+        if launch["am_start_output"] is not None and not isinstance(launch["am_start_output"], str):
+            problems.append("launch.am_start_output must be text or null")
+        if launch["am_launch_state"] is not None and launch["am_launch_state"] not in ("COLD", "WARM", "HOT"):
+            problems.append("launch.am_launch_state must be COLD, WARM, HOT or null")
+        if "android" in str(header.get("platform", "")).lower():
+            ticks, tick_hz, boot_ns = (launch[k] for k in
+                                      ("process_start_ticks", "process_ticks_per_second", "first_usable_boot_ns"))
+            if all(positive(v) for v in (ticks, tick_hz, boot_ns)):
+                seconds = boot_ns / 1e9 - ticks / tick_hz
+                if seconds <= 0:
+                    problems.append("Android first usable must follow process start on the boot-time clock")
+                if not arguments.quiet:
+                    print(f"launch   {seconds:.6f}s from process start; tick granularity {1/tick_hz:.6f}s")
+            if not uncertainty.get("android"):
+                problems.append("header has no Android launch uncertainty text")
+            if arguments.launch_required:
+                for column in ("process_start_ticks", "process_ticks_per_second", "first_usable_boot_ns"):
+                    if not positive(launch[column]): problems.append(f"Android launch missing {column}")
+                if not launch["am_start_output"] or launch["am_launch_state"] not in ("COLD", "WARM", "HOT"):
+                    problems.append("Android launch missing am start -W output or launch state")
+                if not positive(uncertainty.get("android_tick_ns")):
+                    problems.append("Android uncertainty has no process-start tick granularity")
+                spread = uncertainty.get("android_am_spread_ns")
+                if type(spread) not in (int, float) or not math.isfinite(spread) or spread < 0:
+                    problems.append("Android uncertainty has no observed spread against am start -W")
+    if arguments.launch_required and not launches:
+        problems.append("no launch measurement")
+
+    declared = header.get("declared_rules", [])
+    rule_ids = set()
+    for rule in declared if isinstance(declared, list) else []:
+        if isinstance(rule, dict) and type(rule.get("id")) is int and isinstance(rule.get("name"), str):
+            if arguments.document_rules is None or rule["name"] not in arguments.document_rules:
+                problems.append(f"rule {rule['name']!r} is not proven declared in the loaded document; supply --document")
+            else:
+                rule_ids.add(rule["id"])
+    for serial, row in armed.items():
+        matched = statuses.get(serial, [])
+        if row["kind"] in (1, 2):
+            if row["signal"] not in rule_ids:
+                problems.append(f"rule expiry {serial} names undeclared rule {row['signal']}")
+            if len(matched) != 1:
+                problems.append(f"rule expiry {serial} has {len(matched)} status rows, not exactly one")
+        if arguments.orderly and len(matched) != 1:
+            problems.append(f"orderly run: expiry {serial} has {len(matched)} status rows, not exactly one")
+        for status in matched:
+            if status["kind"] != row["kind"]:
+                problems.append(f"expiry {serial} status kind differs from arming")
+            if status["status"] == "fired" and positive(status["t_fired"]) and positive(row["t_armed"]):
+                if status["t_fired"] < row["t_armed"]:
+                    problems.append(f"expiry {serial} fired before its deadline")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("log", type=Path)
@@ -250,13 +424,31 @@ def main() -> int:
     parser.add_argument("--lifecycle", action="store_true",
                         help="classify every published sample into PLAN 4.8's four states and "
                              "check that the four counts sum to the published count")
+    parser.add_argument("--survived-kill", action="store_true",
+                        help="require 29 seconds in each of frame, sampled, receive, acquire, submit and present")
+    parser.add_argument("--all-types", action="store_true", help="require a row of every declared record type")
+    parser.add_argument("--orderly", action="store_true", help="require one status for every armed expiry")
+    parser.add_argument("--launch-required", action="store_true", help="require measured launch endpoints and uncertainty")
+    parser.add_argument("--expect-assets", default="", help="comma separated package-relative imported asset identifiers")
+    parser.add_argument("--document", type=Path, help="loaded dashboard.json, used to verify declared rule names")
     parser.add_argument("--quiet", action="store_true")
     arguments = parser.parse_args()
 
     if not arguments.log.exists():
         print(f"No such log: {arguments.log}")
         return 2
-    raw = arguments.log.read_bytes()
+    try:
+        raw = arguments.log.read_bytes()
+        arguments.document_rules = None
+        if arguments.document:
+            document = json.loads(arguments.document.read_text(encoding="utf-8-sig"))
+            arguments.document_rules = document.get("dashboard", document).get("rules", {})
+            if not isinstance(arguments.document_rules, dict):
+                print("Document rules must be an object")
+                return 2
+    except (OSError, ValueError, AttributeError) as error:
+        print(f"Cannot read input: {error}")
+        return 2
     if not raw:
         print(f"Empty log: {arguments.log}")
         return 2
@@ -286,7 +478,8 @@ def main() -> int:
     # rows at the wrong rate passes a row count and fails this.
     primary: dict[str, list[float]] = {}
 
-    # Kept only for --lifecycle, so an ordinary validation pays nothing for them.
+    rows: dict[str, list[dict]] = {}
+    # Semantic joins are validated even when lifecycle reporting is not requested.
     receives: dict[int, dict] = {}
     receive_order: list[int] = []
     acquires: dict[int, list[int]] = {}
@@ -324,6 +517,10 @@ def main() -> int:
                 if not isinstance(columns, list) or not all(isinstance(c, str) for c in columns):
                     fail(problems, f"line {number}: schema for {name} is not a list of column names")
                     continue
+                if len(columns) != len(set(columns)):
+                    fail(problems, f"line {number}: schema for {name} has duplicate columns")
+                if name in COLUMNS and columns != COLUMNS[name].split():
+                    fail(problems, f"line {number}: schema for {name} differs from its frozen columns")
                 schema[name] = columns
             continue
         if kind == "header":
@@ -343,39 +540,49 @@ def main() -> int:
             fail(problems, f"line {number}: {kind} columns differ; missing {missing}, unexpected {extra}")
             continue
 
-        if arguments.lifecycle:
-            if kind == "receive":
-                receives[record["sample"]] = record
-                receive_order.append(record["sample"])
-            elif kind == "acquire":
-                acquires[record["frame"]] = record["samples"]
-            elif kind == "submit":
-                submitted.add(record["frame"])
-            elif kind == "present":
-                presents[record["frame"]] = (record["signals"], record["t_present"])
-            elif kind == "expiry_armed":
-                armed[record["expiry"]] = record
-            elif kind == "expiry_status":
-                statuses.setdefault(record["expiry"], []).append(record)
+        if kind in COLUMNS and not set(COLUMNS[kind].split()).issubset(record):
+            continue
+        if not row_values(record, problems, number):
+            continue
+        rows.setdefault(kind, []).append(record)
+        if kind == "receive":
+            if record["sample"] in receives:
+                fail(problems, f"line {number}: duplicate receive sample")
+            receives[record["sample"]] = record
+            receive_order.append(record["sample"])
+        elif kind == "acquire":
+            acquires[record["frame"]] = record["samples"]
+        elif kind == "submit":
+            submitted.add(record["frame"])
+        elif kind == "present":
+            if record["frame"] in presents:
+                fail(problems, f"line {number}: duplicate present frame")
+            presents[record["frame"]] = (record["signals"], record["t_present"])
+        elif kind == "expiry_armed":
+            if record["expiry"] in armed:
+                fail(problems, f"line {number}: duplicate expiry arming")
+            armed[record["expiry"]] = record
+        elif kind == "expiry_status":
+            statuses.setdefault(record["expiry"], []).append(record)
 
         for column in schema[kind]:
-            if column not in TIMESTAMPS:
+            if column not in TIMESTAMPS | NULLABLE_TIMESTAMPS and not column.startswith("t_"):
                 continue
             value = record[column]
-            if not isinstance(value, (int, float)) or isinstance(value, bool):
-                fail(problems, f"line {number}: {kind}.{column} is not a number")
+            if column == "t_fired" and record.get("status") == "cancelled" and value is None:
                 continue
-            if value <= 0:
-                fail(problems, f"line {number}: {kind}.{column} is not positive")
+            if not positive(value):
+                fail(problems, f"line {number}: {kind}.{column} is not finite and positive")
                 continue
             key = (kind, column)
             if key in last_time and value < last_time[key]:
                 fail(problems, f"line {number}: {kind}.{column} went backwards")
             last_time[key] = value
-            first, _ = spans.get(kind, (value, value))
-            spans[kind] = (first, value)
-            if column == schema[kind][0] or (kind not in primary and column in TIMESTAMPS):
+            primary_column = PRIMARY.get(kind, next((c for c in schema[kind] if c.startswith("t_")), None))
+            if column == primary_column:
                 primary.setdefault(kind, []).append(value)
+                first, _ = spans.get(kind, (value, value))
+                spans[kind] = (first, value)
 
     if not schema:
         fail(problems, "the log declares no schema")
@@ -384,7 +591,12 @@ def main() -> int:
     if trailing_partial > 1:
         fail(problems, "more than one trailing partial line")
 
-    for kind in [t for t in arguments.expect_types.split(",") if t]:
+    arguments.declared_types = schema
+    wanted_types = set(t for t in arguments.expect_types.split(",") if t)
+    if arguments.all_types:
+        wanted_types.update(schema)
+        wanted_types.update(COLUMNS)
+    for kind in wanted_types:
         if counts.get(kind, 0) == 0:
             fail(problems, f"no rows of type {kind!r}")
 
@@ -395,16 +607,35 @@ def main() -> int:
             fail(problems, f"cannot measure the cadence of {name!r}: {len(stamps)} timestamped rows")
             continue
         mean = (stamps[-1] - stamps[0]) / 1e9 / (len(stamps) - 1)
-        target = float(wanted)
+        try:
+            target = float(wanted)
+        except ValueError:
+            fail(problems, f"invalid cadence target {entry!r}")
+            continue
+        if not positive(target):
+            fail(problems, f"invalid cadence target {entry!r}")
+            continue
         if abs(mean - target) > target * arguments.cadence_tolerance:
             fail(problems, f"{name} rows are {mean:.4f}s apart, not {target:.4f}s "
                            f"within {arguments.cadence_tolerance:.1%}")
         elif not arguments.quiet:
             print(f"cadence  {name} {mean:.4f}s between rows, target {target:.4f}s")
 
-    if arguments.lifecycle:
-        classify(receives, receive_order, acquires, submitted, presents, problems, arguments.quiet)
+    classify(receives, receive_order, acquires, submitted, presents, problems, arguments.quiet or not arguments.lifecycle)
+    # Timestamp failures are already diagnosed. Avoid arithmetic on malformed endpoints in joins.
+    endpoints_ok = all(positive(r["t_recv"]) for r in receives.values()) and all(
+        positive(r["t_armed"]) for r in armed.values()) and all(positive(t) for _, t in presents.values())
+    endpoints_ok = endpoints_ok and all(r["status"] == "cancelled" or positive(r["t_fired"])
+                                       for group in statuses.values() for r in group)
+    if endpoints_ok:
         expiries(receives, armed, statuses, presents, problems, arguments.quiet)
+    check_chunk20(rows, presents, armed, statuses, header or {}, arguments, problems)
+    if arguments.survived_kill:
+        for kind in ("frame", "sampled", "receive", "acquire", "submit", "present"):
+            stamps = primary.get(kind, [])
+            span = (stamps[-1] - stamps[0]) / 1e9 if len(stamps) > 1 else 0
+            if span < 29:
+                fail(problems, f"killed run: {kind} spans {span:.3f}s, needs at least 29s")
 
     elapsed = 0.0
     for kind, (first, last) in spans.items():

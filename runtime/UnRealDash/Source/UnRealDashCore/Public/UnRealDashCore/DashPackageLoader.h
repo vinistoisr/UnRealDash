@@ -73,7 +73,8 @@ public:
     TArray<FString> AssetNames() const;
     // Takes an asset reference exactly as the document writes it and normalizes it through the
     // package path rules before looking it up.
-    bool Asset(const FString& Reference, TConstArrayView<uint8>& Out, FDashLoadError& OutError) const;
+    bool Asset(const FString& Reference, TConstArrayView<uint8>& Out, FDashLoadError& OutError,
+        FString* ResolvedName = nullptr) const;
     FString Path() const;
 private:
     struct FImpl;

@@ -1,4 +1,5 @@
 #include "DashPackageScreen.h"
+#include "DashDebugOverlay.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
@@ -47,11 +48,12 @@ TSharedRef<SWidget> UDashPackageScreen::RebuildWidget()
     {
         UnRealDashCore::FComponentRegistry Registry;
         UnRealDashCore::RegisterStage0Builders(Registry, *WidgetTree);
-        Accepted = Builder.Build(Package, Profile, Registry, Theme, State, Fraction, Content, Error);
+        Accepted = Builder.Build(Package, Profile, Registry, Theme, State, Fraction, Content, Error, &EventLog);
         // The bindings are resolved once, here, not per frame. A string comparison against every
         // declared signal for every binding every frame is invisible on a workstation and a dropped
         // frame on a head unit.
         if (Accepted) Accepted = Bindings.Build(Package, Builder.UpdatersById(), SignalIds, Error);
+        if (Accepted) Rendered.Reserve(Builder.UpdatersById().Num());
         if (!Accepted) UE_LOG(LogUnRealDash, Error, TEXT("%s"), *Error.DisplayText());
     }
     WidgetTree->RootWidget = Accepted ? BuildDocumentRoot(Content) : BuildErrorRoot();
@@ -176,12 +178,36 @@ UnRealDashCore::FConnectionHealth UDashPackageScreen::GetHealth() const
 {
     return Acquisition ? Acquisition->GetHealth() : UnRealDashCore::FConnectionHealth{};
 }
+void UDashPackageScreen::EnableOverlay()
+{
+    DebugOverlay = CreateWidget<UDashDebugOverlay>(GetWorld(), UDashDebugOverlay::StaticClass());
+    if (!DebugOverlay)
+    {
+        UE_LOG(LogUnRealDash, Error, TEXT("Debug overlay could not be constructed"));
+        return;
+    }
+    DebugOverlay->InitializeSignals(Bindings.SignalNames(), SignalIds);
+    DebugOverlay->AddToViewport(100);
+    DebugOverlay->SetPositionInViewport(FVector2D(12.f, 12.f), false);
+    DebugOverlay->SetDesiredSizeInViewport(FVector2D(420.f, 240.f + 24.f * Bindings.SignalNames().Num()));
+}
+void UDashPackageScreen::RemoveOverlay()
+{
+    DebugOverlay->RemoveFromParent();
+    DebugOverlay = nullptr;
+}
 void UDashPackageScreen::NativeTick(const FGeometry& Geometry, float DeltaTime)
 {
     Super::NativeTick(Geometry, DeltaTime);
     // Before the early return: a run with no connector still has frames, and 4.8's per-frame rows
     // are about the renderer rather than about the data.
     EventLog.Tick(DeltaTime);
+    if (DebugOverlay)
+    {
+        uint64 Resident = 0, Texture = 0;
+        EventLog.SampledMemory(Resident, Texture);
+        DebugOverlay->Advance(DeltaTime, Resident, Texture, Snapshot);
+    }
     if (!Acquisition) return;
     // Acquired once per tick and passed down. Acquiring per binding could straddle a publication
     // and hand two components values from different ones, which is exactly what the triple buffer
@@ -376,15 +402,28 @@ void ADashPackageHUD::BeginPlay()
     if (Config.Profile == TEXT("mobile")) Profile = UnRealDashCore::EDashProfile::Mobile;
     else if (Config.Profile == TEXT("desktop")) Profile = UnRealDashCore::EDashProfile::Desktop;
 
-    Screen->Open(Config.Udash, Profile, State, Fraction);
-    Screen->AddToViewport();
-
     // PLAN 4.8's event log. Always on and always at the same place, so a gate reads the logged
     // path rather than being handed a flag; chunk 16 froze the command-line surface and 4.8 names
     // no flag of its own.
     UnRealDashCore::FDashEventLogOptions LogOptions;
     LogOptions.Path = FPaths::Combine(Saved, TEXT("events"), TEXT("run.jsonl"));
     LogOptions.BuildId = FApp::GetBuildVersion();
+    FString LaunchText;
+    if (FParse::Value(FCommandLine::Get(), TEXT("udash-launch-counter="), LaunchText))
+    {
+        uint64 Counter = 0;
+        bool Valid = !LaunchText.IsEmpty();
+        for (TCHAR Digit : LaunchText)
+        {
+            if (Digit < TEXT('0') || Digit > TEXT('9') ||
+                Counter > (MAX_uint64 - static_cast<uint64>(Digit - TEXT('0'))) / 10)
+            { Valid = false; break; }
+            Counter = Counter * 10 + Digit - TEXT('0');
+        }
+        if (Valid && Counter > 0) LogOptions.LaunchCounter = Counter;
+        else UE_LOG(LogUnRealDash, Error, TEXT("DashEventLog invalid launch counter: %s; launch endpoint unavailable"), *LaunchText);
+    }
+    FParse::Value(FCommandLine::Get(), TEXT("udash-launch-evidence="), LogOptions.LaunchEvidencePath);
     LogOptions.Rhi = GDynamicRHI ? GDynamicRHI->GetName() : TEXT("unknown");
     // GSystemResolution rather than the viewport: BeginPlay runs before the game viewport has a
     // size, so reading it there wrote 0 by 0 into the header of every run.
@@ -407,6 +446,8 @@ void ADashPackageHUD::BeginPlay()
         // itself is worse than one that starts without it, so this says so and carries on.
         UE_LOG(LogUnRealDash, Error, TEXT("DashEventLog unavailable: %s"), *LogFailure);
     }
+    Screen->Open(Config.Udash, Profile, State, Fraction);
+    Screen->AddToViewport();
     UE_LOG(LogUnRealDash, Display, TEXT("DashVerdict accepted=%s code=%s pointer=%s path=%s state=%s"),
         Screen->WasAccepted() ? TEXT("true") : TEXT("false"),
         *Screen->LastError().CodeName, *Screen->LastError().Pointer, *Config.Udash,
@@ -479,6 +520,8 @@ void ADashPackageHUD::BeginPlay()
             { FPlatformMisc::RequestExitWithStatus(true, 9); }), FCString::Atof(*KillText), false);
         UE_LOG(LogUnRealDash, Display, TEXT("DashForcing kill-at=%s"), *KillText);
     }
+
+    if (FParse::Param(FCommandLine::Get(), TEXT("udash-overlay"))) Screen->EnableOverlay();
 
     if (Config.QuitAfterSeconds > 0)
     {

@@ -1,4 +1,6 @@
 #include "Primitives.h"
+#include "UnRealDashCore/DashEventLog.h"
+#include "UnRealDashCore/MonotonicClock.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanel.h"
 #include "Components/Image.h"
@@ -18,10 +20,14 @@ namespace
 // declared dimensions against the manifest and the profile texture budget. They are kept because
 // this function allocates from numbers a decoder reports, and a decoder is the wrong place to take
 // a size on trust.
-bool DecodePng(TConstArrayView<uint8> Bytes, UTexture2D*& Out, FString& Error)
+bool DecodePng(TConstArrayView<uint8> Bytes, const FString& Name, FDashEventLog* Log,
+    UTexture2D*& Out, FString& Error)
 {
-    IImageWrapperModule& Images = FModuleManager::LoadModuleChecked<IImageWrapperModule>(TEXT("ImageWrapper"));
-    const auto Wrapper = Images.CreateImageWrapper(EImageFormat::PNG);
+    const FMonotonicClock Clock = MakePlatformClock();
+    const int64 DecodeStart = Clock.NowNanoseconds(Clock.Context);
+    IImageWrapperModule* Images = FModuleManager::LoadModulePtr<IImageWrapperModule>(TEXT("ImageWrapper"));
+    if (!Images) { Error = TEXT("ImageWrapper module unavailable"); return false; }
+    const auto Wrapper = Images->CreateImageWrapper(EImageFormat::PNG);
     if (!Wrapper.IsValid() || !Wrapper->SetCompressed(Bytes.GetData(), Bytes.Num()))
     { Error = TEXT("Malformed PNG"); return false; }
     const int64 Width = Wrapper->GetWidth(), Height = Wrapper->GetHeight();
@@ -30,6 +36,7 @@ bool DecodePng(TConstArrayView<uint8> Bytes, UTexture2D*& Out, FString& Error)
     TArray64<uint8> Raw;
     if (!Wrapper->GetRaw(ERGBFormat::BGRA, 8, Raw) || Raw.Num() != Width * Height * 4)
     { Error = TEXT("PNG decode failed"); return false; }
+    const int64 DecodeEnd = Clock.NowNanoseconds(Clock.Context);
     Out = UTexture2D::CreateTransient(static_cast<int32>(Width), static_cast<int32>(Height), PF_B8G8R8A8);
     if (!Out || !Out->GetPlatformData() || Out->GetPlatformData()->Mips.Num() == 0)
     { Error = TEXT("Texture allocation failed"); return false; }
@@ -43,7 +50,11 @@ bool DecodePng(TConstArrayView<uint8> Bytes, UTexture2D*& Out, FString& Error)
     // filtering of the same artwork differs in the last bit or two across driver versions, which
     // the screenshot gate would report as a change nobody made.
     Out->Filter = TF_Nearest;
+    const int64 UploadStart = Clock.NowNanoseconds(Clock.Context);
     Out->UpdateResource();
+    // The package reader checked these dimensions against the declaration before this builder ran.
+    if (Log) Log->QueueAssetImport(Name, Bytes.Num(), FIntPoint(Width, Height),
+        DecodeStart, DecodeEnd, UploadStart);
     return true;
 }
 }
@@ -68,21 +79,26 @@ FBuiltComponent BuildImage(const FComponentContext& Context, FDashLoadError& Out
         return {};
     }
     TConstArrayView<uint8> Bytes;
+    FString ResolvedName;
     // A missing asset is a readable error naming the component, not a blank space. A blank space
     // in a cluster reads as a design with a gap in it rather than as a package that is wrong.
-    if (!Context.Package.Asset(Name, Bytes, OutError))
+    if (!Context.Package.Asset(Name, Bytes, OutError, &ResolvedName))
     {
         OutError.Pointer = Context.Component.Pointer + TEXT("/properties/asset");
         return {};
     }
     UTexture2D* Texture = nullptr;
+    // Several components can share artwork; one import and one completion belong to that asset.
+    if (Context.ImageTextures)
+        if (UTexture2D** Cached = Context.ImageTextures->Find(ResolvedName)) Texture = *Cached;
     FString Error;
-    if (!DecodePng(Bytes, Texture, Error))
+    if (!Texture && !DecodePng(Bytes, ResolvedName, Context.EventLog, Texture, Error))
     {
         OutError = { TEXT("E_PKG_ASSET_UNREADABLE"), 45, Context.Component.Pointer + TEXT("/properties/asset"),
             Name + TEXT(": ") + Error, Context.Package.Path() };
         return {};
     }
+    if (Context.ImageTextures) Context.ImageTextures->Add(ResolvedName, Texture);
     UCanvasPanel* Panel = MakePanel(Tree);
     UImage* Picture = Tree.ConstructWidget<UImage>();
     Picture->SetBrushFromTexture(Texture, true);

@@ -110,7 +110,14 @@ else { Write-Host '  an acquisition row naming an unknown sample is rejected' }
 # acquired-not-displayed, and the four counts must still sum: the partition has to stay
 # exhaustive when its happy path is gone.
 $nopresent = Join-Path $WorkDirectory 'no-present.jsonl'
-($lines | Where-Object { $_ -notmatch '"type":"present"' }) | Set-Content $nopresent -Encoding utf8
+# The first_usable record names the earliest present row carrying a valid reading, and the launch
+# record is paired with it, so a log with every present row removed and either still in it is
+# self-contradictory and chunk 20's validator rightly rejects it. Removing all three keeps this
+# mutation about what it is about: whether the partition stays exhaustive when its happy path is
+# gone, rather than about whether the log contradicts itself.
+($lines | Where-Object {
+    $_ -notmatch '"type":"present"' -and $_ -notmatch '"type":"first_usable"' -and $_ -notmatch '"type":"launch"'
+}) | Set-Content $nopresent -Encoding utf8
 $mutated = & python $validator $nopresent --lifecycle 2>&1
 $mutatedText = ($mutated -join "`n")
 if ($LASTEXITCODE -ne 0) {

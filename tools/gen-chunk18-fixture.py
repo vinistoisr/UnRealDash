@@ -25,6 +25,16 @@ CHUNK12 = CHUNK14.CHUNK12
 CHUNK11 = CHUNK12.CHUNK11
 
 UNBOUND = 'coolant_temperature'
+# A second, visibly different image. PLAN 4.8 wants one asset import row per imported asset, and a
+# fixture with one image cannot tell a per-asset identifier from a hardcoded one, nor show that
+# the shared-texture cache does not collapse two distinct assets into a single row.
+BADGE = 'assets/badge.png'
+
+
+def badge_png():
+    """A flat square in the arc colour, so it is distinguishable from the face by eye and by the
+    same colour measurement the other gates use."""
+    return CHUNK12.flat_png(CHUNK12.DAY['arc'], 24)
 
 
 def signals():
@@ -39,7 +49,10 @@ def signals():
 
 def generate():
     document = CHUNK14.dashboard()
-    outputs = CHUNK12.write_package(NAME, document, signals())
+    document['components']['badge'] = CHUNK11.component(
+        'image', (40, 40, 24, 24), {'asset': BADGE}, parent='root', z_order=3)
+    extra = {BADGE: badge_png()}
+    outputs = CHUNK12.write_package(NAME, document, signals(), extra)
 
     png = CHUNK12.face_png()
     target = DOCUMENTS / (NAME + '.json')
@@ -47,8 +60,11 @@ def generate():
                                 'manifest': {
                                     'schema_version': 1, 'package_id': 'unrealdash.chunk18.gate',
                                     'revision': 1, 'runtime_compatibility': 'stage0',
-                                    'assets': {'assets/face.png': {'width': 60, 'height': 60,
-                                                                   'format': 'rgba8', 'bytes': len(png)}}}})
+                                    'assets': {
+                                        'assets/face.png': {'width': 60, 'height': 60,
+                                                            'format': 'rgba8', 'bytes': len(png)},
+                                        BADGE: {'width': 24, 'height': 24, 'format': 'rgba8',
+                                                'bytes': len(badge_png())}}}})
     outputs.append(target)
     print('Generated ' + NAME)
     return outputs
