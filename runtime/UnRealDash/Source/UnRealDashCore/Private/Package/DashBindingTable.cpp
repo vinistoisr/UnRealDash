@@ -89,8 +89,9 @@ bool FDashBindingTable::Build(const FDashPackage& Package, const TMap<FString, F
     return true;
 }
 
-void FDashBindingTable::Apply(const FFrameSnapshot& Snapshot) const
+void FDashBindingTable::Apply(const FFrameSnapshot& Snapshot, TArray<FDashRenderedSignal>* OutRendered) const
 {
+    if (OutRendered) OutRendered->Reset(Entries.Num());
     for (const FEntry& Entry : Entries)
     {
         // SignalIds is aligned with Samples, one entry per registry slot. Present is a compacted
@@ -98,6 +99,8 @@ void FDashBindingTable::Apply(const FFrameSnapshot& Snapshot) const
         // why the snapshot carries both.
         const int32 Slot = Snapshot.SignalIds.IndexOfByKey(Entry.Signal);
         FDashSignalValue Reading;
+        uint64 SampleId = 0;
+        uint8 Quality = static_cast<uint8>(ESignalQuality::Unavailable);
         if (Slot != INDEX_NONE && Snapshot.Samples.IsValidIndex(Slot))
         {
             const FSignalSample& Sample = Snapshot.Samples[Slot];
@@ -107,8 +110,14 @@ void FDashBindingTable::Apply(const FFrameSnapshot& Snapshot) const
             // its minimum rather than drawing a number nobody measured.
             Reading.bHasValue = Reading.State != EDashSignalState::Unavailable && FMath::IsFinite(Sample.Value);
             Reading.Value = Reading.bHasValue ? Sample.Value : 0.0;
+            SampleId = Sample.Id;
+            Quality = static_cast<uint8>(Sample.Quality);
         }
         Entry.Updater(Reading);
+        // Recorded after the updater ran, so the row says what was rendered rather than what was
+        // about to be. A bound signal with no sample keeps its entry, with a zero id: it renders
+        // the missing-data presentation, which is a real thing on screen.
+        if (OutRendered) OutRendered->Add({Entry.Signal, SampleId, Quality});
     }
 }
 }

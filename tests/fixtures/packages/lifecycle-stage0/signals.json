@@ -1,0 +1,1 @@
+{"signals":[{"id":"engine_speed","type":"number","unit":"rpm","freshness_deadline_ms":200,"discrete":false},{"id":"coolant_temperature","type":"number","unit":"degC","freshness_deadline_ms":200,"discrete":false}]}

@@ -24,11 +24,18 @@ namespace
 // A frame row is about 190 bytes of JSON. 384 leaves room for the columns chunks 18 to 20 add
 // without changing the slot size under them.
 constexpr std::size_t kRowBytes = 384;
+// A present row carries one nested object per bound signal, so it needs far more room than a
+// frame row. Sixty-four bound signals at about forty bytes each, plus the frame's own columns.
+constexpr std::size_t kWideRowBytes = 4096;
 // The writer drains every kDrainMilliseconds, so this has to hold a drain interval's worth of
 // frames at whatever rate the renderer actually runs. An unthrottled windowed run of a trivial
 // document measured about 920 fps, which is 46 rows per interval; 1024 is headroom for twenty
 // times that. Overflow is counted rather than silent.
 constexpr std::size_t kFrameSlots = 1024;
+// Receive rows arrive at the acquisition rate rather than the frame rate, which 4.3 puts at up to
+// 200 Hz, so a 50 ms drain interval sees about ten. This is two orders of headroom.
+constexpr std::size_t kReceiveSlots = 1024;
+constexpr std::size_t kWideSlots = 256;
 // The sampled stream is 1 Hz, but the drain cannot be: at 920 fps a one second drain interval
 // overflowed any ring worth allocating, and dropped 7,974 of 11,060 frame rows on the first run.
 // The thread therefore wakes twenty times a second to drain and writes its own row on the second.
@@ -73,6 +80,10 @@ struct FDashEventLogImpl : public FRunnable
 {
     signal_core::EventLog Log;
     signal_core::EventRowRing<kRowBytes, kFrameSlots> Rows;
+    // One ring per producer thread. EventRowRing is single-producer by construction, and the
+    // acquisition thread is not the game thread.
+    signal_core::EventRowRing<kRowBytes, kReceiveSlots> ReceiveRows;
+    signal_core::EventRowRing<kWideRowBytes, kWideSlots> WideRows;
     FPresentRing Presents;
     FMonotonicClock PlatformClock{};
     FDashEventLogOptions Options;
@@ -95,6 +106,7 @@ struct FDashEventLogImpl : public FRunnable
     std::atomic<uint64> Frames{0};
     std::atomic<uint64> Samples{0};
     std::atomic<uint64> Dropped{0};
+    std::atomic<uint64> Receives{0}, Acquires{0}, Submits{0}, PresentRows{0};
 
     // Game thread only.
     struct FPendingFrame
@@ -105,6 +117,9 @@ struct FDashEventLogImpl : public FRunnable
     };
     TArray<FPendingFrame> Pending;
     int64 MissedThresholdNanoseconds = 0;
+    // What the bindings rendered, per frame, waiting for that frame's present timestamp. Game
+    // thread only, like Pending, and drained by the same join.
+    TMap<uint64, TArray<FDashRenderedSignal>> Rendered;
 
     int64 Now() const { return PlatformClock.NowNanoseconds(PlatformClock.Context); }
 
@@ -129,7 +144,7 @@ struct FDashEventLogImpl : public FRunnable
     // a temperature and memory trace.
     uint32 Run() override
     {
-        char Buffer[kRowBytes];
+        char Buffer[kWideRowBytes];
         int64 NextSample = Now();
         while (bRunning.load(std::memory_order_acquire))
         {
@@ -152,10 +167,14 @@ struct FDashEventLogImpl : public FRunnable
     }
     void Stop() override { bRunning.store(false, std::memory_order_release); if (Wake) Wake->Trigger(); }
 
-    void Drain(char (&Buffer)[kRowBytes])
+    void Drain(char (&Buffer)[kWideRowBytes])
     {
         std::size_t Length = 0;
         while (Rows.Pop(std::span<char>(Buffer, kRowBytes), Length))
+            (void)Log.Write(std::span<const char>(Buffer, Length));
+        while (ReceiveRows.Pop(std::span<char>(Buffer, kRowBytes), Length))
+            (void)Log.Write(std::span<const char>(Buffer, Length));
+        while (WideRows.Pop(std::span<char>(Buffer, kWideRowBytes), Length))
             (void)Log.Write(std::span<const char>(Buffer, Length));
     }
 
@@ -222,6 +241,19 @@ FString FDashEventLog::Open(const FDashEventLogOptions& Options)
                 .String("t").String("resident_bytes").String("texture_bytes").String("handles")
                 .String("temperature_c")
             .EndArray()
+            .Key("receive").BeginArray()
+                .String("sample").String("signal").String("t_recv").String("seq")
+                .String("generation").String("quality").String("age_evidence")
+            .EndArray()
+            .Key("acquire").BeginArray()
+                .String("frame").String("t_acquire").String("samples")
+            .EndArray()
+            .Key("submit").BeginArray()
+                .String("frame").String("t_submit")
+            .EndArray()
+            .Key("present").BeginArray()
+                .String("frame").String("t_present").String("signals")
+            .EndArray()
             .EndObject()
             .End();
         if (!Candidate->Log.Write(Row).Ok()) return TEXT("the event log schema record did not write");
@@ -241,6 +273,9 @@ FString FDashEventLog::Open(const FDashEventLogOptions& Options)
             .Key("missed_frame_rule").String("frame_ns > 1.5 * (1e9 / target_fps)")
             .Key("frame_memory_source").String("most_recent_sampled_row, not a per-frame syscall")
             .Key("temperature_source").String("not measured: no in-process source on this platform, see PLAN 6.5")
+            // PLAN 4.8 asks the present row to name the sample an interpolated value came from.
+            // Established rather than assumed: see the chunk 18 report.
+            .Key("interpolation").String("none: the Stage 0 binding path renders samples directly, so derived_from is always null")
             .End();
         if (!Candidate->Log.Write(Row).Ok()) return TEXT("the event log header record did not write");
     }
@@ -304,6 +339,36 @@ void FDashEventLog::Tick(float DeltaSeconds)
             .End();
         if (Impl->Rows.Push(Row.View())) Impl->Frames.fetch_add(1, std::memory_order_relaxed);
         else Impl->Dropped.fetch_add(1, std::memory_order_relaxed);
+
+        // The present row, from the same join and the same timestamp. A second capture would let
+        // the two rows disagree about when this frame reached the screen, which is chunk 17
+        // revision 2 A.
+        if (const TArray<FDashRenderedSignal>* Shown = Impl->Rendered.Find(Done.Frame))
+        {
+            char Wide[kWideRowBytes];
+            signal_core::RowBuilder Present(std::span<char>(Wide, kWideRowBytes));
+            Present.Begin("present")
+                .Key("frame").Unsigned(Done.Frame)
+                .Key("t_present").Integer(Stamp.Nanoseconds)
+                .Key("signals").BeginArray();
+            for (const FDashRenderedSignal& Entry : *Shown)
+            {
+                Present.BeginObject().Key("signal").Unsigned(Entry.Signal);
+                // Null rather than omitted: a bound signal with no sample renders the
+                // missing-data presentation, which is a real thing on screen.
+                Present.Key("sample");
+                if (Entry.SampleId != 0) Present.Unsigned(Entry.SampleId); else Present.Null();
+                Present.Key("quality").Unsigned(Entry.Quality)
+                    // Chunk 19 fills the expiry; the Stage 0 path never interpolates.
+                    .Key("expiry").Null()
+                    .Key("derived_from").Null()
+                    .EndObject();
+            }
+            Present.EndArray().End();
+            if (Impl->WideRows.Push(Present.View())) Impl->PresentRows.fetch_add(1, std::memory_order_relaxed);
+            else Impl->Dropped.fetch_add(1, std::memory_order_relaxed);
+            Impl->Rendered.Remove(Done.Frame);
+        }
     }
 
     // A frame whose present stamp never arrives would otherwise accumulate for the life of the
@@ -311,8 +376,10 @@ void FDashEventLog::Tick(float DeltaSeconds)
     constexpr int32 kMaxPending = 120;
     if (Impl->Pending.Num() > kMaxPending)
     {
-        Impl->Dropped.fetch_add(static_cast<uint64>(Impl->Pending.Num() - kMaxPending), std::memory_order_relaxed);
-        Impl->Pending.RemoveAt(0, Impl->Pending.Num() - kMaxPending);
+        const int32 Excess = Impl->Pending.Num() - kMaxPending;
+        for (int32 Index = 0; Index < Excess; ++Index) Impl->Rendered.Remove(Impl->Pending[Index].Frame);
+        Impl->Dropped.fetch_add(static_cast<uint64>(Excess), std::memory_order_relaxed);
+        Impl->Pending.RemoveAt(0, Excess);
     }
 }
 
@@ -336,6 +403,59 @@ void FDashEventLog::Close()
     Impl.Reset();
 }
 
+void FDashEventLog::WriteReceive(uint32 Signal, uint64 SampleId, int64 ReceiveNanoseconds, uint64 Sequence,
+    uint64 Generation, uint8 Quality, uint8 AgeEvidence)
+{
+    if (!Impl.IsValid()) return;
+    // Acquisition thread. Formats into a stack buffer and pushes; no allocation and no file.
+    char Storage[kRowBytes];
+    signal_core::RowBuilder Row(std::span<char>(Storage, kRowBytes));
+    Row.Begin("receive")
+        .Key("sample").Unsigned(SampleId)
+        .Key("signal").Unsigned(Signal)
+        .Key("t_recv").Integer(ReceiveNanoseconds)
+        .Key("seq").Unsigned(Sequence)
+        .Key("generation").Unsigned(Generation)
+        .Key("quality").Unsigned(Quality)
+        .Key("age_evidence").Unsigned(AgeEvidence)
+        .End();
+    if (Impl->ReceiveRows.Push(Row.View())) Impl->Receives.fetch_add(1, std::memory_order_relaxed);
+    else Impl->Dropped.fetch_add(1, std::memory_order_relaxed);
+}
+
+void FDashEventLog::WriteAcquire(uint64 Frame, int64 Nanoseconds, TArrayView<const uint64> SampleIds)
+{
+    if (!Impl.IsValid()) return;
+    char Storage[kWideRowBytes];
+    signal_core::RowBuilder Row(std::span<char>(Storage, kWideRowBytes));
+    Row.Begin("acquire").Key("frame").Unsigned(Frame).Key("t_acquire").Integer(Nanoseconds)
+        .Key("samples").BeginArray();
+    for (const uint64 Id : SampleIds) Row.Unsigned(Id);
+    Row.EndArray().End();
+    if (Impl->WideRows.Push(Row.View())) Impl->Acquires.fetch_add(1, std::memory_order_relaxed);
+    else Impl->Dropped.fetch_add(1, std::memory_order_relaxed);
+}
+
+void FDashEventLog::WriteSubmit(uint64 Frame, int64 Nanoseconds)
+{
+    if (!Impl.IsValid()) return;
+    char Storage[kRowBytes];
+    signal_core::RowBuilder Row(std::span<char>(Storage, kRowBytes));
+    Row.Begin("submit").Key("frame").Unsigned(Frame).Key("t_submit").Integer(Nanoseconds).End();
+    if (Impl->Rows.Push(Row.View())) Impl->Submits.fetch_add(1, std::memory_order_relaxed);
+    else Impl->Dropped.fetch_add(1, std::memory_order_relaxed);
+}
+
+void FDashEventLog::WriteRendered(uint64 Frame, TArrayView<const FDashRenderedSignal> Rendered)
+{
+    if (!Impl.IsValid()) return;
+    // Stashed, not written. The present row needs this frame's present timestamp, which the
+    // render thread has not produced yet.
+    TArray<FDashRenderedSignal>& Slot = Impl->Rendered.FindOrAdd(Frame);
+    Slot.Reset(Rendered.Num());
+    Slot.Append(Rendered.GetData(), Rendered.Num());
+}
+
 FDashEventLogCounts FDashEventLog::Counts() const
 {
     FDashEventLogCounts Counts;
@@ -343,9 +463,14 @@ FDashEventLogCounts FDashEventLog::Counts() const
     const signal_core::EventLogStats& Stats = Impl->Log.Stats();
     Counts.Records = Stats.records;
     Counts.Bytes = Stats.bytes;
-    Counts.Dropped = Stats.dropped + Impl->Dropped.load(std::memory_order_relaxed) + Impl->Rows.Drops();
+    Counts.Dropped = Stats.dropped + Impl->Dropped.load(std::memory_order_relaxed) + Impl->Rows.Drops()
+        + Impl->ReceiveRows.Drops() + Impl->WideRows.Drops();
     Counts.Frames = Impl->Frames.load(std::memory_order_relaxed);
     Counts.Samples = Impl->Samples.load(std::memory_order_relaxed);
+    Counts.Receives = Impl->Receives.load(std::memory_order_relaxed);
+    Counts.Acquires = Impl->Acquires.load(std::memory_order_relaxed);
+    Counts.Submits = Impl->Submits.load(std::memory_order_relaxed);
+    Counts.Presents = Impl->PresentRows.load(std::memory_order_relaxed);
     return Counts;
 }
 

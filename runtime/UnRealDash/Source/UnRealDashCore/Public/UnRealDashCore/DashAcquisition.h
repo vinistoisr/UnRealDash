@@ -70,6 +70,11 @@ class UNREALDASHCORE_API FDashAcquisition {
     bool AcquireFrameSnapshot(FFrameSnapshot& Out);
     void RecordSubmit(uint64 FrameIndex);
     void RequestAcknowledge(uint32 RuleId);
+    // PLAN 4.8. Null detaches, which is what Close does before the log goes away under the
+    // acquisition thread.
+    void SetEventLog(class FDashEventLog* Log);
+    // The pipeline's own count of samples Apply accepted, which is PLAN 4.8's published count.
+    uint64 SamplesApplied() const;
     FConnectionHealth GetHealth() const;
   private:
     struct FImpl;

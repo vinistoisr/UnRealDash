@@ -2,6 +2,7 @@
 #include "CoreMinimal.h"
 #include "UnRealDashCore/ComponentRegistry.h"
 #include "UnRealDashCore/DashAcquisition.h"
+#include "UnRealDashCore/DashEventLog.h"
 
 namespace UnRealDashCore
 {
@@ -38,7 +39,11 @@ public:
     // Applies one snapshot to every bound widget. The caller acquires the snapshot once and passes
     // it here; acquiring per binding could straddle a publication and show two components values
     // from different ones, which is what the triple buffer exists to prevent.
-    void Apply(const FFrameSnapshot& Snapshot) const;
+    // OutRendered, when supplied, receives one entry per bound signal describing what this frame
+    // actually put on screen for it. That is PLAN 4.8's present row, and this is the only place
+    // that knows it: a signal in the registry that no visible component binds is the difference
+    // between a sample that was presented and one that was merely acquired.
+    void Apply(const FFrameSnapshot& Snapshot, TArray<FDashRenderedSignal>* OutRendered = nullptr) const;
 
     // Names in document order, which is also signal id order. The recording generator walks this so
     // the ids it writes are the ids this resolved against.

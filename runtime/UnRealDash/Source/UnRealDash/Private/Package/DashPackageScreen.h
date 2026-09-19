@@ -25,8 +25,18 @@ public:
     FString StartScenario(double DurationSeconds);
     // PLAN 4.8. Empty on success; a failure is reported and the run continues.
     FString OpenEventLog(const UnRealDashCore::FDashEventLogOptions& Options) { return EventLog.Open(Options); }
-    void CloseEventLog() { EventLog.Close(); }
+    void CloseEventLog()
+    {
+        // Detached first. The acquisition thread writes receive rows through this pointer and the
+        // log is about to stop existing under it.
+        if (Acquisition) Acquisition->SetEventLog(nullptr);
+        EventLog.Close();
+    }
     UnRealDashCore::FDashEventLogCounts EventLogCounts() const { return EventLog.Counts(); }
+    // The pipeline's own count of samples Apply accepted. PLAN 4.8's partition sums to this, and
+    // comparing it against the receive row count is what stops the denominator being the log's
+    // own account of what it managed to write.
+    uint64 SamplesApplied() const { return Acquisition ? Acquisition->SamplesApplied() : 0; }
     // A named signal-core scenario, run through the real pipeline like every other source.
     FString StartNamedScenario(const FString& Name, bool bFreezeTime);
     // Recorded bytes from a file, through the same framer and decoder a socket uses.
@@ -66,6 +76,8 @@ private:
     // PLAN 4.8's raw event log. Opened by the HUD, ticked here because this is what already has a
     // per-frame callback, and closed by the HUD on exit.
     UnRealDashCore::FDashEventLog EventLog;
+    // Reused every frame so the present row costs no allocation on the frame path.
+    TArray<UnRealDashCore::FDashRenderedSignal> Rendered;
     // Filled before the tree is built when a connector numbers signals its own way; empty for the
     // scenario source, which numbers them by document position.
     TMap<FString, uint32> SignalIds;

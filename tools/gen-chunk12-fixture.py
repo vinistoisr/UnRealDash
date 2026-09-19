@@ -185,13 +185,16 @@ def signals():
     ]}
 
 
-def write_package(name, document):
+def write_package(name, document, declared=None):
+    # declared lets a later fixture add a signal this one does not know about. Chunk 18 needs one
+    # that nothing binds, which is the only way to reach PLAN 4.8's acquired-not-displayed state
+    # without forcing the acquisition and presentation sides out of step.
     outputs = []
     directory = PACKAGES / name
     directory.mkdir(parents=True, exist_ok=True)
     png = face_png()
     CHUNK11.write_json(directory / 'dashboard.json', document)
-    CHUNK11.write_json(directory / 'signals.json', signals())
+    CHUNK11.write_json(directory / 'signals.json', declared if declared is not None else signals())
     CHUNK11.write_json(directory / 'manifest.json', {
         'schema_version': 1, 'package_id': 'unrealdash.chunk12.' + name, 'revision': 1,
         'runtime_compatibility': 'stage0',

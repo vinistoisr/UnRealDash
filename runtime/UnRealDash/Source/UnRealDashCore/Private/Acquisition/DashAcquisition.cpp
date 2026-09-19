@@ -238,7 +238,9 @@ bool FDashAcquisition::AcquireFrameSnapshot(FFrameSnapshot& Out) {
     int32 Present = 0;
     // The sample ids actually held this frame, which is what the acquisition row carries. A
     // signal with no sample yet has id zero and is not one of them.
-    TArray<uint64, TInlineAllocator<64>> Held;
+    // std::uint64_t, not UE's uint64: on Android one is unsigned long and the other unsigned
+    // long long, and this array is handed straight to a std::span the sink takes.
+    TArray<std::uint64_t, TInlineAllocator<64>> Held;
     for (std::size_t Index = 0; Index < Snapshot.samples.size(); ++Index) {
         Out.Samples[static_cast<int32>(Index)] = ToEngineSample(Snapshot.samples[Index].sample);
         Out.SignalIds[static_cast<int32>(Index)] = Snapshot.samples[Index].signal;
@@ -258,6 +260,12 @@ bool FDashAcquisition::AcquireFrameSnapshot(FFrameSnapshot& Out) {
 }
 void FDashAcquisition::RecordSubmit(uint64 FrameIndex) {
     Impl->Sink.OnSubmit(FrameIndex, signal_core::Time(Impl->PlatformClock.NowNanoseconds(Impl->PlatformClock.Context)));
+}
+uint64 FDashAcquisition::SamplesApplied() const {
+    return Impl->Pipeline ? Impl->Pipeline->SamplesApplied() : 0;
+}
+void FDashAcquisition::SetEventLog(FDashEventLog* Log) {
+    Impl->Sink.Log.store(Log, std::memory_order_release);
 }
 void FDashAcquisition::RequestAcknowledge(uint32 RuleId) {
     if (Impl->Pipeline) {

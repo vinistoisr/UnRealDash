@@ -24,6 +24,18 @@ struct FDashEventLogOptions
     double FlushSeconds = 1.0;
 };
 
+// One bound signal's contribution to a present row: what was actually on screen for it in that
+// frame. A bound signal that has received nothing renders the missing-data presentation, which is
+// a real thing on screen, so its entry is present with a null sample id rather than omitted.
+struct FDashRenderedSignal
+{
+    uint32 Signal = 0;
+    // Zero means no sample has ever arrived for this signal.
+    uint64 SampleId = 0;
+    // valid, stale, unavailable or invalid, as rendered rather than as stored.
+    uint8 Quality = 0;
+};
+
 struct FDashEventLogCounts
 {
     uint64 Records = 0;
@@ -33,6 +45,10 @@ struct FDashEventLogCounts
     uint64 Dropped = 0;
     uint64 Frames = 0;
     uint64 Samples = 0;
+    uint64 Receives = 0;
+    uint64 Acquires = 0;
+    uint64 Submits = 0;
+    uint64 Presents = 0;
 };
 
 class UNREALDASHCORE_API FDashEventLog
@@ -53,6 +69,20 @@ public:
     // Game thread, once per tick. Records when this frame began and how long the last one took,
     // and emits the rows whose present timestamps have since arrived from the render thread.
     void Tick(float DeltaSeconds);
+
+    // PLAN 4.8's receive row. Called from the ACQUISITION thread, so it has its own ring: an
+    // EventRowRing is single-producer by construction and the frame ring's producer is the game
+    // thread.
+    void WriteReceive(uint32 Signal, uint64 SampleId, int64 ReceiveNanoseconds, uint64 Sequence,
+        uint64 Generation, uint8 Quality, uint8 AgeEvidence);
+    // The acquisition and submit rows, from the game thread.
+    void WriteAcquire(uint64 Frame, int64 Nanoseconds, TArrayView<const uint64> SampleIds);
+    void WriteSubmit(uint64 Frame, int64 Nanoseconds);
+    // What the bindings put on screen for a frame. Stashed rather than written: the present row
+    // needs the present timestamp, which arrives from the render thread one or two frames later,
+    // and it is written inside the same join the per-frame row already uses. One join, one
+    // present timestamp, so the two rows cannot disagree about when a frame reached the screen.
+    void WriteRendered(uint64 Frame, TArrayView<const FDashRenderedSignal> Rendered);
 
     FDashEventLogCounts Counts() const;
 

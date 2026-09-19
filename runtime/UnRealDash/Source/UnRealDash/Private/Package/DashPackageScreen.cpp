@@ -85,6 +85,7 @@ FString UDashPackageScreen::StartScenario(double DurationSeconds)
     const FString Recording = UnRealDashCore::BuildScenarioRecording(Bindings.SignalNames(), Bindings.SignalRanges(), Options, Failure);
     if (Recording.IsEmpty()) return Failure;
     Acquisition = MakeUnique<UnRealDashCore::FDashAcquisition>(Recording);
+    Acquisition->SetEventLog(&EventLog);
     return Acquisition->Start();
 }
 FString UDashPackageScreen::StartConnector(const FDashPlayerConfig& Config)
@@ -130,6 +131,7 @@ FString UDashPackageScreen::StartNamedScenario(const FString& Name, bool bFreeze
     const FString Recording = UnRealDashCore::GenerateNamedScenario(Name, 1, 30.0, 20, Failure);
     if (Recording.IsEmpty()) return Failure.IsEmpty() ? TEXT("The scenario produced no recording") : Failure;
     Acquisition = MakeUnique<UnRealDashCore::FDashAcquisition>(Recording);
+    Acquisition->SetEventLog(&EventLog);
     if (bFreezeTime) Acquisition->FreezeScenarioTime();
     // The scenario names its own signals, so the bindings resolve against its numbering rather
     // than the document's ordering, exactly as they do for a definition pack.
@@ -146,6 +148,7 @@ FString UDashPackageScreen::StartReplay(const FString& Path, bool bLoop)
     Options.ReplayPath = Path;
     Options.bReplayLoop = bLoop;
     Acquisition = MakeUnique<UnRealDashCore::FDashAcquisition>(Options);
+    Acquisition->SetEventLog(&EventLog);
     SignalIds = Acquisition->SignalIds();
     if (!Bindings.Build(Package, Builder.UpdatersById(), SignalIds, Error)) return Error.DisplayText();
     return Acquisition->Start();
@@ -159,6 +162,7 @@ FString UDashPackageScreen::StartTcp(const FString& Host, uint16 Port)
     Options.DefinitionPackText = Package.DefinitionPackText();
     Options.SchemaDirectory = UnRealDashCore::ResolveDashSchemaDirectory();
     Acquisition = MakeUnique<UnRealDashCore::FDashAcquisition>(Options);
+    Acquisition->SetEventLog(&EventLog);
 
     // The pack numbers the signals, so the bindings are resolved against its numbering rather than
     // the document's ordering. This is the one case where the binding table has to be rebuilt after
@@ -182,7 +186,18 @@ void UDashPackageScreen::NativeTick(const FGeometry& Geometry, float DeltaTime)
     // Acquired once per tick and passed down. Acquiring per binding could straddle a publication
     // and hand two components values from different ones, which is exactly what the triple buffer
     // exists to prevent.
-    if (Acquisition->AcquireFrameSnapshot(Snapshot)) Bindings.Apply(Snapshot);
+    if (Acquisition->AcquireFrameSnapshot(Snapshot))
+    {
+        // The bindings report what they put on screen, which the event log stashes against this
+        // frame until the render thread says when the frame presented. That is PLAN 4.8's present
+        // row, and the bindings are the only thing that knows which signals a visible component
+        // actually drives.
+        Bindings.Apply(Snapshot, &Rendered);
+        EventLog.WriteRendered(Snapshot.FrameIndex, Rendered);
+        // The submit row. Recorded here rather than at a real submit callback because this is
+        // where the game thread is done with the snapshot it acquired; the report says so.
+        Acquisition->RecordSubmit(Snapshot.FrameIndex);
+    }
 
     ++Ticks;
     // One health line a second. PLAN 4.9's criterion 6 is a sequence rather than a state, so a
@@ -452,9 +467,12 @@ void ADashPackageHUD::EndPlay(const EEndPlayReason::Type Reason)
         // engine_frames comes from GFrameCounter rather than from the log's own counter, or
         // criterion 1 would be the log checked against itself.
         UE_LOG(LogUnRealDash, Display,
-            TEXT("DashEventLog records=%llu frames=%llu samples=%llu dropped=%llu bytes=%llu engine_frames=%llu"),
+            TEXT("DashEventLog records=%llu frames=%llu samples=%llu dropped=%llu bytes=%llu engine_frames=%llu ")
+            TEXT("receives=%llu acquires=%llu submits=%llu presents=%llu applied=%llu"),
             Counts.Records, Counts.Frames, Counts.Samples, Counts.Dropped, Counts.Bytes,
-            static_cast<uint64>(GFrameCounter) - FirstFrameCounter);
+            static_cast<uint64>(GFrameCounter) - FirstFrameCounter,
+            Counts.Receives, Counts.Acquires, Counts.Submits, Counts.Presents,
+            Screen->SamplesApplied());
     }
     Super::EndPlay(Reason);
 }

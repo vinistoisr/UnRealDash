@@ -1,5 +1,6 @@
 #pragma once
 #include "UnRealDashCore/DashAcquisition.h"
+#include "UnRealDashCore/DashEventLog.h"
 #include "UnRealDashCore/MonotonicClock.h"
 #include "HAL/Runnable.h"
 #include "HAL/RunnableThread.h"
@@ -56,7 +57,40 @@ struct FDashAcquisition::FImpl final : FRunnable {
     // counts a link coming back, which is what the criterion is about.
     std::uint64_t Reconnections = 0;
     signal_core::SiMapping Mapping;
-    signal_core::NullAcquisitionEventSink Sink;
+    // PLAN 4.8's receive row. Forwards from the acquisition thread into the event log's own
+    // ring, which is why it is a pointer rather than a reference: a run with no log is a run that
+    // still runs, and this has to cost nothing when there is nowhere to send them.
+    struct FForwardingSink final : signal_core::IAcquisitionEventSink
+    {
+        std::atomic<FDashEventLog*> Log{nullptr};
+        void OnReceive(signal_core::SignalId Signal, const signal_core::Sample& Sample) override
+        {
+            if (FDashEventLog* Target = Log.load(std::memory_order_acquire))
+                Target->WriteReceive(Signal, Sample.id, Sample.t_recv.count(), Sample.seq, Sample.generation,
+                    static_cast<uint8>(Sample.quality), static_cast<uint8>(Sample.age_evidence));
+        }
+        void OnAcquire(std::uint64_t Frame, signal_core::Time At, std::span<const std::uint64_t> Samples) override
+        {
+            if (FDashEventLog* Target = Log.load(std::memory_order_acquire))
+            {
+                // UE's uint64 and std::uint64_t are the same width everywhere this builds and are
+                // DISTINCT TYPES on Android, where one is unsigned long and the other unsigned
+                // long long. The cast is at this one boundary rather than spread through the
+                // seam, and the assert is what keeps it honest if a platform ever disagrees.
+                static_assert(sizeof(uint64) == sizeof(std::uint64_t), "sample id width differs");
+                Target->WriteAcquire(Frame, At.count(),
+                    TArrayView<const uint64>(reinterpret_cast<const uint64*>(Samples.data()),
+                        static_cast<int32>(Samples.size())));
+            }
+        }
+        void OnSubmit(std::uint64_t Frame, signal_core::Time At) override
+        {
+            if (FDashEventLog* Target = Log.load(std::memory_order_acquire))
+                Target->WriteSubmit(Frame, At.count());
+        }
+        void OnRuleTransition(std::uint32_t, signal_core::Time, bool, bool) override {}
+    };
+    FForwardingSink Sink;
     TUniquePtr<signal_core::SampleQueue> Display;
     std::array<uint8, 4096> ReadBuffer{};
     TUniquePtr<signal_core::AcquisitionPipeline> Pipeline;
