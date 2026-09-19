@@ -5,6 +5,7 @@
 #include "UnRealDashCore/ComponentRegistry.h"
 #include "UnRealDashCore/DashAcquisition.h"
 #include "UnRealDashCore/DashBindingTable.h"
+#include "UnRealDashCore/DashEventLog.h"
 #include "DashPackageScreen.generated.h"
 
 UCLASS()
@@ -22,6 +23,10 @@ public:
     // configuration makes, so the screen does not need three call sites that can drift.
     FString StartConnector(const struct FDashPlayerConfig& Config);
     FString StartScenario(double DurationSeconds);
+    // PLAN 4.8. Empty on success; a failure is reported and the run continues.
+    FString OpenEventLog(const UnRealDashCore::FDashEventLogOptions& Options) { return EventLog.Open(Options); }
+    void CloseEventLog() { EventLog.Close(); }
+    UnRealDashCore::FDashEventLogCounts EventLogCounts() const { return EventLog.Counts(); }
     // A named signal-core scenario, run through the real pipeline like every other source.
     FString StartNamedScenario(const FString& Name, bool bFreezeTime);
     // Recorded bytes from a file, through the same framer and decoder a socket uses.
@@ -58,6 +63,9 @@ private:
     float Fraction = 0.f;
     UnRealDashCore::FWidgetTreeBuilder Builder;
     UnRealDashCore::FDashBindingTable Bindings;
+    // PLAN 4.8's raw event log. Opened by the HUD, ticked here because this is what already has a
+    // per-frame callback, and closed by the HUD on exit.
+    UnRealDashCore::FDashEventLog EventLog;
     // Filled before the tree is built when a connector numbers signals its own way; empty for the
     // scenario source, which numbers them by document position.
     TMap<FString, uint32> SignalIds;
@@ -82,8 +90,14 @@ class ADashPackageHUD : public AHUD
     void TickShot();
 public:
     virtual void BeginPlay() override;
+    // The event log's last flush and its counts. A gate reads the counts out of the player log
+    // rather than recomputing them, so the two cannot disagree about what was written.
+    virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 private:
     UPROPERTY(Transient) TObjectPtr<UDashPackageScreen> Screen;
+    // GFrameCounter when the log opened, so the run's frame count is the engine's own and not the
+    // log's count of what it managed to write.
+    uint64 FirstFrameCounter = 0;
     FString ShotPath;
     FTimerHandle ShotTimer;
     // Frames to let the scene settle before capturing. The capture conditions switch off temporal

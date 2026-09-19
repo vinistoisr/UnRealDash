@@ -18,6 +18,11 @@
 #include "UnRealDashCore/DashScenario.h"
 #include "DashPlayerConfig.h"
 #include "Misc/FileHelper.h"
+#include "Misc/App.h"
+#include "DynamicRHI.h"
+#include "Engine/Engine.h"
+#include "Engine/GameViewportClient.h"
+#include "UnrealEngine.h"
 
 void UDashPackageScreen::Open(const FString& Path, UnRealDashCore::EDashProfile InProfile,
     UnRealDashCore::EDashSignalState InState, float InFraction)
@@ -170,6 +175,9 @@ UnRealDashCore::FConnectionHealth UDashPackageScreen::GetHealth() const
 void UDashPackageScreen::NativeTick(const FGeometry& Geometry, float DeltaTime)
 {
     Super::NativeTick(Geometry, DeltaTime);
+    // Before the early return: a run with no connector still has frames, and 4.8's per-frame rows
+    // are about the renderer rather than about the data.
+    EventLog.Tick(DeltaTime);
     if (!Acquisition) return;
     // Acquired once per tick and passed down. Acquiring per binding could straddle a publication
     // and hand two components values from different ones, which is exactly what the triple buffer
@@ -345,6 +353,35 @@ void ADashPackageHUD::BeginPlay()
 
     Screen->Open(Config.Udash, Profile, State, Fraction);
     Screen->AddToViewport();
+
+    // PLAN 4.8's event log. Always on and always at the same place, so a gate reads the logged
+    // path rather than being handed a flag; chunk 16 froze the command-line surface and 4.8 names
+    // no flag of its own.
+    UnRealDashCore::FDashEventLogOptions LogOptions;
+    LogOptions.Path = FPaths::Combine(Saved, TEXT("events"), TEXT("run.jsonl"));
+    LogOptions.BuildId = FApp::GetBuildVersion();
+    LogOptions.Rhi = GDynamicRHI ? GDynamicRHI->GetName() : TEXT("unknown");
+    // GSystemResolution rather than the viewport: BeginPlay runs before the game viewport has a
+    // size, so reading it there wrote 0 by 0 into the header of every run.
+    LogOptions.Resolution = FIntPoint(GSystemResolution.ResX, GSystemResolution.ResY);
+    if (GEngine && GEngine->GameViewport && GEngine->GameViewport->Viewport)
+    {
+        const FIntPoint Viewport = GEngine->GameViewport->Viewport->GetSizeXY();
+        if (Viewport.X > 0 && Viewport.Y > 0) LogOptions.Resolution = Viewport;
+    }
+    IFileManager::Get().MakeDirectory(*FPaths::GetPath(LogOptions.Path), true);
+    FirstFrameCounter = static_cast<uint64>(GFrameCounter);
+    const FString LogFailure = Screen->OpenEventLog(LogOptions);
+    if (LogFailure.IsEmpty())
+    {
+        UE_LOG(LogUnRealDash, Display, TEXT("DashEventLog path=%s"), *LogOptions.Path);
+    }
+    else
+    {
+        // Not fatal. A dashboard that refuses to start because it could not write telemetry about
+        // itself is worse than one that starts without it, so this says so and carries on.
+        UE_LOG(LogUnRealDash, Error, TEXT("DashEventLog unavailable: %s"), *LogFailure);
+    }
     UE_LOG(LogUnRealDash, Display, TEXT("DashVerdict accepted=%s code=%s pointer=%s path=%s state=%s"),
         Screen->WasAccepted() ? TEXT("true") : TEXT("false"),
         *Screen->LastError().CodeName, *Screen->LastError().Pointer, *Config.Udash,
@@ -405,6 +442,21 @@ void ADashPackageHUD::BeginPlay()
         }
         ScheduleShot(Delay);
     }
+}
+void ADashPackageHUD::EndPlay(const EEndPlayReason::Type Reason)
+{
+    if (Screen)
+    {
+        const UnRealDashCore::FDashEventLogCounts Counts = Screen->EventLogCounts();
+        Screen->CloseEventLog();
+        // engine_frames comes from GFrameCounter rather than from the log's own counter, or
+        // criterion 1 would be the log checked against itself.
+        UE_LOG(LogUnRealDash, Display,
+            TEXT("DashEventLog records=%llu frames=%llu samples=%llu dropped=%llu bytes=%llu engine_frames=%llu"),
+            Counts.Records, Counts.Frames, Counts.Samples, Counts.Dropped, Counts.Bytes,
+            static_cast<uint64>(GFrameCounter) - FirstFrameCounter);
+    }
+    Super::EndPlay(Reason);
 }
 // Gate-only capture. bShowUI is true and must stay true: everything this project draws is UI, and
 // a capture taken with false writes a black image, so a gate comparing two of them would pass for
