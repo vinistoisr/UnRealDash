@@ -16,6 +16,8 @@
 #include "Misc/Paths.h"
 #include "UnrealClient.h"
 #include "UnRealDashCore/DashScenario.h"
+#include "DashPlayerConfig.h"
+#include "Misc/FileHelper.h"
 
 void UDashPackageScreen::Open(const FString& Path, UnRealDashCore::EDashProfile InProfile,
     UnRealDashCore::EDashSignalState InState, float InFraction)
@@ -78,6 +80,69 @@ FString UDashPackageScreen::StartScenario(double DurationSeconds)
     const FString Recording = UnRealDashCore::BuildScenarioRecording(Bindings.SignalNames(), Bindings.SignalRanges(), Options, Failure);
     if (Recording.IsEmpty()) return Failure;
     Acquisition = MakeUnique<UnRealDashCore::FDashAcquisition>(Recording);
+    return Acquisition->Start();
+}
+FString UDashPackageScreen::StartConnector(const FDashPlayerConfig& Config)
+{
+    if (Config.Connector.IsEmpty())
+    {
+        // No connector is a valid way to look at a document: chunks 11 and 12's gates do exactly
+        // that, measuring geometry with every gauge at a pinned deflection.
+        UE_LOG(LogUnRealDash, Display, TEXT("DashConnector kind=none"));
+        return FString();
+    }
+    if (Config.Connector == TEXT("tcp"))
+    {
+        const FString Failure = StartTcp(Config.ConnectorHost, static_cast<uint16>(Config.ConnectorPort));
+        if (Failure.IsEmpty())
+            UE_LOG(LogUnRealDash, Display, TEXT("DashConnector kind=tcp host=%s port=%d"),
+                *Config.ConnectorHost, Config.ConnectorPort);
+        return Failure;
+    }
+    if (Config.Connector == TEXT("replay"))
+    {
+        if (Config.Replay.IsEmpty()) return TEXT("-connector=replay needs -replay-file=<file>");
+        const FString Failure = StartReplay(Config.Replay, Config.bReplayLoop);
+        if (Failure.IsEmpty())
+            UE_LOG(LogUnRealDash, Display, TEXT("DashConnector kind=replay file=%s loop=%s"),
+                *Config.Replay, Config.bReplayLoop ? TEXT("true") : TEXT("false"));
+        return Failure;
+    }
+    // sim, which runs a named signal-core scenario rather than a waveform this project invented.
+    if (Config.Scenario.IsEmpty()) return TEXT("-connector=sim needs -scenario=<name>");
+    const FString Failure = StartNamedScenario(Config.Scenario, Config.bFreezeScenarioTime);
+    if (Failure.IsEmpty())
+        UE_LOG(LogUnRealDash, Display, TEXT("DashConnector kind=sim scenario=%s frozen=%s"),
+            *Config.Scenario, Config.bFreezeScenarioTime ? TEXT("true") : TEXT("false"));
+    return Failure;
+}
+FString UDashPackageScreen::StartNamedScenario(const FString& Name, bool bFreezeTime)
+{
+    if (!Accepted) return TEXT("No package is loaded");
+    FString Failure;
+    // Seed and cadence are fixed rather than exposed. PLAN 4.7's surface has no flag for either,
+    // and a scenario whose shape depends on an unstated default is not reproducible.
+    const FString Recording = UnRealDashCore::GenerateNamedScenario(Name, 1, 30.0, 20, Failure);
+    if (Recording.IsEmpty()) return Failure.IsEmpty() ? TEXT("The scenario produced no recording") : Failure;
+    Acquisition = MakeUnique<UnRealDashCore::FDashAcquisition>(Recording);
+    if (bFreezeTime) Acquisition->FreezeScenarioTime();
+    // The scenario names its own signals, so the bindings resolve against its numbering rather
+    // than the document's ordering, exactly as they do for a definition pack.
+    SignalIds = Acquisition->SignalIds();
+    if (!Bindings.Build(Package, Builder.UpdatersById(), SignalIds, Error)) return Error.DisplayText();
+    return Acquisition->Start();
+}
+FString UDashPackageScreen::StartReplay(const FString& Path, bool bLoop)
+{
+    if (!Accepted) return TEXT("No package is loaded");
+    UnRealDashCore::FDashTcpOptions Options;
+    Options.DefinitionPackText = Package.DefinitionPackText();
+    Options.SchemaDirectory = UnRealDashCore::ResolveDashSchemaDirectory();
+    Options.ReplayPath = Path;
+    Options.bReplayLoop = bLoop;
+    Acquisition = MakeUnique<UnRealDashCore::FDashAcquisition>(Options);
+    SignalIds = Acquisition->SignalIds();
+    if (!Bindings.Build(Package, Builder.UpdatersById(), SignalIds, Error)) return Error.DisplayText();
     return Acquisition->Start();
 }
 FString UDashPackageScreen::StartTcp(const FString& Host, uint16 Port)
@@ -190,136 +255,142 @@ UWidget* UDashPackageScreen::BuildErrorRoot()
     Scale->SetContent(Width);
     return Scale;
 }
+// A rejected run has to exit non-zero, and RequestExitWithStatus(false, N) does not achieve that.
+// WindowsPlatformMisc.cpp:1517 passes N to PostQuitMessage, whose wParam never reaches the process
+// exit code: GuardedMain returns its own ErrorLevel, so every rejection here has been exiting 0 and
+// looking like a clean run to every script that tests $LASTEXITCODE. Forcing flushes GLog and calls
+// TerminateProcess with the code, which is the only path on which the code survives. Measured on
+// 2026-09-18 while building the PLAN 4.7 flag gate, which is the first gate to assert an exit code.
+static void RejectRun(uint8 Code)
+{
+    if (GLog) GLog->Flush();
+    FPlatformMisc::RequestExitWithStatus(true, Code);
+}
 void ADashPackageHUD::BeginPlay()
 {
     Super::BeginPlay();
     UnRealDashCore::InitializePackageLoader();
-    FString Path;
-    if (!FParse::Value(FCommandLine::Get(), TEXT("udash="), Path))
+
+    // One resolver for the whole surface, command line over player.json, field by field. A
+    // Shipping Android build receives no command line at all, so the file alone has to be enough.
+    const FString Saved = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir());
+    const auto Resolved = ResolveDashPlayerConfig(Saved, FCommandLine::Get(),
+        [](const FString& Path)
+        {
+            FSmokeFileRead Read;
+            Read.bExists = FPaths::FileExists(Path);
+            if (Read.bExists && !FFileHelper::LoadFileToString(Read.Contents, *Path))
+                Read.Error = TEXT("unreadable");
+            return Read;
+        },
+        [](const FString& Message) { UE_LOG(LogUnRealDash, Display, TEXT("%s"), *Message); });
+    const FDashPlayerConfig& Config = Resolved.Config;
+
+    if (Resolved.bUnknown)
+    {
+        // Printed, not swallowed. A mistyped flag that is ignored produces a run that looks like
+        // the one you asked for and is not, which is the failure every gate here exists to avoid.
+        UE_LOG(LogUnRealDash, Error, TEXT("%s"), *DashPlayerSupportedFlags());
+        RejectRun(2);
+        return;
+    }
+    if (!Resolved.bRunnable)
+    {
+        UE_LOG(LogUnRealDash, Error, TEXT("The configuration is not runnable; see the config error lines above"));
+        RejectRun(2);
+        return;
+    }
+
+    if (Config.Udash.IsEmpty())
         UE_LOG(LogUnRealDash, Display, TEXT("No -udash= package supplied"));
     Screen = CreateWidget<UDashPackageScreen>(GetOwningPlayerController());
     if (!Screen) { UE_LOG(LogUnRealDash, Error, TEXT("Cannot create package screen")); return; }
+
     FString BatchDirectory;
     if (FParse::Value(FCommandLine::Get(), TEXT("udash-batch="), BatchDirectory))
     {
         RunBatch(BatchDirectory);
         return;
     }
-    // Gate-only, like -udash-batch= and the smoke commandlet's -stress switch, and deliberately not
-    // part of the runtime command-line surface PLAN 4.7 owns. Criterion 4 of PLAN 4.5 needs three
-    // captures of one frozen document under three missing-data states, and a frozen document has no
-    // way to reach age_unknown or stale on its own: it binds constants, and the capture conditions
-    // forbid a running scenario. Values stay frozen; only the presented state changes.
+
+    // Hidden gate switches, outside the documented surface and validated by the resolver's own
+    // list so a typo in one is still rejected. They force a missing-data state and pin a gauge at
+    // a deflection, neither of which means anything to a user of the player.
     UnRealDashCore::EDashSignalState State = UnRealDashCore::EDashSignalState::Valid;
     FString StateName;
     if (FParse::Value(FCommandLine::Get(), TEXT("udash-state="), StateName) &&
         !UnRealDashCore::ParseSignalState(StateName, State))
     {
-        // A mistyped state must not quietly capture the valid frame and report green.
         UE_LOG(LogUnRealDash, Error, TEXT("Unknown -udash-state=%s"), *StateName);
-        FPlatformMisc::RequestExit(false);
+        RejectRun(2);
         return;
     }
-    // The PLAN 4.6 counterpart of -udash-state=, and a gate switch for the same reason: the
-    // connectors that supply real values are PLAN 4.9, and a dial cannot be captured at a known
-    // deflection before one exists. It supplies one synthetic constant to every bound gauge, as a
-    // fraction of that gauge's declared range. It is not data and the reports say so.
     float Fraction = 0.f;
     FString FractionText;
     if (FParse::Value(FCommandLine::Get(), TEXT("udash-fraction="), FractionText))
     {
-        if (!FractionText.IsNumeric())
-        {
-            UE_LOG(LogUnRealDash, Error, TEXT("Unparsable -udash-fraction=%s"), *FractionText);
-            FPlatformMisc::RequestExit(false);
-            return;
-        }
+        if (!FractionText.IsNumeric()) { UE_LOG(LogUnRealDash, Error, TEXT("Unparsable -udash-fraction=%s"), *FractionText); RejectRun(2); return; }
         Fraction = FCString::Atof(*FractionText);
         if (Fraction < 0.f || Fraction > 1.f)
         {
-            // Clamping silently would let a mistyped gate run capture a different deflection than
-            // the one it printed and still look green.
             UE_LOG(LogUnRealDash, Error, TEXT("-udash-fraction must be between 0 and 1, got %s"), *FractionText);
-            FPlatformMisc::RequestExit(false);
+            RejectRun(2);
             return;
         }
-    }
-    Screen->Open(Path, UnRealDashCore::DefaultDashProfile(), State, Fraction);
-    Screen->AddToViewport();
-    // The PLAN 4.9 value source, until a connector exists. It generates bytes and the real pipeline
-    // consumes them, so a signal goes stale here because a deadline passed. Gate-only, beside
-    // -udash-state= and -udash-fraction=, and outside the runtime flag surface PLAN 4.7 owns.
-    FString ScenarioSeconds;
-    if (FParse::Value(FCommandLine::Get(), TEXT("udash-scenario="), ScenarioSeconds))
-    {
-        const double Duration = ScenarioSeconds.IsNumeric() ? FCString::Atod(*ScenarioSeconds) : 0.0;
-        if (Duration <= 0.0)
-        {
-            UE_LOG(LogUnRealDash, Error, TEXT("-udash-scenario must be a positive number of seconds, got %s"),
-                *ScenarioSeconds);
-            FPlatformMisc::RequestExit(false);
-            return;
-        }
-        const FString Failure = Screen->StartScenario(Duration);
-        if (!Failure.IsEmpty())
-        {
-            UE_LOG(LogUnRealDash, Error, TEXT("Scenario failed: %s"), *Failure);
-            FPlatformMisc::RequestExit(false);
-            return;
-        }
-        UE_LOG(LogUnRealDash, Display, TEXT("DashScenario seconds=%.3f"), Duration);
     }
 
-    // PLAN 4.9's connector selection. Only the tcp value is wired here; sim is the scenario switch
-    // above and replay is a file, both of which the rest of 4.9 folds in. An unknown value exits
-    // rather than falling back, so a mistyped connector cannot look like a working run.
-    FString Connector;
-    if (FParse::Value(FCommandLine::Get(), TEXT("connector="), Connector))
-    {
-        if (!Connector.Equals(TEXT("tcp"), ESearchCase::IgnoreCase))
-        {
-            UE_LOG(LogUnRealDash, Error, TEXT("Unknown -connector=%s; this build wires tcp"), *Connector);
-            FPlatformMisc::RequestExit(false);
-            return;
-        }
-        FString Host = TEXT("127.0.0.1");
-        FParse::Value(FCommandLine::Get(), TEXT("connector-host="), Host);
-        int32 Port = 35000;
-        FParse::Value(FCommandLine::Get(), TEXT("connector-port="), Port);
-        if (Port <= 0 || Port > 65535)
-        {
-            UE_LOG(LogUnRealDash, Error, TEXT("-connector-port must be 1 through 65535, got %d"), Port);
-            FPlatformMisc::RequestExit(false);
-            return;
-        }
-        const FString Failure = Screen->StartTcp(Host, static_cast<uint16>(Port));
-        if (!Failure.IsEmpty())
-        {
-            UE_LOG(LogUnRealDash, Error, TEXT("Connector failed: %s"), *Failure);
-            FPlatformMisc::RequestExit(false);
-            return;
-        }
-        UE_LOG(LogUnRealDash, Display, TEXT("DashConnector kind=tcp host=%s port=%d"), *Host, Port);
-    }
-    // One machine-readable verdict per run. The device half of the PLAN 4.4 gate is driven by
-    // launching once per fixture and reading logcat, and an accepted case otherwise produces no
-    // output at all, which would make "it worked" indistinguishable from "it died early".
+    UnRealDashCore::EDashProfile Profile = UnRealDashCore::DefaultDashProfile();
+    if (Config.Profile == TEXT("mobile")) Profile = UnRealDashCore::EDashProfile::Mobile;
+    else if (Config.Profile == TEXT("desktop")) Profile = UnRealDashCore::EDashProfile::Desktop;
+
+    Screen->Open(Config.Udash, Profile, State, Fraction);
+    Screen->AddToViewport();
     UE_LOG(LogUnRealDash, Display, TEXT("DashVerdict accepted=%s code=%s pointer=%s path=%s state=%s"),
         Screen->WasAccepted() ? TEXT("true") : TEXT("false"),
-        *Screen->LastError().CodeName, *Screen->LastError().Pointer, *Path,
+        *Screen->LastError().CodeName, *Screen->LastError().Pointer, *Config.Udash,
         UnRealDashCore::SignalStateName(State));
-    UE_LOG(LogUnRealDash, Display, TEXT("DashFraction value=%.4f"), Fraction);
-    // Gate-only, like the rest. A connector gate needs a run that outlives a relay being killed
-    // and restarted, and a capture cannot end it early or the sequence never happens.
-    FString QuitAfter;
-    if (FParse::Value(FCommandLine::Get(), TEXT("udash-quit-after="), QuitAfter) && QuitAfter.IsNumeric())
+
+    // The hidden sweep switch, which is not -scenario= and must not be confused with it. A named
+    // signal-core scenario carries speed and temperature; this one synthesises a sweep over the
+    // document's OWN signals and their declared ranges, which is the only way the chunk 14 live
+    // gate can move a gauge in a fixture that declares neither of those names. It was called
+    // -udash-scenario= until chunk 16, where the two meanings became one word apart.
+    FString SweepSeconds;
+    if (FParse::Value(FCommandLine::Get(), TEXT("udash-sweep="), SweepSeconds))
+    {
+        if (!SweepSeconds.IsNumeric() || FCString::Atod(*SweepSeconds) <= 0.0)
+        {
+            UE_LOG(LogUnRealDash, Error, TEXT("-udash-sweep must be a positive number of seconds, got %s"), *SweepSeconds);
+            RejectRun(2);
+            return;
+        }
+        const FString SweepFailure = Screen->StartScenario(FCString::Atod(*SweepSeconds));
+        if (!SweepFailure.IsEmpty())
+        {
+            UE_LOG(LogUnRealDash, Error, TEXT("Sweep failed: %s"), *SweepFailure);
+            RejectRun(2);
+            return;
+        }
+        UE_LOG(LogUnRealDash, Display, TEXT("DashConnector kind=sweep seconds=%s"), *SweepSeconds);
+    }
+
+    const FString Failure = SweepSeconds.IsEmpty() ? Screen->StartConnector(Config) : FString();
+    if (!Failure.IsEmpty())
+    {
+        UE_LOG(LogUnRealDash, Error, TEXT("Connector failed: %s"), *Failure);
+        RejectRun(2);
+        return;
+    }
+
+    if (Config.QuitAfterSeconds > 0)
     {
         FTimerHandle Quit;
         GetWorldTimerManager().SetTimer(Quit, FTimerDelegate::CreateLambda([]()
-            { FPlatformMisc::RequestExit(false); }), FCString::Atof(*QuitAfter), false);
+            { FPlatformMisc::RequestExit(false); }), static_cast<float>(Config.QuitAfterSeconds), false);
     }
-    if (FParse::Value(FCommandLine::Get(), TEXT("udash-shot="), ShotPath))
+    if (!Config.Screenshot.IsEmpty())
     {
+        ShotPath = Config.Screenshot;
         FString At;
         float Delay = 0.f;
         if (FParse::Value(FCommandLine::Get(), TEXT("udash-shot-at="), At))
@@ -327,7 +398,7 @@ void ADashPackageHUD::BeginPlay()
             if (!At.IsNumeric() || FCString::Atof(*At) < 0.f)
             {
                 UE_LOG(LogUnRealDash, Error, TEXT("-udash-shot-at must be a non-negative number of seconds, got %s"), *At);
-                FPlatformMisc::RequestExit(false);
+                RejectRun(2);
                 return;
             }
             Delay = FCString::Atof(*At);

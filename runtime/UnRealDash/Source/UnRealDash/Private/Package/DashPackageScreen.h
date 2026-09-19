@@ -18,7 +18,14 @@ public:
     // Starts the PLAN 4.9 value source. Returns an empty string on success. It generates bytes and
     // everything downstream of it is the real pipeline, so a signal here goes stale because a
     // deadline passed rather than because something decided to say so.
+    // One entry point for all three connectors. Which one is a document-independent choice the
+    // configuration makes, so the screen does not need three call sites that can drift.
+    FString StartConnector(const struct FDashPlayerConfig& Config);
     FString StartScenario(double DurationSeconds);
+    // A named signal-core scenario, run through the real pipeline like every other source.
+    FString StartNamedScenario(const FString& Name, bool bFreezeTime);
+    // Recorded bytes from a file, through the same framer and decoder a socket uses.
+    FString StartReplay(const FString& Path, bool bLoop);
     // PLAN 4.9's third connector: a receive-only binary-telemetry-v1 client. Signals and their
     // numeric ids come from the package's definition pack, so the binding table has to be built
     // after this rather than before, which is why it takes the package path again.
