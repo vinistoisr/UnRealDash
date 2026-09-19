@@ -1,4 +1,7 @@
 #include "support/FakeClock.h"
+#include <array>
+#include <map>
+#include <vector>
 TEST_CASE("2.5 oscillation at 20 Hz changes output at most twice") {
     RuleFixture f;
     f.definition.hysteresis_band = 0;
@@ -153,4 +156,167 @@ TEST_CASE("2.5 transition exactly at the debounce boundary") {
     CHECK_FALSE(f.Evaluate().current);
     f.clock.time = 105ms;
     CHECK(f.Evaluate().current);
+}
+
+namespace {
+// PLAN 4.8's armed-expiry rows, recorded rather than formatted. The property under test is that
+// one arming produces exactly one status row, which no amount of reading the callers can show.
+struct ScheduleWitness final : IExpiryEventSink {
+    struct Event {
+        enum class Kind { armed, fired, cancelled } kind{};
+        std::uint64_t serial{};
+        CancelReason reason{};
+        std::uint64_t by{};
+    };
+    std::vector<Event> events;
+    void OnArmed(const Expiry &expiry) override {
+        events.push_back({Event::Kind::armed, expiry.serial, {}, 0});
+    }
+    void OnFired(const Expiry &expiry, Time) override {
+        events.push_back({Event::Kind::fired, expiry.serial, {}, 0});
+    }
+    void OnCancelled(const Expiry &expiry, CancelReason reason, std::uint64_t by) override {
+        events.push_back({Event::Kind::cancelled, expiry.serial, reason, by});
+    }
+    // The invariant, computed rather than eyeballed: every serial armed has exactly one status.
+    bool OneStatusEach() const {
+        std::map<std::uint64_t, int> armed, status;
+        for (const Event &event : events) {
+            if (event.kind == Event::Kind::armed) ++armed[event.serial];
+            else ++status[event.serial];
+        }
+        if (armed.size() != status.size()) return false;
+        for (const auto &[serial, count] : armed)
+            if (count != 1 || status.count(serial) != 1 || status.at(serial) != 1) return false;
+        return true;
+    }
+    std::size_t Count(Event::Kind kind) const {
+        std::size_t total = 0;
+        for (const Event &event : events)
+            if (event.kind == kind) ++total;
+        return total;
+    }
+};
+
+Expiry Freshness(Time at, std::uint32_t id, std::uint64_t sample = 0) {
+    Expiry expiry{};
+    expiry.time = at;
+    expiry.kind = ExpiryKind::freshness;
+    expiry.id = id;
+    expiry.sample = sample;
+    return expiry;
+}
+} // namespace
+
+TEST_CASE("4.8 every arming gets its own identifier") {
+    std::array<Expiry, 8> storage{};
+    ExpirySchedule schedule(storage);
+    ScheduleWitness witness;
+    schedule.SetSink(&witness);
+
+    REQUIRE(schedule.Arm(Freshness(10ns, 1, 100)).Ok());
+    // Re-arming the same signal is a different arming, and the old one is cancelled naming the
+    // sample that moved it. Arm has always replaced silently; the point of the serial is that the
+    // two are now tellable apart.
+    REQUIRE(schedule.Arm(Freshness(20ns, 1, 101)).Ok());
+    REQUIRE(witness.events.size() == 3);
+    CHECK(witness.events[0].kind == ScheduleWitness::Event::Kind::armed);
+    CHECK(witness.events[1].kind == ScheduleWitness::Event::Kind::cancelled);
+    CHECK(witness.events[1].serial == witness.events[0].serial);
+    CHECK(witness.events[1].reason == CancelReason::rearmed);
+    CHECK(witness.events[1].by == 101);
+    CHECK(witness.events[2].kind == ScheduleWitness::Event::Kind::armed);
+    CHECK(witness.events[2].serial != witness.events[0].serial);
+    CHECK_FALSE(witness.OneStatusEach());  // the second arming has no status row yet
+
+    Expiry popped{};
+    REQUIRE(schedule.PopDue(30ns, popped));
+    CHECK(popped.serial == witness.events[2].serial);
+    CHECK(witness.OneStatusEach());
+}
+
+TEST_CASE("4.8 a firing is not also a cancellation") {
+    std::array<Expiry, 4> storage{};
+    ExpirySchedule schedule(storage);
+    ScheduleWitness witness;
+    schedule.SetSink(&witness);
+    REQUIRE(schedule.Arm(Freshness(10ns, 1)).Ok());
+
+    Expiry popped{};
+    REQUIRE(schedule.PopDue(10ns, popped));
+    // PopDue removes its own entry internally. Routing that through Cancel would have written a
+    // cancelled row for an expiry that fired, which is the failure the private Remove exists for.
+    CHECK(witness.Count(ScheduleWitness::Event::Kind::fired) == 1);
+    CHECK(witness.Count(ScheduleWitness::Event::Kind::cancelled) == 0);
+
+    // And the cancel SignalRegistry::Expire would issue afterwards finds nothing and says
+    // nothing, which is the other half of the one-status-row rule.
+    schedule.Cancel(ExpiryKind::freshness, 1);
+    schedule.Fire(ExpiryKind::freshness, 1, 11ns);
+    CHECK(witness.Count(ScheduleWitness::Event::Kind::cancelled) == 0);
+    CHECK(witness.Count(ScheduleWitness::Event::Kind::fired) == 1);
+    CHECK(witness.OneStatusEach());
+}
+
+TEST_CASE("4.8 Fire and PopDue cannot both fire the same arming") {
+    std::array<Expiry, 4> storage{};
+    ExpirySchedule schedule(storage);
+    ScheduleWitness witness;
+    schedule.SetSink(&witness);
+    REQUIRE(schedule.Arm(Freshness(10ns, 1)).Ok());
+
+    // Whichever observes the deadline first removes the entry; the other finds nothing. Both
+    // orders, because a Pump runs both and the order depends on when the sample arrived.
+    schedule.Fire(ExpiryKind::freshness, 1, 10ns);
+    Expiry popped{};
+    CHECK_FALSE(schedule.PopDue(10ns, popped));
+    CHECK(witness.Count(ScheduleWitness::Event::Kind::fired) == 1);
+    CHECK(witness.OneStatusEach());
+}
+
+TEST_CASE("4.8 a clean shutdown cancels what is still armed, and says why") {
+    std::array<Expiry, 8> storage{};
+    ExpirySchedule schedule(storage);
+    ScheduleWitness witness;
+    schedule.SetSink(&witness);
+    REQUIRE(schedule.Arm(Freshness(100ns, 1)).Ok());
+    REQUIRE(schedule.Arm(Freshness(200ns, 2)).Ok());
+
+    schedule.Clear(CancelReason::run_end, 0);
+    CHECK(witness.Count(ScheduleWitness::Event::Kind::cancelled) == 2);
+    for (const auto &event : witness.events)
+        if (event.kind == ScheduleWitness::Event::Kind::cancelled)
+            CHECK(event.reason == CancelReason::run_end);
+    // Every arming accounted for, which is the clause PLAN puts on an orderly exit.
+    CHECK(witness.OneStatusEach());
+    CHECK(schedule.Size() == 0);
+}
+
+TEST_CASE("4.8 rule expiries carry the same identity as freshness ones") {
+    // signal-core's RuleEngine really does arm hold_last and debounce entries. The Stage 0 player
+    // loads no rules, so a player run has none, but the record type is not hypothetical.
+    std::array<Expiry, 8> storage{};
+    ExpirySchedule schedule(storage);
+    ScheduleWitness witness;
+    schedule.SetSink(&witness);
+
+    Expiry hold{};
+    hold.time = 50ns;
+    hold.kind = ExpiryKind::hold_last;
+    hold.id = 7;
+    REQUIRE(schedule.Arm(hold).Ok());
+    Expiry debounce{};
+    debounce.time = 60ns;
+    debounce.kind = ExpiryKind::debounce;
+    debounce.id = 7;
+    REQUIRE(schedule.Arm(debounce).Ok());
+    // Same rule id, different kinds, so neither cancels the other.
+    CHECK(witness.Count(ScheduleWitness::Event::Kind::cancelled) == 0);
+    CHECK(schedule.Size() == 2);
+
+    schedule.Cancel(ExpiryKind::hold_last, 7, CancelReason::rearmed, 0);
+    Expiry popped{};
+    REQUIRE(schedule.PopDue(60ns, popped));
+    CHECK(popped.kind == ExpiryKind::debounce);
+    CHECK(witness.OneStatusEach());
 }

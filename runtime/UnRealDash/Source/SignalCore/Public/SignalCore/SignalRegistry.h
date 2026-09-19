@@ -10,6 +10,10 @@ class SIGNALCORE_API SignalRegistry {
     Status Initialize();
     Status Apply(SignalId id, const Sample &sample);
     void Expire();
+    // An expiry the caller has already popped from the schedule. The registry stamps the sample
+    // with the identifier of the firing it is now displaying, which Expire cannot do for this
+    // path because PopDue has already taken the entry the serial lived on.
+    void MarkFired(const Expiry &expiry);
     Status SetGeneration(std::uint64_t generation);
     Status Publish(std::span<const std::uint8_t> latched = {});
     std::span<const SignalSample> Samples() const { return storage_.first(signals_.size()); }

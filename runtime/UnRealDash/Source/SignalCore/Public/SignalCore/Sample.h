@@ -31,6 +31,11 @@ struct Sample {
     Quality quality{Quality::unavailable};
     AgeEvidence age_evidence{AgeEvidence::unknown};
     std::uint64_t generation{};
+    // PLAN 4.8's expiry identifier, stamped when this sample goes stale because a freshness
+    // deadline passed. It rides with the sample so the present row can say WHICH firing it is
+    // displaying; matching a latency observation by signal alone would let a later episode's
+    // frame close an earlier expiry. Zero for a sample that is not showing a firing.
+    std::uint64_t expiry{};
     Sample() = default;
     Sample(Value v, Unit u, Time received) : value(v), unit(u), t_recv(received), quality(Quality::valid) {}
 };

@@ -205,6 +205,9 @@ PumpResult AcquisitionPipeline::Pump(Time deadline) {
     Expiry expiry{};
     while (schedule_.PopDue(now, expiry)) {
         ++result.expiries_fired;
+        // Stamped from the popped entry, because PopDue has already removed the one the serial
+        // lived on and Expire's own lookup would find nothing.
+        registry_.MarkFired(expiry);
         registry_.Expire();
         Evaluate(now, result);
     }

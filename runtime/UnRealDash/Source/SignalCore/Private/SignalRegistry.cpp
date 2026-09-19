@@ -67,11 +67,19 @@ Status SignalRegistry::Apply(SignalId id, const Sample &sample) {
         } else
             normalized.value = *value.Get();
     }
+    normalized.expiry = 0;
     if (normalized.quality == Quality::valid) {
         auto expiry = AddTime(sample.t_recv, declaration.deadline);
         if (!expiry.Ok())
             return Error(ErrorCode::invalid_configuration, "signal %s deadline overflow", declaration.name);
-        auto status = schedule_.Arm({*expiry.Get(), ExpiryKind::freshness, id});
+        Expiry armed{};
+        armed.time = *expiry.Get();
+        armed.kind = ExpiryKind::freshness;
+        armed.id = id;
+        armed.sample = normalized.id;
+        armed.generation = normalized.generation;
+        armed.becomes = static_cast<std::uint8_t>(Quality::stale);
+        auto status = schedule_.Arm(armed);
         if (!status.Ok())
             return status;
     } else
@@ -79,6 +87,19 @@ Status SignalRegistry::Apply(SignalId id, const Sample &sample) {
     storage_[i] = {id, normalized, true};
     Expire();
     return {};
+}
+void SignalRegistry::MarkFired(const Expiry &expiry) {
+    if (expiry.kind != ExpiryKind::freshness)
+        return;
+    for (std::size_t i = 0; i < signals_.size(); ++i) {
+        if (signals_[i].id != expiry.id)
+            continue;
+        auto &sample = storage_[i].sample;
+        if (sample.quality == Quality::valid)
+            sample.quality = Quality::stale;
+        sample.expiry = expiry.serial;
+        return;
+    }
 }
 void SignalRegistry::Expire() {
     const auto now = clock_.Now();
@@ -91,7 +112,13 @@ void SignalRegistry::Expire() {
         const auto expiry = AddTime(sample.t_recv, signals_[i].deadline);
         if (!expiry.Ok() || now >= *expiry.Get()) {
             sample.quality = Quality::stale;
-            schedule_.Cancel(ExpiryKind::freshness, signals_[i].id);
+            // Before the Fire, because Fire removes the entry and the serial is on it. Read from
+            // the schedule rather than remembered here: PopDue may already have fired it in this
+            // same Pump, in which case Earliest no longer holds it and the sample keeps the
+            // serial that firing stamped.
+            if (const std::uint64_t serial = schedule_.SerialOf(ExpiryKind::freshness, signals_[i].id))
+                sample.expiry = serial;
+            schedule_.Fire(ExpiryKind::freshness, signals_[i].id, now);
         }
     }
 }
